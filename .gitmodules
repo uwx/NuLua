@@ -1,0 +1,21 @@
+[submodule "lua51"]
+	path = submodules/lua51
+	url = https://github.com/lua/lua
+[submodule "lua52"]
+	path = submodules/lua52
+	url = https://github.com/lua/lua
+[submodule "lua53"]
+	path = submodules/lua53
+	url = https://github.com/lua/lua
+[submodule "lua54"]
+	path = submodules/lua54
+	url = https://github.com/lua/lua
+[submodule "lua55"]
+	path = submodules/lua55
+	url = https://github.com/lua/lua
+[submodule "luajit"]
+	path = submodules/luajit
+	url = https://github.com/LuaJIT/LuaJIT
+[submodule "luau"]
+	path = submodules/luau
+	url = https://github.com/luau-lang/luau
