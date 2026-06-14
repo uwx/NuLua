@@ -133,6 +133,69 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "953f07c43838f8e6f9758cab68bf5bed85465e7587ebe0b823f1bcd81978ad3a"
 
 [[package]]
+name = "lua51"
+version = "0.1.0"
+dependencies = [
+ "bindgen",
+ "cc",
+ "csbindgen",
+]
+
+[[package]]
+name = "lua52"
+version = "0.1.0"
+dependencies = [
+ "bindgen",
+ "cc",
+ "csbindgen",
+]
+
+[[package]]
+name = "lua53"
+version = "0.1.0"
+dependencies = [
+ "bindgen",
+ "cc",
+ "csbindgen",
+]
+
+[[package]]
+name = "lua54"
+version = "0.1.0"
+dependencies = [
+ "bindgen",
+ "cc",
+ "csbindgen",
+]
+
+[[package]]
+name = "lua55"
+version = "0.1.0"
+dependencies = [
+ "bindgen",
+ "cc",
+ "csbindgen",
+]
+
+[[package]]
+name = "luajit"
+version = "0.1.0"
+dependencies = [
+ "bindgen",
+ "cc",
+ "csbindgen",
+]
+
+[[package]]
+name = "luau"
+version = "0.1.0"
+dependencies = [
+ "bindgen",
+ "cc",
+ "csbindgen",
+]
+
+[[package]]
 name = "memchr"
 version = "2.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -143,15 +206,6 @@ name = "minimal-lexical"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "68354c5c6bd36d73ff3feceb05efa59b6acb7626617f4962be322a825e61f79a"
-
-[[package]]
-name = "native"
-version = "0.1.0"
-dependencies = [
- "bindgen",
- "cc",
- "csbindgen",
-]
 
 [[package]]
 name = "nom"
