@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/NuLua.Interop.Lua51/NuLua.Interop.Lua51.csproj" />
+    <Project Path="src/NuLua.Interop.Lua52/NuLua.Interop.Lua52.csproj" />
+    <Project Path="src/NuLua.Interop.Lua53/NuLua.Interop.Lua53.csproj" />
+    <Project Path="src/NuLua.Interop.Lua54/NuLua.Interop.Lua54.csproj" />
+    <Project Path="src/NuLua.Interop.Lua55/NuLua.Interop.Lua55.csproj" />
+    <Project Path="src/NuLua.Interop.LuaJit/NuLua.Interop.LuaJit.csproj" />
+    <Project Path="src/NuLua.Interop.Luau/NuLua.Interop.Luau.csproj" />
+    <Project Path="src/NuLua.Shared/NuLua.Shared.csproj" />
+  </Folder>
+  <Project Path="src/NuLua/NuLua.csproj" />
+</Solution>
