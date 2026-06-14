@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <Nullable>enable</Nullable>
+    <!-- Not include this dll, only native dlls. -->
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <IncludeContentInPack>true</IncludeContentInPack>
+    <NoWarn>$(NoWarn);NU5100;NU5128</NoWarn>
+    <Description>lua53 native runtimes for NuLua.Interop.Lua53.</Description>
+
+    <!-- NuGet -->
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="runtimes\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="NuLua.Runtime.Lua53.win-x64.csproj" />
+    <ProjectReference Include="NuLua.Runtime.Lua53.win-arm64.csproj" />
+    <ProjectReference Include="NuLua.Runtime.Lua53.linux-x64.csproj" />
+    <ProjectReference Include="NuLua.Runtime.Lua53.linux-arm64.csproj" />
+    <ProjectReference Include="NuLua.Runtime.Lua53.osx-x64.csproj" />
+    <ProjectReference Include="NuLua.Runtime.Lua53.osx-arm64.csproj" />
+  </ItemGroup>
+
+</Project>
