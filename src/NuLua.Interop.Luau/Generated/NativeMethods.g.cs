@@ -15,6 +15,32 @@ namespace NuLua.Interop.Luau
     {
         const string __DllName = "luau";
 
+        public const uint LUA_USE_LONGJMP = 0;
+        public const uint LUA_IDSIZE = 256;
+        public const uint LUA_MINSTACK = 20;
+        public const uint LUA_BUFFERSIZE = 512;
+        public const uint LUA_UTAG_LIMIT = 128;
+        public const uint LUA_LUTAG_LIMIT = 128;
+        public const uint LUA_SIZECLASSES = 40;
+        public const uint LUA_MEMORY_CATEGORIES = 256;
+        public const uint LUA_EXECUTION_CALLBACK_STORAGE = 512;
+        public const uint LUA_MINSTRTABSIZE = 32;
+        public const uint LUA_MAXCAPTURES = 32;
+        public const uint LUA_VECTOR_SIZE = 3;
+        public const uint LUA_EXTRA_SIZE = 1;
+        public const uint LUA_REFNIL = 0;
+        public static ReadOnlySpan<byte> LUA_COLIBNAME => new byte[] { 99, 111, 114, 111, 117, 116, 105, 110, 101, 0 };
+        public static ReadOnlySpan<byte> LUA_TABLIBNAME => new byte[] { 116, 97, 98, 108, 101, 0 };
+        public static ReadOnlySpan<byte> LUA_OSLIBNAME => new byte[] { 111, 115, 0 };
+        public static ReadOnlySpan<byte> LUA_STRLIBNAME => new byte[] { 115, 116, 114, 105, 110, 103, 0 };
+        public static ReadOnlySpan<byte> LUA_BITLIBNAME => new byte[] { 98, 105, 116, 51, 50, 0 };
+        public static ReadOnlySpan<byte> LUA_BUFFERLIBNAME => new byte[] { 98, 117, 102, 102, 101, 114, 0 };
+        public static ReadOnlySpan<byte> LUA_UTF8LIBNAME => new byte[] { 117, 116, 102, 56, 0 };
+        public static ReadOnlySpan<byte> LUA_CLASSLIBNAME => new byte[] { 99, 108, 97, 115, 115, 0 };
+        public static ReadOnlySpan<byte> LUA_MATHLIBNAME => new byte[] { 109, 97, 116, 104, 0 };
+        public static ReadOnlySpan<byte> LUA_DBLIBNAME => new byte[] { 100, 101, 98, 117, 103, 0 };
+        public static ReadOnlySpan<byte> LUA_VECLIBNAME => new byte[] { 118, 101, 99, 116, 111, 114, 0 };
+        public static ReadOnlySpan<byte> LUA_INTLIBNAME => new byte[] { 105, 110, 116, 101, 103, 101, 114, 0 };
 
 
 
