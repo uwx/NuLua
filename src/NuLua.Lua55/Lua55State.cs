@@ -234,6 +234,12 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
         NativeMethods.lua_settop(ptr, index);
     }
 
+    public int GetAbsIndex(int index)
+    {
+        CheckDisposed();
+        return NativeMethods.lua_absindex(ptr, index);
+    }
+
     public void PushNil()
     {
         CheckDisposed();

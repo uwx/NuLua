@@ -15,6 +15,7 @@ public interface ILuaState : ILuaObject, IDisposable
 
     int GetTop();
     void SetTop(int index);
+    int GetAbsIndex(int index);
     LuaType GetType(int index);
 
     void PushNil();
