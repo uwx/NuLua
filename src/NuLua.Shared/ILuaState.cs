@@ -24,7 +24,6 @@ public interface ILuaState : ILuaObject, IDisposable
     void PushBoolean(bool value);
     void PushInteger(long value);
     void PushNumber(double value);
-    void PushString(ReadOnlySpan<char> str);
     void PushString(ReadOnlySpan<byte> utf8Str);
     void PushLightUserData(nint data);
     void PushValue(int index);

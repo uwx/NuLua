@@ -279,24 +279,6 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
         }
     }
 
-    public void PushString(ReadOnlySpan<char> str)
-    {
-        CheckDisposed();
-        var buffer = ArrayPool<byte>.Shared.Rent(str.Length * 3);
-        try
-        {
-            var len = Encoding.UTF8.GetBytes(str, buffer);
-            fixed (byte* strPtr = buffer)
-            {
-                NativeMethods.lua_pushlstring(ptr, strPtr, (nuint)len);
-            }
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(buffer);
-        }
-    }
-
     public void PushLightUserData(nint data)
     {
         CheckDisposed();
