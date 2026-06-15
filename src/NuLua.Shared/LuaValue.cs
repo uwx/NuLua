@@ -89,7 +89,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>
         this.reference = reference;
     }
 
-    public override unsafe string ToString()
+    public override string ToString()
     {
         return type switch
         {
@@ -121,6 +121,14 @@ public readonly struct LuaValue : IEquatable<LuaValue>
         if (TryRead<T>(out var result))
             return result;
         throw new InvalidOperationException($"Cannot convert {Type} to {typeof(T).Name}");
+    }
+
+    public T UnsafeRead<T>()
+    {
+        if (TryRead<T>(out var result))
+            return result;
+        Unsafe.SkipInit(out result);
+        return result!;
     }
 
     public bool TryRead<T>(out T result)
