@@ -28,6 +28,12 @@ namespace NuLua.Interop.Luau
         public const uint LUA_MAXCAPTURES = 32;
         public const uint LUA_VECTOR_SIZE = 3;
         public const uint LUA_EXTRA_SIZE = 1;
+        public const int LUA_MULTRET = -1;
+        public const int LUA_REGISTRYINDEX = -10000;
+        public const int LUA_ENVIRONINDEX = -10001;
+        public const int LUA_GLOBALSINDEX = -10002;
+        public const int LUA_TNONE = -1;
+        public const int LUA_NOREF = -1;
         public const uint LUA_REFNIL = 0;
         public static ReadOnlySpan<byte> LUA_COLIBNAME => new byte[] { 99, 111, 114, 111, 117, 116, 105, 110, 101, 0 };
         public static ReadOnlySpan<byte> LUA_TABLIBNAME => new byte[] { 116, 97, 98, 108, 101, 0 };

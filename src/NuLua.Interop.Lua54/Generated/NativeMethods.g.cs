@@ -37,6 +37,8 @@ namespace NuLua.Interop.Lua54
         public static ReadOnlySpan<byte> LUA_NUMBER_FMT => new byte[] { 37, 46, 49, 52, 103, 0 };
         public static ReadOnlySpan<byte> LUA_INTEGER_FRMLEN => new byte[] { 108, 108, 0 };
         public const ulong LUA_MAXINTEGER = 9223372036854775807;
+        public const long LUA_MININTEGER = -9223372036854775808;
+        public const int LUA_MAXUNSIGNED = -1;
         public const uint LUA_IDSIZE = 60;
         public static ReadOnlySpan<byte> LUA_VERSION_MAJOR => new byte[] { 53, 0 };
         public static ReadOnlySpan<byte> LUA_VERSION_MINOR => new byte[] { 52, 0 };
@@ -48,12 +50,15 @@ namespace NuLua.Interop.Lua54
         public static ReadOnlySpan<byte> LUA_COPYRIGHT => new byte[] { 76, 117, 97, 32, 53, 46, 52, 46, 56, 32, 32, 67, 111, 112, 121, 114, 105, 103, 104, 116, 32, 40, 67, 41, 32, 49, 57, 57, 52, 45, 50, 48, 50, 53, 32, 76, 117, 97, 46, 111, 114, 103, 44, 32, 80, 85, 67, 45, 82, 105, 111, 0 };
         public static ReadOnlySpan<byte> LUA_AUTHORS => new byte[] { 82, 46, 32, 73, 101, 114, 117, 115, 97, 108, 105, 109, 115, 99, 104, 121, 44, 32, 76, 46, 32, 72, 46, 32, 100, 101, 32, 70, 105, 103, 117, 101, 105, 114, 101, 100, 111, 44, 32, 87, 46, 32, 67, 101, 108, 101, 115, 0 };
         public static ReadOnlySpan<byte> LUA_SIGNATURE => new byte[] { 27, 76, 117, 97, 0 };
+        public const int LUA_MULTRET = -1;
+        public const int LUA_REGISTRYINDEX = -1001000;
         public const uint LUA_OK = 0;
         public const uint LUA_YIELD = 1;
         public const uint LUA_ERRRUN = 2;
         public const uint LUA_ERRSYNTAX = 3;
         public const uint LUA_ERRMEM = 4;
         public const uint LUA_ERRERR = 5;
+        public const int LUA_TNONE = -1;
         public const uint LUA_TNIL = 0;
         public const uint LUA_TBOOLEAN = 1;
         public const uint LUA_TLIGHTUSERDATA = 2;
@@ -120,6 +125,8 @@ namespace NuLua.Interop.Lua54
         public const uint LUA_ERRFILE = 6;
         public static ReadOnlySpan<byte> LUA_LOADED_TABLE => new byte[] { 95, 76, 79, 65, 68, 69, 68, 0 };
         public static ReadOnlySpan<byte> LUA_PRELOAD_TABLE => new byte[] { 95, 80, 82, 69, 76, 79, 65, 68, 0 };
+        public const int LUA_NOREF = -2;
+        public const int LUA_REFNIL = -1;
         public static ReadOnlySpan<byte> LUA_FILEHANDLE => new byte[] { 70, 73, 76, 69, 42, 0 };
 
 

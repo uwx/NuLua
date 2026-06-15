@@ -10,4 +10,4 @@ publish = false
 [workspace.dependencies]
 bindgen = "0.72.1"
 cc = "1.2.64"
-csbindgen = "1.9.8"
+csbindgen = { git = "https://github.com/OleRoss/csbindgen.git", branch = "feat/include-negative-const-values" }

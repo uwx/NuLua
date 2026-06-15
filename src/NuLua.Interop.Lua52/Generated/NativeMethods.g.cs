@@ -30,6 +30,8 @@ namespace NuLua.Interop.Lua52
         public static ReadOnlySpan<byte> LUA_COPYRIGHT => new byte[] { 76, 117, 97, 32, 53, 46, 50, 46, 51, 32, 32, 67, 111, 112, 121, 114, 105, 103, 104, 116, 32, 40, 67, 41, 32, 49, 57, 57, 52, 45, 50, 48, 49, 51, 32, 76, 117, 97, 46, 111, 114, 103, 44, 32, 80, 85, 67, 45, 82, 105, 111, 0 };
         public static ReadOnlySpan<byte> LUA_AUTHORS => new byte[] { 82, 46, 32, 73, 101, 114, 117, 115, 97, 108, 105, 109, 115, 99, 104, 121, 44, 32, 76, 46, 32, 72, 46, 32, 100, 101, 32, 70, 105, 103, 117, 101, 105, 114, 101, 100, 111, 44, 32, 87, 46, 32, 67, 101, 108, 101, 115, 0 };
         public static ReadOnlySpan<byte> LUA_SIGNATURE => new byte[] { 27, 76, 117, 97, 0 };
+        public const int LUA_MULTRET = -1;
+        public const int LUA_REGISTRYINDEX = -1001000;
         public const uint LUA_OK = 0;
         public const uint LUA_YIELD = 1;
         public const uint LUA_ERRRUN = 2;
@@ -37,6 +39,7 @@ namespace NuLua.Interop.Lua52
         public const uint LUA_ERRMEM = 4;
         public const uint LUA_ERRGCMM = 5;
         public const uint LUA_ERRERR = 6;
+        public const int LUA_TNONE = -1;
         public const uint LUA_TNIL = 0;
         public const uint LUA_TBOOLEAN = 1;
         public const uint LUA_TLIGHTUSERDATA = 2;
@@ -92,6 +95,8 @@ namespace NuLua.Interop.Lua52
         public static ReadOnlySpan<byte> LUA_DBLIBNAME => new byte[] { 100, 101, 98, 117, 103, 0 };
         public static ReadOnlySpan<byte> LUA_LOADLIBNAME => new byte[] { 112, 97, 99, 107, 97, 103, 101, 0 };
         public const uint LUA_ERRFILE = 7;
+        public const int LUA_NOREF = -2;
+        public const int LUA_REFNIL = -1;
         public static ReadOnlySpan<byte> LUA_FILEHANDLE => new byte[] { 70, 73, 76, 69, 42, 0 };
 
 
