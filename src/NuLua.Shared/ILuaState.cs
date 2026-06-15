@@ -42,6 +42,7 @@ public interface ILuaState : ILuaObject, IDisposable
     LuaTable CreateTable(int initialArraySize = 0, int initialRecordsSize = 0);
     void GetTable(int index);
     void SetTable(int index);
+    void Next(int index);
 
     void Arith(LuaArithmeticOperator op);
     void Compare(LuaComparisonOperator op);

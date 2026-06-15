@@ -62,6 +62,11 @@ public static class LuaStateExtensions
         return value;
     }
 
+    public static void Pop(this ILuaState state, int count)
+    {
+        state.SetTop(state.GetTop() - count);
+    }
+
     public static void Insert(this ILuaState state, int index)
     {
         state.Rotate(index, 1);

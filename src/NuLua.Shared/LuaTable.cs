@@ -2,6 +2,38 @@ namespace NuLua;
 
 public sealed class LuaTable(ILuaState state, int index) : ILuaObject
 {
+    public struct Enumerator(LuaTable table)
+    {
+        readonly LuaTable table = table;
+        bool started = false;
+        KeyValuePair<LuaValue, LuaValue> current;
+        public KeyValuePair<LuaValue, LuaValue> Current => current;
+
+        public bool MoveNext()
+        {
+            if (!started)
+            {
+                table.Handle.State.PushNil();
+                started = true;
+            }
+            else
+            {
+                table.Handle.State.Pop(1);
+            }
+
+            table.Handle.State.Next(table.Handle.Index);
+            if (table.Handle.State.GetType(-2) == LuaType.Nil)
+            {
+                return false;
+            }
+
+            var key = table.Handle.State.ToLuaValue(-2);
+            var value = table.Handle.State.ToLuaValue(-1);
+            current = new KeyValuePair<LuaValue, LuaValue>(key, value);
+            return true;
+        }
+    }
+
     public LuaObjectHandle Handle => new(state, index);
 
     public LuaValue this[int index]
@@ -83,4 +115,11 @@ public sealed class LuaTable(ILuaState state, int index) : ILuaObject
             return length;
         }
     }
+
+    public void Next()
+    {
+        Handle.State.Next(Handle.Index);
+    }
+
+    public Enumerator GetEnumerator() => new(this);
 }
