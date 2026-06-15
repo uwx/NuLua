@@ -19,466 +19,466 @@ namespace NuLua.Interop.Lua54
 
 
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_newstate", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_newstate", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern lua_State* lua_newstate(delegate* unmanaged[Cdecl]<void*, void*, nuint, nuint, void*> f, void* ud);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_close", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_close", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void lua_close(lua_State* L);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_newthread", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_newthread", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern lua_State* lua_newthread(lua_State* L);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_closethread", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_closethread", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_closethread(lua_State* L, lua_State* from);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_resetthread", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_resetthread", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_resetthread(lua_State* L);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_atpanic", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_atpanic", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern delegate* unmanaged[Cdecl]<lua_State*, int> lua_atpanic(lua_State* L, delegate* unmanaged[Cdecl]<lua_State*, int> panicf);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_version", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_version", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern double lua_version(lua_State* L);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_absindex", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_absindex", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_absindex(lua_State* L, int idx);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_gettop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_gettop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_gettop(lua_State* L);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_settop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_settop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void lua_settop(lua_State* L, int idx);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_pushvalue", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_pushvalue", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void lua_pushvalue(lua_State* L, int idx);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_rotate", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_rotate", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void lua_rotate(lua_State* L, int idx, int n);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_copy", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_copy", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void lua_copy(lua_State* L, int fromidx, int toidx);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_checkstack", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_checkstack", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_checkstack(lua_State* L, int n);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_xmove", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_xmove", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void lua_xmove(lua_State* from, lua_State* to, int n);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_isnumber", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_isnumber", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_isnumber(lua_State* L, int idx);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_isstring", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_isstring", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_isstring(lua_State* L, int idx);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_iscfunction", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_iscfunction", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_iscfunction(lua_State* L, int idx);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_isinteger", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_isinteger", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_isinteger(lua_State* L, int idx);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_isuserdata", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_isuserdata", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_isuserdata(lua_State* L, int idx);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_type", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_type", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_type(lua_State* L, int idx);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_typename", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_typename", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern byte* lua_typename(lua_State* L, int tp);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_tonumberx", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_tonumberx", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern double lua_tonumberx(lua_State* L, int idx, int* isnum);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_tointegerx", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_tointegerx", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern long lua_tointegerx(lua_State* L, int idx, int* isnum);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_toboolean", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_toboolean", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_toboolean(lua_State* L, int idx);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_tolstring", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_tolstring", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern byte* lua_tolstring(lua_State* L, int idx, nuint* len);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_rawlen", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_rawlen", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern ulong lua_rawlen(lua_State* L, int idx);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_tocfunction", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_tocfunction", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern delegate* unmanaged[Cdecl]<lua_State*, int> lua_tocfunction(lua_State* L, int idx);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_touserdata", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_touserdata", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void* lua_touserdata(lua_State* L, int idx);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_tothread", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_tothread", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern lua_State* lua_tothread(lua_State* L, int idx);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_topointer", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_topointer", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void* lua_topointer(lua_State* L, int idx);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_arith", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_arith", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void lua_arith(lua_State* L, int op);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_rawequal", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_rawequal", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_rawequal(lua_State* L, int idx1, int idx2);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_compare", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_compare", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_compare(lua_State* L, int idx1, int idx2, int op);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_pushnil", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_pushnil", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void lua_pushnil(lua_State* L);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_pushnumber", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_pushnumber", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void lua_pushnumber(lua_State* L, double n);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_pushinteger", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_pushinteger", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void lua_pushinteger(lua_State* L, long n);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_pushlstring", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_pushlstring", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern byte* lua_pushlstring(lua_State* L, byte* s, nuint len);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_pushstring", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_pushstring", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern byte* lua_pushstring(lua_State* L, byte* s);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_pushvfstring", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_pushvfstring", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern byte* lua_pushvfstring(lua_State* L, byte* fmt, byte* argp);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_pushfstring", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_pushfstring", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern byte* lua_pushfstring(lua_State* L, byte* fmt);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_pushcclosure", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_pushcclosure", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void lua_pushcclosure(lua_State* L, delegate* unmanaged[Cdecl]<lua_State*, int> fn_, int n);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_pushboolean", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_pushboolean", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void lua_pushboolean(lua_State* L, int b);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_pushlightuserdata", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_pushlightuserdata", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void lua_pushlightuserdata(lua_State* L, void* p);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_pushthread", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_pushthread", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_pushthread(lua_State* L);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_getglobal", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_getglobal", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_getglobal(lua_State* L, byte* name);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_gettable", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_gettable", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_gettable(lua_State* L, int idx);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_getfield", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_getfield", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_getfield(lua_State* L, int idx, byte* k);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_geti", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_geti", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_geti(lua_State* L, int idx, long n);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_rawget", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_rawget", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_rawget(lua_State* L, int idx);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_rawgeti", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_rawgeti", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_rawgeti(lua_State* L, int idx, long n);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_rawgetp", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_rawgetp", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_rawgetp(lua_State* L, int idx, void* p);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_createtable", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_createtable", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void lua_createtable(lua_State* L, int narr, int nrec);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_newuserdatauv", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_newuserdatauv", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void* lua_newuserdatauv(lua_State* L, nuint sz, int nuvalue);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_getmetatable", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_getmetatable", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_getmetatable(lua_State* L, int objindex);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_getiuservalue", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_getiuservalue", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_getiuservalue(lua_State* L, int idx, int n);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_setglobal", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_setglobal", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void lua_setglobal(lua_State* L, byte* name);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_settable", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_settable", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void lua_settable(lua_State* L, int idx);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_setfield", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_setfield", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void lua_setfield(lua_State* L, int idx, byte* k);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_seti", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_seti", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void lua_seti(lua_State* L, int idx, long n);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_rawset", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_rawset", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void lua_rawset(lua_State* L, int idx);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_rawseti", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_rawseti", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void lua_rawseti(lua_State* L, int idx, long n);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_rawsetp", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_rawsetp", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void lua_rawsetp(lua_State* L, int idx, void* p);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_setmetatable", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_setmetatable", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_setmetatable(lua_State* L, int objindex);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_setiuservalue", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_setiuservalue", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_setiuservalue(lua_State* L, int idx, int n);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_callk", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_callk", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void lua_callk(lua_State* L, int nargs, int nresults, nint ctx, delegate* unmanaged[Cdecl]<lua_State*, int, nint, int> k);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_pcallk", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_pcallk", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_pcallk(lua_State* L, int nargs, int nresults, int errfunc, nint ctx, delegate* unmanaged[Cdecl]<lua_State*, int, nint, int> k);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_load", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_load", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_load(lua_State* L, delegate* unmanaged[Cdecl]<lua_State*, void*, nuint*, byte*> reader, void* dt, byte* chunkname, byte* mode);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_dump", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_dump", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_dump(lua_State* L, delegate* unmanaged[Cdecl]<lua_State*, void*, nuint, void*, int> writer, void* data, int strip);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_yieldk", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_yieldk", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_yieldk(lua_State* L, int nresults, nint ctx, delegate* unmanaged[Cdecl]<lua_State*, int, nint, int> k);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_resume", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_resume", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_resume(lua_State* L, lua_State* from, int narg, int* nres);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_status", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_status", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_status(lua_State* L);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_isyieldable", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_isyieldable", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_isyieldable(lua_State* L);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_setwarnf", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_setwarnf", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void lua_setwarnf(lua_State* L, delegate* unmanaged[Cdecl]<void*, byte*, int, void> f, void* ud);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_warning", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_warning", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void lua_warning(lua_State* L, byte* msg, int tocont);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_gc", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_gc", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_gc(lua_State* L, int what);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_error", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_error", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_error(lua_State* L);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_next", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_next", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_next(lua_State* L, int idx);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_concat", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_concat", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void lua_concat(lua_State* L, int n);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_len", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_len", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void lua_len(lua_State* L, int idx);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_stringtonumber", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_stringtonumber", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern nuint lua_stringtonumber(lua_State* L, byte* s);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_getallocf", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_getallocf", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern delegate* unmanaged[Cdecl]<void*, void*, nuint, nuint, void*> lua_getallocf(lua_State* L, void** ud);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_setallocf", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_setallocf", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void lua_setallocf(lua_State* L, delegate* unmanaged[Cdecl]<void*, void*, nuint, nuint, void*> f, void* ud);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_toclose", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_toclose", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void lua_toclose(lua_State* L, int idx);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_closeslot", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_closeslot", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void lua_closeslot(lua_State* L, int idx);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_getstack", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_getstack", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_getstack(lua_State* L, int level, lua_Debug* ar);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_getinfo", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_getinfo", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_getinfo(lua_State* L, byte* what, lua_Debug* ar);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_getlocal", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_getlocal", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern byte* lua_getlocal(lua_State* L, lua_Debug* ar, int n);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_setlocal", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_setlocal", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern byte* lua_setlocal(lua_State* L, lua_Debug* ar, int n);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_getupvalue", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_getupvalue", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern byte* lua_getupvalue(lua_State* L, int funcindex, int n);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_setupvalue", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_setupvalue", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern byte* lua_setupvalue(lua_State* L, int funcindex, int n);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_upvalueid", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_upvalueid", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void* lua_upvalueid(lua_State* L, int fidx, int n);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_upvaluejoin", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_upvaluejoin", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void lua_upvaluejoin(lua_State* L, int fidx1, int n1, int fidx2, int n2);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_sethook", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_sethook", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void lua_sethook(lua_State* L, delegate* unmanaged[Cdecl]<lua_State*, lua_Debug*, void> func, int mask, int count);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_gethook", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_gethook", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern delegate* unmanaged[Cdecl]<lua_State*, lua_Debug*, void> lua_gethook(lua_State* L);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_gethookmask", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_gethookmask", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_gethookmask(lua_State* L);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_gethookcount", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_gethookcount", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_gethookcount(lua_State* L);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenlua_setcstacklimit", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_lua_setcstacklimit", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_setcstacklimit(lua_State* L, uint limit);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaopen_base", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaopen_base", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int luaopen_base(lua_State* L);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaopen_coroutine", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaopen_coroutine", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int luaopen_coroutine(lua_State* L);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaopen_table", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaopen_table", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int luaopen_table(lua_State* L);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaopen_io", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaopen_io", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int luaopen_io(lua_State* L);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaopen_os", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaopen_os", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int luaopen_os(lua_State* L);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaopen_string", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaopen_string", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int luaopen_string(lua_State* L);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaopen_utf8", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaopen_utf8", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int luaopen_utf8(lua_State* L);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaopen_math", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaopen_math", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int luaopen_math(lua_State* L);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaopen_debug", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaopen_debug", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int luaopen_debug(lua_State* L);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaopen_package", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaopen_package", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int luaopen_package(lua_State* L);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_openlibs", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_openlibs", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void luaL_openlibs(lua_State* L);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_checkversion_", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_checkversion_", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void luaL_checkversion_(lua_State* L, double ver, nuint sz);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_getmetafield", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_getmetafield", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int luaL_getmetafield(lua_State* L, int obj, byte* e);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_callmeta", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_callmeta", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int luaL_callmeta(lua_State* L, int obj, byte* e);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_tolstring", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_tolstring", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern byte* luaL_tolstring(lua_State* L, int idx, nuint* len);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_argerror", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_argerror", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int luaL_argerror(lua_State* L, int arg, byte* extramsg);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_typeerror", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_typeerror", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int luaL_typeerror(lua_State* L, int arg, byte* tname);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_checklstring", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_checklstring", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern byte* luaL_checklstring(lua_State* L, int arg, nuint* l);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_optlstring", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_optlstring", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern byte* luaL_optlstring(lua_State* L, int arg, byte* def, nuint* l);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_checknumber", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_checknumber", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern double luaL_checknumber(lua_State* L, int arg);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_optnumber", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_optnumber", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern double luaL_optnumber(lua_State* L, int arg, double def);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_checkinteger", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_checkinteger", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern long luaL_checkinteger(lua_State* L, int arg);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_optinteger", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_optinteger", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern long luaL_optinteger(lua_State* L, int arg, long def);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_checkstack", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_checkstack", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void luaL_checkstack(lua_State* L, int sz, byte* msg);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_checktype", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_checktype", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void luaL_checktype(lua_State* L, int arg, int t);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_checkany", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_checkany", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void luaL_checkany(lua_State* L, int arg);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_newmetatable", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_newmetatable", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int luaL_newmetatable(lua_State* L, byte* tname);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_setmetatable", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_setmetatable", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void luaL_setmetatable(lua_State* L, byte* tname);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_testudata", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_testudata", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void* luaL_testudata(lua_State* L, int ud, byte* tname);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_checkudata", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_checkudata", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void* luaL_checkudata(lua_State* L, int ud, byte* tname);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_where", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_where", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void luaL_where(lua_State* L, int lvl);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_error", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_error", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int luaL_error(lua_State* L, byte* fmt);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_checkoption", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_checkoption", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int luaL_checkoption(lua_State* L, int arg, byte* def, byte** lst);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_fileresult", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_fileresult", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int luaL_fileresult(lua_State* L, int stat, byte* fname);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_execresult", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_execresult", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int luaL_execresult(lua_State* L, int stat);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_ref", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_ref", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int luaL_ref(lua_State* L, int t);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_unref", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_unref", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void luaL_unref(lua_State* L, int t, int ref_);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_loadfilex", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_loadfilex", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int luaL_loadfilex(lua_State* L, byte* filename, byte* mode);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_loadbufferx", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_loadbufferx", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int luaL_loadbufferx(lua_State* L, byte* buff, nuint sz, byte* name, byte* mode);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_loadstring", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_loadstring", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int luaL_loadstring(lua_State* L, byte* s);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_newstate", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_newstate", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern lua_State* luaL_newstate();
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_len", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_len", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern long luaL_len(lua_State* L, int idx);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_addgsub", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_addgsub", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void luaL_addgsub(luaL_Buffer* b, byte* s, byte* p, byte* r);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_gsub", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_gsub", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern byte* luaL_gsub(lua_State* L, byte* s, byte* p, byte* r);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_setfuncs", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_setfuncs", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void luaL_setfuncs(lua_State* L, luaL_Reg* l, int nup);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_getsubtable", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_getsubtable", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int luaL_getsubtable(lua_State* L, int idx, byte* fname);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_traceback", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_traceback", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void luaL_traceback(lua_State* L, lua_State* L1, byte* msg, int level);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_requiref", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_requiref", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void luaL_requiref(lua_State* L, byte* modname, delegate* unmanaged[Cdecl]<lua_State*, int> openf, int glb);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_buffinit", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_buffinit", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void luaL_buffinit(lua_State* L, luaL_Buffer* B);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_prepbuffsize", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_prepbuffsize", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern byte* luaL_prepbuffsize(luaL_Buffer* B, nuint sz);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_addlstring", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_addlstring", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void luaL_addlstring(luaL_Buffer* B, byte* s, nuint l);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_addstring", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_addstring", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void luaL_addstring(luaL_Buffer* B, byte* s);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_addvalue", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_addvalue", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void luaL_addvalue(luaL_Buffer* B);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_pushresult", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_pushresult", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void luaL_pushresult(luaL_Buffer* B);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_pushresultsize", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_pushresultsize", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void luaL_pushresultsize(luaL_Buffer* B, nuint sz);
 
-        [DllImport(__DllName, EntryPoint = "csbindgenluaL_buffinitsize", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        [DllImport(__DllName, EntryPoint = "csbindgen_luaL_buffinitsize", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern byte* luaL_buffinitsize(lua_State* L, luaL_Buffer* B, nuint sz);
 
 

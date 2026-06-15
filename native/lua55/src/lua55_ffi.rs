@@ -5,190 +5,397 @@ use ::std::os::raw::*;
 
 use crate::lua55::*;
 
+
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_lua_newstate(
     f: lua_Alloc,
     ud: *mut c_void,
-    seed: c_uint,
-) -> *mut lua_State {
-    lua_newstate(f, ud, seed)
+    seed: c_uint
+) -> *mut lua_State
+{
+    lua_newstate(
+        f,
+        ud,
+        seed
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_close(L: *mut lua_State) {
-    lua_close(L)
+pub unsafe extern "C" fn csbindgen_lua_close(
+    L: *mut lua_State
+)
+{
+    lua_close(
+        L
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_newthread(L: *mut lua_State) -> *mut lua_State {
-    lua_newthread(L)
+pub unsafe extern "C" fn csbindgen_lua_newthread(
+    L: *mut lua_State
+) -> *mut lua_State
+{
+    lua_newthread(
+        L
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_lua_closethread(
     L: *mut lua_State,
-    from: *mut lua_State,
-) -> c_int {
-    lua_closethread(L, from)
+    from: *mut lua_State
+) -> c_int
+{
+    lua_closethread(
+        L,
+        from
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_lua_atpanic(
     L: *mut lua_State,
-    panicf: lua_CFunction,
-) -> lua_CFunction {
-    lua_atpanic(L, panicf)
+    panicf: lua_CFunction
+) -> lua_CFunction
+{
+    lua_atpanic(
+        L,
+        panicf
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_version(L: *mut lua_State) -> lua_Number {
-    lua_version(L)
+pub unsafe extern "C" fn csbindgen_lua_version(
+    L: *mut lua_State
+) -> lua_Number
+{
+    lua_version(
+        L
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_absindex(L: *mut lua_State, idx: c_int) -> c_int {
-    lua_absindex(L, idx)
+pub unsafe extern "C" fn csbindgen_lua_absindex(
+    L: *mut lua_State,
+    idx: c_int
+) -> c_int
+{
+    lua_absindex(
+        L,
+        idx
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_gettop(L: *mut lua_State) -> c_int {
-    lua_gettop(L)
+pub unsafe extern "C" fn csbindgen_lua_gettop(
+    L: *mut lua_State
+) -> c_int
+{
+    lua_gettop(
+        L
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_settop(L: *mut lua_State, idx: c_int) {
-    lua_settop(L, idx)
+pub unsafe extern "C" fn csbindgen_lua_settop(
+    L: *mut lua_State,
+    idx: c_int
+)
+{
+    lua_settop(
+        L,
+        idx
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_pushvalue(L: *mut lua_State, idx: c_int) {
-    lua_pushvalue(L, idx)
+pub unsafe extern "C" fn csbindgen_lua_pushvalue(
+    L: *mut lua_State,
+    idx: c_int
+)
+{
+    lua_pushvalue(
+        L,
+        idx
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_rotate(L: *mut lua_State, idx: c_int, n: c_int) {
-    lua_rotate(L, idx, n)
+pub unsafe extern "C" fn csbindgen_lua_rotate(
+    L: *mut lua_State,
+    idx: c_int,
+    n: c_int
+)
+{
+    lua_rotate(
+        L,
+        idx,
+        n
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_copy(L: *mut lua_State, fromidx: c_int, toidx: c_int) {
-    lua_copy(L, fromidx, toidx)
+pub unsafe extern "C" fn csbindgen_lua_copy(
+    L: *mut lua_State,
+    fromidx: c_int,
+    toidx: c_int
+)
+{
+    lua_copy(
+        L,
+        fromidx,
+        toidx
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_checkstack(L: *mut lua_State, n: c_int) -> c_int {
-    lua_checkstack(L, n)
+pub unsafe extern "C" fn csbindgen_lua_checkstack(
+    L: *mut lua_State,
+    n: c_int
+) -> c_int
+{
+    lua_checkstack(
+        L,
+        n
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_xmove(from: *mut lua_State, to: *mut lua_State, n: c_int) {
-    lua_xmove(from, to, n)
+pub unsafe extern "C" fn csbindgen_lua_xmove(
+    from: *mut lua_State,
+    to: *mut lua_State,
+    n: c_int
+)
+{
+    lua_xmove(
+        from,
+        to,
+        n
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_isnumber(L: *mut lua_State, idx: c_int) -> c_int {
-    lua_isnumber(L, idx)
+pub unsafe extern "C" fn csbindgen_lua_isnumber(
+    L: *mut lua_State,
+    idx: c_int
+) -> c_int
+{
+    lua_isnumber(
+        L,
+        idx
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_isstring(L: *mut lua_State, idx: c_int) -> c_int {
-    lua_isstring(L, idx)
+pub unsafe extern "C" fn csbindgen_lua_isstring(
+    L: *mut lua_State,
+    idx: c_int
+) -> c_int
+{
+    lua_isstring(
+        L,
+        idx
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_iscfunction(L: *mut lua_State, idx: c_int) -> c_int {
-    lua_iscfunction(L, idx)
+pub unsafe extern "C" fn csbindgen_lua_iscfunction(
+    L: *mut lua_State,
+    idx: c_int
+) -> c_int
+{
+    lua_iscfunction(
+        L,
+        idx
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_isinteger(L: *mut lua_State, idx: c_int) -> c_int {
-    lua_isinteger(L, idx)
+pub unsafe extern "C" fn csbindgen_lua_isinteger(
+    L: *mut lua_State,
+    idx: c_int
+) -> c_int
+{
+    lua_isinteger(
+        L,
+        idx
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_isuserdata(L: *mut lua_State, idx: c_int) -> c_int {
-    lua_isuserdata(L, idx)
+pub unsafe extern "C" fn csbindgen_lua_isuserdata(
+    L: *mut lua_State,
+    idx: c_int
+) -> c_int
+{
+    lua_isuserdata(
+        L,
+        idx
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_type(L: *mut lua_State, idx: c_int) -> c_int {
-    lua_type(L, idx)
+pub unsafe extern "C" fn csbindgen_lua_type(
+    L: *mut lua_State,
+    idx: c_int
+) -> c_int
+{
+    lua_type(
+        L,
+        idx
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_typename(L: *mut lua_State, tp: c_int) -> *const c_char {
-    lua_typename(L, tp)
+pub unsafe extern "C" fn csbindgen_lua_typename(
+    L: *mut lua_State,
+    tp: c_int
+) -> *const c_char
+{
+    lua_typename(
+        L,
+        tp
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_lua_tonumberx(
     L: *mut lua_State,
     idx: c_int,
-    isnum: *mut c_int,
-) -> lua_Number {
-    lua_tonumberx(L, idx, isnum)
+    isnum: *mut c_int
+) -> lua_Number
+{
+    lua_tonumberx(
+        L,
+        idx,
+        isnum
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_lua_tointegerx(
     L: *mut lua_State,
     idx: c_int,
-    isnum: *mut c_int,
-) -> lua_Integer {
-    lua_tointegerx(L, idx, isnum)
+    isnum: *mut c_int
+) -> lua_Integer
+{
+    lua_tointegerx(
+        L,
+        idx,
+        isnum
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_toboolean(L: *mut lua_State, idx: c_int) -> c_int {
-    lua_toboolean(L, idx)
+pub unsafe extern "C" fn csbindgen_lua_toboolean(
+    L: *mut lua_State,
+    idx: c_int
+) -> c_int
+{
+    lua_toboolean(
+        L,
+        idx
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_lua_tolstring(
     L: *mut lua_State,
     idx: c_int,
-    len: *mut usize,
-) -> *const c_char {
-    lua_tolstring(L, idx, len)
+    len: *mut usize
+) -> *const c_char
+{
+    lua_tolstring(
+        L,
+        idx,
+        len
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_rawlen(L: *mut lua_State, idx: c_int) -> lua_Unsigned {
-    lua_rawlen(L, idx)
+pub unsafe extern "C" fn csbindgen_lua_rawlen(
+    L: *mut lua_State,
+    idx: c_int
+) -> lua_Unsigned
+{
+    lua_rawlen(
+        L,
+        idx
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_tocfunction(L: *mut lua_State, idx: c_int) -> lua_CFunction {
-    lua_tocfunction(L, idx)
+pub unsafe extern "C" fn csbindgen_lua_tocfunction(
+    L: *mut lua_State,
+    idx: c_int
+) -> lua_CFunction
+{
+    lua_tocfunction(
+        L,
+        idx
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_touserdata(L: *mut lua_State, idx: c_int) -> *mut c_void {
-    lua_touserdata(L, idx)
+pub unsafe extern "C" fn csbindgen_lua_touserdata(
+    L: *mut lua_State,
+    idx: c_int
+) -> *mut c_void
+{
+    lua_touserdata(
+        L,
+        idx
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_tothread(L: *mut lua_State, idx: c_int) -> *mut lua_State {
-    lua_tothread(L, idx)
+pub unsafe extern "C" fn csbindgen_lua_tothread(
+    L: *mut lua_State,
+    idx: c_int
+) -> *mut lua_State
+{
+    lua_tothread(
+        L,
+        idx
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_topointer(L: *mut lua_State, idx: c_int) -> *const c_void {
-    lua_topointer(L, idx)
+pub unsafe extern "C" fn csbindgen_lua_topointer(
+    L: *mut lua_State,
+    idx: c_int
+) -> *const c_void
+{
+    lua_topointer(
+        L,
+        idx
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_arith(L: *mut lua_State, op: c_int) {
-    lua_arith(L, op)
+pub unsafe extern "C" fn csbindgen_lua_arith(
+    L: *mut lua_State,
+    op: c_int
+)
+{
+    lua_arith(
+        L,
+        op
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_lua_rawequal(
     L: *mut lua_State,
     idx1: c_int,
-    idx2: c_int,
-) -> c_int {
-    lua_rawequal(L, idx1, idx2)
+    idx2: c_int
+) -> c_int
+{
+    lua_rawequal(
+        L,
+        idx1,
+        idx2
+    )
 }
 
 #[no_mangle]
@@ -196,33 +403,63 @@ pub unsafe extern "C" fn csbindgen_lua_compare(
     L: *mut lua_State,
     idx1: c_int,
     idx2: c_int,
-    op: c_int,
-) -> c_int {
-    lua_compare(L, idx1, idx2, op)
+    op: c_int
+) -> c_int
+{
+    lua_compare(
+        L,
+        idx1,
+        idx2,
+        op
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_pushnil(L: *mut lua_State) {
-    lua_pushnil(L)
+pub unsafe extern "C" fn csbindgen_lua_pushnil(
+    L: *mut lua_State
+)
+{
+    lua_pushnil(
+        L
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_pushnumber(L: *mut lua_State, n: lua_Number) {
-    lua_pushnumber(L, n)
+pub unsafe extern "C" fn csbindgen_lua_pushnumber(
+    L: *mut lua_State,
+    n: lua_Number
+)
+{
+    lua_pushnumber(
+        L,
+        n
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_pushinteger(L: *mut lua_State, n: lua_Integer) {
-    lua_pushinteger(L, n)
+pub unsafe extern "C" fn csbindgen_lua_pushinteger(
+    L: *mut lua_State,
+    n: lua_Integer
+)
+{
+    lua_pushinteger(
+        L,
+        n
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_lua_pushlstring(
     L: *mut lua_State,
     s: *const c_char,
-    len: usize,
-) -> *const c_char {
-    lua_pushlstring(L, s, len)
+    len: usize
+) -> *const c_char
+{
+    lua_pushlstring(
+        L,
+        s,
+        len
+    )
 }
 
 #[no_mangle]
@@ -231,186 +468,366 @@ pub unsafe extern "C" fn csbindgen_lua_pushexternalstring(
     s: *const c_char,
     len: usize,
     falloc: lua_Alloc,
-    ud: *mut c_void,
-) -> *const c_char {
-    lua_pushexternalstring(L, s, len, falloc, ud)
+    ud: *mut c_void
+) -> *const c_char
+{
+    lua_pushexternalstring(
+        L,
+        s,
+        len,
+        falloc,
+        ud
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_lua_pushstring(
     L: *mut lua_State,
-    s: *const c_char,
-) -> *const c_char {
-    lua_pushstring(L, s)
+    s: *const c_char
+) -> *const c_char
+{
+    lua_pushstring(
+        L,
+        s
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_lua_pushvfstring(
     L: *mut lua_State,
     fmt: *const c_char,
-    argp: va_list,
-) -> *const c_char {
-    lua_pushvfstring(L, fmt, argp)
+    argp: va_list
+) -> *const c_char
+{
+    lua_pushvfstring(
+        L,
+        fmt,
+        argp
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_lua_pushfstring(
     L: *mut lua_State,
-    fmt: *const c_char,
-) -> *const c_char {
-    lua_pushfstring(L, fmt)
+    fmt: *const c_char
+) -> *const c_char
+{
+    lua_pushfstring(
+        L,
+        fmt
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_lua_pushcclosure(
     L: *mut lua_State,
     fn_: lua_CFunction,
-    n: c_int,
-) {
-    lua_pushcclosure(L, fn_, n)
+    n: c_int
+)
+{
+    lua_pushcclosure(
+        L,
+        fn_,
+        n
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_pushboolean(L: *mut lua_State, b: c_int) {
-    lua_pushboolean(L, b)
+pub unsafe extern "C" fn csbindgen_lua_pushboolean(
+    L: *mut lua_State,
+    b: c_int
+)
+{
+    lua_pushboolean(
+        L,
+        b
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_pushlightuserdata(L: *mut lua_State, p: *mut c_void) {
-    lua_pushlightuserdata(L, p)
+pub unsafe extern "C" fn csbindgen_lua_pushlightuserdata(
+    L: *mut lua_State,
+    p: *mut c_void
+)
+{
+    lua_pushlightuserdata(
+        L,
+        p
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_pushthread(L: *mut lua_State) -> c_int {
-    lua_pushthread(L)
+pub unsafe extern "C" fn csbindgen_lua_pushthread(
+    L: *mut lua_State
+) -> c_int
+{
+    lua_pushthread(
+        L
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_getglobal(L: *mut lua_State, name: *const c_char) -> c_int {
-    lua_getglobal(L, name)
+pub unsafe extern "C" fn csbindgen_lua_getglobal(
+    L: *mut lua_State,
+    name: *const c_char
+) -> c_int
+{
+    lua_getglobal(
+        L,
+        name
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_gettable(L: *mut lua_State, idx: c_int) -> c_int {
-    lua_gettable(L, idx)
+pub unsafe extern "C" fn csbindgen_lua_gettable(
+    L: *mut lua_State,
+    idx: c_int
+) -> c_int
+{
+    lua_gettable(
+        L,
+        idx
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_lua_getfield(
     L: *mut lua_State,
     idx: c_int,
-    k: *const c_char,
-) -> c_int {
-    lua_getfield(L, idx, k)
+    k: *const c_char
+) -> c_int
+{
+    lua_getfield(
+        L,
+        idx,
+        k
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_lua_geti(
     L: *mut lua_State,
     idx: c_int,
-    n: lua_Integer,
-) -> c_int {
-    lua_geti(L, idx, n)
+    n: lua_Integer
+) -> c_int
+{
+    lua_geti(
+        L,
+        idx,
+        n
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_rawget(L: *mut lua_State, idx: c_int) -> c_int {
-    lua_rawget(L, idx)
+pub unsafe extern "C" fn csbindgen_lua_rawget(
+    L: *mut lua_State,
+    idx: c_int
+) -> c_int
+{
+    lua_rawget(
+        L,
+        idx
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_lua_rawgeti(
     L: *mut lua_State,
     idx: c_int,
-    n: lua_Integer,
-) -> c_int {
-    lua_rawgeti(L, idx, n)
+    n: lua_Integer
+) -> c_int
+{
+    lua_rawgeti(
+        L,
+        idx,
+        n
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_lua_rawgetp(
     L: *mut lua_State,
     idx: c_int,
-    p: *const c_void,
-) -> c_int {
-    lua_rawgetp(L, idx, p)
+    p: *const c_void
+) -> c_int
+{
+    lua_rawgetp(
+        L,
+        idx,
+        p
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_createtable(L: *mut lua_State, narr: c_int, nrec: c_int) {
-    lua_createtable(L, narr, nrec)
+pub unsafe extern "C" fn csbindgen_lua_createtable(
+    L: *mut lua_State,
+    narr: c_int,
+    nrec: c_int
+)
+{
+    lua_createtable(
+        L,
+        narr,
+        nrec
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_lua_newuserdatauv(
     L: *mut lua_State,
     sz: usize,
-    nuvalue: c_int,
-) -> *mut c_void {
-    lua_newuserdatauv(L, sz, nuvalue)
+    nuvalue: c_int
+) -> *mut c_void
+{
+    lua_newuserdatauv(
+        L,
+        sz,
+        nuvalue
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_getmetatable(L: *mut lua_State, objindex: c_int) -> c_int {
-    lua_getmetatable(L, objindex)
+pub unsafe extern "C" fn csbindgen_lua_getmetatable(
+    L: *mut lua_State,
+    objindex: c_int
+) -> c_int
+{
+    lua_getmetatable(
+        L,
+        objindex
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_lua_getiuservalue(
     L: *mut lua_State,
     idx: c_int,
-    n: c_int,
-) -> c_int {
-    lua_getiuservalue(L, idx, n)
+    n: c_int
+) -> c_int
+{
+    lua_getiuservalue(
+        L,
+        idx,
+        n
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_setglobal(L: *mut lua_State, name: *const c_char) {
-    lua_setglobal(L, name)
+pub unsafe extern "C" fn csbindgen_lua_setglobal(
+    L: *mut lua_State,
+    name: *const c_char
+)
+{
+    lua_setglobal(
+        L,
+        name
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_settable(L: *mut lua_State, idx: c_int) {
-    lua_settable(L, idx)
+pub unsafe extern "C" fn csbindgen_lua_settable(
+    L: *mut lua_State,
+    idx: c_int
+)
+{
+    lua_settable(
+        L,
+        idx
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_setfield(L: *mut lua_State, idx: c_int, k: *const c_char) {
-    lua_setfield(L, idx, k)
+pub unsafe extern "C" fn csbindgen_lua_setfield(
+    L: *mut lua_State,
+    idx: c_int,
+    k: *const c_char
+)
+{
+    lua_setfield(
+        L,
+        idx,
+        k
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_seti(L: *mut lua_State, idx: c_int, n: lua_Integer) {
-    lua_seti(L, idx, n)
+pub unsafe extern "C" fn csbindgen_lua_seti(
+    L: *mut lua_State,
+    idx: c_int,
+    n: lua_Integer
+)
+{
+    lua_seti(
+        L,
+        idx,
+        n
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_rawset(L: *mut lua_State, idx: c_int) {
-    lua_rawset(L, idx)
+pub unsafe extern "C" fn csbindgen_lua_rawset(
+    L: *mut lua_State,
+    idx: c_int
+)
+{
+    lua_rawset(
+        L,
+        idx
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_rawseti(L: *mut lua_State, idx: c_int, n: lua_Integer) {
-    lua_rawseti(L, idx, n)
+pub unsafe extern "C" fn csbindgen_lua_rawseti(
+    L: *mut lua_State,
+    idx: c_int,
+    n: lua_Integer
+)
+{
+    lua_rawseti(
+        L,
+        idx,
+        n
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_rawsetp(L: *mut lua_State, idx: c_int, p: *const c_void) {
-    lua_rawsetp(L, idx, p)
+pub unsafe extern "C" fn csbindgen_lua_rawsetp(
+    L: *mut lua_State,
+    idx: c_int,
+    p: *const c_void
+)
+{
+    lua_rawsetp(
+        L,
+        idx,
+        p
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_setmetatable(L: *mut lua_State, objindex: c_int) -> c_int {
-    lua_setmetatable(L, objindex)
+pub unsafe extern "C" fn csbindgen_lua_setmetatable(
+    L: *mut lua_State,
+    objindex: c_int
+) -> c_int
+{
+    lua_setmetatable(
+        L,
+        objindex
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_lua_setiuservalue(
     L: *mut lua_State,
     idx: c_int,
-    n: c_int,
-) -> c_int {
-    lua_setiuservalue(L, idx, n)
+    n: c_int
+) -> c_int
+{
+    lua_setiuservalue(
+        L,
+        idx,
+        n
+    )
 }
 
 #[no_mangle]
@@ -419,9 +836,16 @@ pub unsafe extern "C" fn csbindgen_lua_callk(
     nargs: c_int,
     nresults: c_int,
     ctx: lua_KContext,
-    k: lua_KFunction,
-) {
-    lua_callk(L, nargs, nresults, ctx, k)
+    k: lua_KFunction
+)
+{
+    lua_callk(
+        L,
+        nargs,
+        nresults,
+        ctx,
+        k
+    )
 }
 
 #[no_mangle]
@@ -431,9 +855,17 @@ pub unsafe extern "C" fn csbindgen_lua_pcallk(
     nresults: c_int,
     errfunc: c_int,
     ctx: lua_KContext,
-    k: lua_KFunction,
-) -> c_int {
-    lua_pcallk(L, nargs, nresults, errfunc, ctx, k)
+    k: lua_KFunction
+) -> c_int
+{
+    lua_pcallk(
+        L,
+        nargs,
+        nresults,
+        errfunc,
+        ctx,
+        k
+    )
 }
 
 #[no_mangle]
@@ -442,9 +874,16 @@ pub unsafe extern "C" fn csbindgen_lua_load(
     reader: lua_Reader,
     dt: *mut c_void,
     chunkname: *const c_char,
-    mode: *const c_char,
-) -> c_int {
-    lua_load(L, reader, dt, chunkname, mode)
+    mode: *const c_char
+) -> c_int
+{
+    lua_load(
+        L,
+        reader,
+        dt,
+        chunkname,
+        mode
+    )
 }
 
 #[no_mangle]
@@ -452,9 +891,15 @@ pub unsafe extern "C" fn csbindgen_lua_dump(
     L: *mut lua_State,
     writer: lua_Writer,
     data: *mut c_void,
-    strip: c_int,
-) -> c_int {
-    lua_dump(L, writer, data, strip)
+    strip: c_int
+) -> c_int
+{
+    lua_dump(
+        L,
+        writer,
+        data,
+        strip
+    )
 }
 
 #[no_mangle]
@@ -462,9 +907,15 @@ pub unsafe extern "C" fn csbindgen_lua_yieldk(
     L: *mut lua_State,
     nresults: c_int,
     ctx: lua_KContext,
-    k: lua_KFunction,
-) -> c_int {
-    lua_yieldk(L, nresults, ctx, k)
+    k: lua_KFunction
+) -> c_int
+{
+    lua_yieldk(
+        L,
+        nresults,
+        ctx,
+        k
+    )
 }
 
 #[no_mangle]
@@ -472,165 +923,295 @@ pub unsafe extern "C" fn csbindgen_lua_resume(
     L: *mut lua_State,
     from: *mut lua_State,
     narg: c_int,
-    nres: *mut c_int,
-) -> c_int {
-    lua_resume(L, from, narg, nres)
+    nres: *mut c_int
+) -> c_int
+{
+    lua_resume(
+        L,
+        from,
+        narg,
+        nres
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_status(L: *mut lua_State) -> c_int {
-    lua_status(L)
+pub unsafe extern "C" fn csbindgen_lua_status(
+    L: *mut lua_State
+) -> c_int
+{
+    lua_status(
+        L
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_isyieldable(L: *mut lua_State) -> c_int {
-    lua_isyieldable(L)
+pub unsafe extern "C" fn csbindgen_lua_isyieldable(
+    L: *mut lua_State
+) -> c_int
+{
+    lua_isyieldable(
+        L
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_lua_setwarnf(
     L: *mut lua_State,
     f: lua_WarnFunction,
-    ud: *mut c_void,
-) {
-    lua_setwarnf(L, f, ud)
+    ud: *mut c_void
+)
+{
+    lua_setwarnf(
+        L,
+        f,
+        ud
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_lua_warning(
     L: *mut lua_State,
     msg: *const c_char,
-    tocont: c_int,
-) {
-    lua_warning(L, msg, tocont)
+    tocont: c_int
+)
+{
+    lua_warning(
+        L,
+        msg,
+        tocont
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_gc(L: *mut lua_State, what: c_int) -> c_int {
-    lua_gc(L, what)
+pub unsafe extern "C" fn csbindgen_lua_gc(
+    L: *mut lua_State,
+    what: c_int
+) -> c_int
+{
+    lua_gc(
+        L,
+        what
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_error(L: *mut lua_State) -> c_int {
-    lua_error(L)
+pub unsafe extern "C" fn csbindgen_lua_error(
+    L: *mut lua_State
+) -> c_int
+{
+    lua_error(
+        L
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_next(L: *mut lua_State, idx: c_int) -> c_int {
-    lua_next(L, idx)
+pub unsafe extern "C" fn csbindgen_lua_next(
+    L: *mut lua_State,
+    idx: c_int
+) -> c_int
+{
+    lua_next(
+        L,
+        idx
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_concat(L: *mut lua_State, n: c_int) {
-    lua_concat(L, n)
+pub unsafe extern "C" fn csbindgen_lua_concat(
+    L: *mut lua_State,
+    n: c_int
+)
+{
+    lua_concat(
+        L,
+        n
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_len(L: *mut lua_State, idx: c_int) {
-    lua_len(L, idx)
+pub unsafe extern "C" fn csbindgen_lua_len(
+    L: *mut lua_State,
+    idx: c_int
+)
+{
+    lua_len(
+        L,
+        idx
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_lua_numbertocstring(
     L: *mut lua_State,
     idx: c_int,
-    buff: *mut c_char,
-) -> c_uint {
-    lua_numbertocstring(L, idx, buff)
+    buff: *mut c_char
+) -> c_uint
+{
+    lua_numbertocstring(
+        L,
+        idx,
+        buff
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_lua_stringtonumber(
     L: *mut lua_State,
-    s: *const c_char,
-) -> usize {
-    lua_stringtonumber(L, s)
+    s: *const c_char
+) -> usize
+{
+    lua_stringtonumber(
+        L,
+        s
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_lua_getallocf(
     L: *mut lua_State,
-    ud: *mut *mut c_void,
-) -> lua_Alloc {
-    lua_getallocf(L, ud)
+    ud: *mut *mut c_void
+) -> lua_Alloc
+{
+    lua_getallocf(
+        L,
+        ud
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_setallocf(L: *mut lua_State, f: lua_Alloc, ud: *mut c_void) {
-    lua_setallocf(L, f, ud)
+pub unsafe extern "C" fn csbindgen_lua_setallocf(
+    L: *mut lua_State,
+    f: lua_Alloc,
+    ud: *mut c_void
+)
+{
+    lua_setallocf(
+        L,
+        f,
+        ud
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_toclose(L: *mut lua_State, idx: c_int) {
-    lua_toclose(L, idx)
+pub unsafe extern "C" fn csbindgen_lua_toclose(
+    L: *mut lua_State,
+    idx: c_int
+)
+{
+    lua_toclose(
+        L,
+        idx
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_closeslot(L: *mut lua_State, idx: c_int) {
-    lua_closeslot(L, idx)
+pub unsafe extern "C" fn csbindgen_lua_closeslot(
+    L: *mut lua_State,
+    idx: c_int
+)
+{
+    lua_closeslot(
+        L,
+        idx
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_lua_getstack(
     L: *mut lua_State,
     level: c_int,
-    ar: *mut lua_Debug,
-) -> c_int {
-    lua_getstack(L, level, ar)
+    ar: *mut lua_Debug
+) -> c_int
+{
+    lua_getstack(
+        L,
+        level,
+        ar
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_lua_getinfo(
     L: *mut lua_State,
     what: *const c_char,
-    ar: *mut lua_Debug,
-) -> c_int {
-    lua_getinfo(L, what, ar)
+    ar: *mut lua_Debug
+) -> c_int
+{
+    lua_getinfo(
+        L,
+        what,
+        ar
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_lua_getlocal(
     L: *mut lua_State,
     ar: *const lua_Debug,
-    n: c_int,
-) -> *const c_char {
-    lua_getlocal(L, ar, n)
+    n: c_int
+) -> *const c_char
+{
+    lua_getlocal(
+        L,
+        ar,
+        n
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_lua_setlocal(
     L: *mut lua_State,
     ar: *const lua_Debug,
-    n: c_int,
-) -> *const c_char {
-    lua_setlocal(L, ar, n)
+    n: c_int
+) -> *const c_char
+{
+    lua_setlocal(
+        L,
+        ar,
+        n
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_lua_getupvalue(
     L: *mut lua_State,
     funcindex: c_int,
-    n: c_int,
-) -> *const c_char {
-    lua_getupvalue(L, funcindex, n)
+    n: c_int
+) -> *const c_char
+{
+    lua_getupvalue(
+        L,
+        funcindex,
+        n
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_lua_setupvalue(
     L: *mut lua_State,
     funcindex: c_int,
-    n: c_int,
-) -> *const c_char {
-    lua_setupvalue(L, funcindex, n)
+    n: c_int
+) -> *const c_char
+{
+    lua_setupvalue(
+        L,
+        funcindex,
+        n
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_lua_upvalueid(
     L: *mut lua_State,
     fidx: c_int,
-    n: c_int,
-) -> *mut c_void {
-    lua_upvalueid(L, fidx, n)
+    n: c_int
+) -> *mut c_void
+{
+    lua_upvalueid(
+        L,
+        fidx,
+        n
+    )
 }
 
 #[no_mangle]
@@ -639,9 +1220,16 @@ pub unsafe extern "C" fn csbindgen_lua_upvaluejoin(
     fidx1: c_int,
     n1: c_int,
     fidx2: c_int,
-    n2: c_int,
-) {
-    lua_upvaluejoin(L, fidx1, n1, fidx2, n2)
+    n2: c_int
+)
+{
+    lua_upvaluejoin(
+        L,
+        fidx1,
+        n1,
+        fidx2,
+        n2
+    )
 }
 
 #[no_mangle]
@@ -649,146 +1237,257 @@ pub unsafe extern "C" fn csbindgen_lua_sethook(
     L: *mut lua_State,
     func: lua_Hook,
     mask: c_int,
-    count: c_int,
-) {
-    lua_sethook(L, func, mask, count)
+    count: c_int
+)
+{
+    lua_sethook(
+        L,
+        func,
+        mask,
+        count
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_gethook(L: *mut lua_State) -> lua_Hook {
-    lua_gethook(L)
+pub unsafe extern "C" fn csbindgen_lua_gethook(
+    L: *mut lua_State
+) -> lua_Hook
+{
+    lua_gethook(
+        L
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_gethookmask(L: *mut lua_State) -> c_int {
-    lua_gethookmask(L)
+pub unsafe extern "C" fn csbindgen_lua_gethookmask(
+    L: *mut lua_State
+) -> c_int
+{
+    lua_gethookmask(
+        L
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_lua_gethookcount(L: *mut lua_State) -> c_int {
-    lua_gethookcount(L)
+pub unsafe extern "C" fn csbindgen_lua_gethookcount(
+    L: *mut lua_State
+) -> c_int
+{
+    lua_gethookcount(
+        L
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_luaopen_base(L: *mut lua_State) -> c_int {
-    luaopen_base(L)
+pub unsafe extern "C" fn csbindgen_luaopen_base(
+    L: *mut lua_State
+) -> c_int
+{
+    luaopen_base(
+        L
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_luaopen_package(L: *mut lua_State) -> c_int {
-    luaopen_package(L)
+pub unsafe extern "C" fn csbindgen_luaopen_package(
+    L: *mut lua_State
+) -> c_int
+{
+    luaopen_package(
+        L
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_luaopen_coroutine(L: *mut lua_State) -> c_int {
-    luaopen_coroutine(L)
+pub unsafe extern "C" fn csbindgen_luaopen_coroutine(
+    L: *mut lua_State
+) -> c_int
+{
+    luaopen_coroutine(
+        L
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_luaopen_debug(L: *mut lua_State) -> c_int {
-    luaopen_debug(L)
+pub unsafe extern "C" fn csbindgen_luaopen_debug(
+    L: *mut lua_State
+) -> c_int
+{
+    luaopen_debug(
+        L
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_luaopen_io(L: *mut lua_State) -> c_int {
-    luaopen_io(L)
+pub unsafe extern "C" fn csbindgen_luaopen_io(
+    L: *mut lua_State
+) -> c_int
+{
+    luaopen_io(
+        L
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_luaopen_math(L: *mut lua_State) -> c_int {
-    luaopen_math(L)
+pub unsafe extern "C" fn csbindgen_luaopen_math(
+    L: *mut lua_State
+) -> c_int
+{
+    luaopen_math(
+        L
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_luaopen_os(L: *mut lua_State) -> c_int {
-    luaopen_os(L)
+pub unsafe extern "C" fn csbindgen_luaopen_os(
+    L: *mut lua_State
+) -> c_int
+{
+    luaopen_os(
+        L
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_luaopen_string(L: *mut lua_State) -> c_int {
-    luaopen_string(L)
+pub unsafe extern "C" fn csbindgen_luaopen_string(
+    L: *mut lua_State
+) -> c_int
+{
+    luaopen_string(
+        L
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_luaopen_table(L: *mut lua_State) -> c_int {
-    luaopen_table(L)
+pub unsafe extern "C" fn csbindgen_luaopen_table(
+    L: *mut lua_State
+) -> c_int
+{
+    luaopen_table(
+        L
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_luaopen_utf8(L: *mut lua_State) -> c_int {
-    luaopen_utf8(L)
+pub unsafe extern "C" fn csbindgen_luaopen_utf8(
+    L: *mut lua_State
+) -> c_int
+{
+    luaopen_utf8(
+        L
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_luaL_openselectedlibs(
     L: *mut lua_State,
     load: c_int,
-    preload: c_int,
-) {
-    luaL_openselectedlibs(L, load, preload)
+    preload: c_int
+)
+{
+    luaL_openselectedlibs(
+        L,
+        load,
+        preload
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_luaL_checkversion_(
     L: *mut lua_State,
     ver: lua_Number,
-    sz: usize,
-) {
-    luaL_checkversion_(L, ver, sz)
+    sz: usize
+)
+{
+    luaL_checkversion_(
+        L,
+        ver,
+        sz
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_luaL_getmetafield(
     L: *mut lua_State,
     obj: c_int,
-    e: *const c_char,
-) -> c_int {
-    luaL_getmetafield(L, obj, e)
+    e: *const c_char
+) -> c_int
+{
+    luaL_getmetafield(
+        L,
+        obj,
+        e
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_luaL_callmeta(
     L: *mut lua_State,
     obj: c_int,
-    e: *const c_char,
-) -> c_int {
-    luaL_callmeta(L, obj, e)
+    e: *const c_char
+) -> c_int
+{
+    luaL_callmeta(
+        L,
+        obj,
+        e
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_luaL_tolstring(
     L: *mut lua_State,
     idx: c_int,
-    len: *mut usize,
-) -> *const c_char {
-    luaL_tolstring(L, idx, len)
+    len: *mut usize
+) -> *const c_char
+{
+    luaL_tolstring(
+        L,
+        idx,
+        len
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_luaL_argerror(
     L: *mut lua_State,
     arg: c_int,
-    extramsg: *const c_char,
-) -> c_int {
-    luaL_argerror(L, arg, extramsg)
+    extramsg: *const c_char
+) -> c_int
+{
+    luaL_argerror(
+        L,
+        arg,
+        extramsg
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_luaL_typeerror(
     L: *mut lua_State,
     arg: c_int,
-    tname: *const c_char,
-) -> c_int {
-    luaL_typeerror(L, arg, tname)
+    tname: *const c_char
+) -> c_int
+{
+    luaL_typeerror(
+        L,
+        arg,
+        tname
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_luaL_checklstring(
     L: *mut lua_State,
     arg: c_int,
-    l: *mut usize,
-) -> *const c_char {
-    luaL_checklstring(L, arg, l)
+    l: *mut usize
+) -> *const c_char
+{
+    luaL_checklstring(
+        L,
+        arg,
+        l
+    )
 }
 
 #[no_mangle]
@@ -796,97 +1495,183 @@ pub unsafe extern "C" fn csbindgen_luaL_optlstring(
     L: *mut lua_State,
     arg: c_int,
     def: *const c_char,
-    l: *mut usize,
-) -> *const c_char {
-    luaL_optlstring(L, arg, def, l)
+    l: *mut usize
+) -> *const c_char
+{
+    luaL_optlstring(
+        L,
+        arg,
+        def,
+        l
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_luaL_checknumber(L: *mut lua_State, arg: c_int) -> lua_Number {
-    luaL_checknumber(L, arg)
+pub unsafe extern "C" fn csbindgen_luaL_checknumber(
+    L: *mut lua_State,
+    arg: c_int
+) -> lua_Number
+{
+    luaL_checknumber(
+        L,
+        arg
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_luaL_optnumber(
     L: *mut lua_State,
     arg: c_int,
-    def: lua_Number,
-) -> lua_Number {
-    luaL_optnumber(L, arg, def)
+    def: lua_Number
+) -> lua_Number
+{
+    luaL_optnumber(
+        L,
+        arg,
+        def
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_luaL_checkinteger(L: *mut lua_State, arg: c_int) -> lua_Integer {
-    luaL_checkinteger(L, arg)
+pub unsafe extern "C" fn csbindgen_luaL_checkinteger(
+    L: *mut lua_State,
+    arg: c_int
+) -> lua_Integer
+{
+    luaL_checkinteger(
+        L,
+        arg
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_luaL_optinteger(
     L: *mut lua_State,
     arg: c_int,
-    def: lua_Integer,
-) -> lua_Integer {
-    luaL_optinteger(L, arg, def)
+    def: lua_Integer
+) -> lua_Integer
+{
+    luaL_optinteger(
+        L,
+        arg,
+        def
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_luaL_checkstack(
     L: *mut lua_State,
     sz: c_int,
-    msg: *const c_char,
-) {
-    luaL_checkstack(L, sz, msg)
+    msg: *const c_char
+)
+{
+    luaL_checkstack(
+        L,
+        sz,
+        msg
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_luaL_checktype(L: *mut lua_State, arg: c_int, t: c_int) {
-    luaL_checktype(L, arg, t)
+pub unsafe extern "C" fn csbindgen_luaL_checktype(
+    L: *mut lua_State,
+    arg: c_int,
+    t: c_int
+)
+{
+    luaL_checktype(
+        L,
+        arg,
+        t
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_luaL_checkany(L: *mut lua_State, arg: c_int) {
-    luaL_checkany(L, arg)
+pub unsafe extern "C" fn csbindgen_luaL_checkany(
+    L: *mut lua_State,
+    arg: c_int
+)
+{
+    luaL_checkany(
+        L,
+        arg
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_luaL_newmetatable(
     L: *mut lua_State,
-    tname: *const c_char,
-) -> c_int {
-    luaL_newmetatable(L, tname)
+    tname: *const c_char
+) -> c_int
+{
+    luaL_newmetatable(
+        L,
+        tname
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_luaL_setmetatable(L: *mut lua_State, tname: *const c_char) {
-    luaL_setmetatable(L, tname)
+pub unsafe extern "C" fn csbindgen_luaL_setmetatable(
+    L: *mut lua_State,
+    tname: *const c_char
+)
+{
+    luaL_setmetatable(
+        L,
+        tname
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_luaL_testudata(
     L: *mut lua_State,
     ud: c_int,
-    tname: *const c_char,
-) -> *mut c_void {
-    luaL_testudata(L, ud, tname)
+    tname: *const c_char
+) -> *mut c_void
+{
+    luaL_testudata(
+        L,
+        ud,
+        tname
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_luaL_checkudata(
     L: *mut lua_State,
     ud: c_int,
-    tname: *const c_char,
-) -> *mut c_void {
-    luaL_checkudata(L, ud, tname)
+    tname: *const c_char
+) -> *mut c_void
+{
+    luaL_checkudata(
+        L,
+        ud,
+        tname
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_luaL_where(L: *mut lua_State, lvl: c_int) {
-    luaL_where(L, lvl)
+pub unsafe extern "C" fn csbindgen_luaL_where(
+    L: *mut lua_State,
+    lvl: c_int
+)
+{
+    luaL_where(
+        L,
+        lvl
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_luaL_error(L: *mut lua_State, fmt: *const c_char) -> c_int {
-    luaL_error(L, fmt)
+pub unsafe extern "C" fn csbindgen_luaL_error(
+    L: *mut lua_State,
+    fmt: *const c_char
+) -> c_int
+{
+    luaL_error(
+        L,
+        fmt
+    )
 }
 
 #[no_mangle]
@@ -894,23 +1679,41 @@ pub unsafe extern "C" fn csbindgen_luaL_checkoption(
     L: *mut lua_State,
     arg: c_int,
     def: *const c_char,
-    lst: *const *const c_char,
-) -> c_int {
-    luaL_checkoption(L, arg, def, lst)
+    lst: *const *const c_char
+) -> c_int
+{
+    luaL_checkoption(
+        L,
+        arg,
+        def,
+        lst
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_luaL_fileresult(
     L: *mut lua_State,
     stat: c_int,
-    fname: *const c_char,
-) -> c_int {
-    luaL_fileresult(L, stat, fname)
+    fname: *const c_char
+) -> c_int
+{
+    luaL_fileresult(
+        L,
+        stat,
+        fname
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_luaL_execresult(L: *mut lua_State, stat: c_int) -> c_int {
-    luaL_execresult(L, stat)
+pub unsafe extern "C" fn csbindgen_luaL_execresult(
+    L: *mut lua_State,
+    stat: c_int
+) -> c_int
+{
+    luaL_execresult(
+        L,
+        stat
+    )
 }
 
 #[no_mangle]
@@ -918,28 +1721,55 @@ pub unsafe extern "C" fn csbindgen_luaL_alloc(
     ud: *mut c_void,
     ptr: *mut c_void,
     osize: usize,
-    nsize: usize,
-) -> *mut c_void {
-    luaL_alloc(ud, ptr, osize, nsize)
+    nsize: usize
+) -> *mut c_void
+{
+    luaL_alloc(
+        ud,
+        ptr,
+        osize,
+        nsize
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_luaL_ref(L: *mut lua_State, t: c_int) -> c_int {
-    luaL_ref(L, t)
+pub unsafe extern "C" fn csbindgen_luaL_ref(
+    L: *mut lua_State,
+    t: c_int
+) -> c_int
+{
+    luaL_ref(
+        L,
+        t
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_luaL_unref(L: *mut lua_State, t: c_int, ref_: c_int) {
-    luaL_unref(L, t, ref_)
+pub unsafe extern "C" fn csbindgen_luaL_unref(
+    L: *mut lua_State,
+    t: c_int,
+    ref_: c_int
+)
+{
+    luaL_unref(
+        L,
+        t,
+        ref_
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_luaL_loadfilex(
     L: *mut lua_State,
     filename: *const c_char,
-    mode: *const c_char,
-) -> c_int {
-    luaL_loadfilex(L, filename, mode)
+    mode: *const c_char
+) -> c_int
+{
+    luaL_loadfilex(
+        L,
+        filename,
+        mode
+    )
 }
 
 #[no_mangle]
@@ -948,29 +1778,60 @@ pub unsafe extern "C" fn csbindgen_luaL_loadbufferx(
     buff: *const c_char,
     sz: usize,
     name: *const c_char,
-    mode: *const c_char,
-) -> c_int {
-    luaL_loadbufferx(L, buff, sz, name, mode)
+    mode: *const c_char
+) -> c_int
+{
+    luaL_loadbufferx(
+        L,
+        buff,
+        sz,
+        name,
+        mode
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_luaL_loadstring(L: *mut lua_State, s: *const c_char) -> c_int {
-    luaL_loadstring(L, s)
+pub unsafe extern "C" fn csbindgen_luaL_loadstring(
+    L: *mut lua_State,
+    s: *const c_char
+) -> c_int
+{
+    luaL_loadstring(
+        L,
+        s
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_luaL_newstate() -> *mut lua_State {
-    luaL_newstate()
+pub unsafe extern "C" fn csbindgen_luaL_newstate(
+
+) -> *mut lua_State
+{
+    luaL_newstate(
+
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_luaL_makeseed(L: *mut lua_State) -> c_uint {
-    luaL_makeseed(L)
+pub unsafe extern "C" fn csbindgen_luaL_makeseed(
+    L: *mut lua_State
+) -> c_uint
+{
+    luaL_makeseed(
+        L
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_luaL_len(L: *mut lua_State, idx: c_int) -> lua_Integer {
-    luaL_len(L, idx)
+pub unsafe extern "C" fn csbindgen_luaL_len(
+    L: *mut lua_State,
+    idx: c_int
+) -> lua_Integer
+{
+    luaL_len(
+        L,
+        idx
+    )
 }
 
 #[no_mangle]
@@ -978,9 +1839,15 @@ pub unsafe extern "C" fn csbindgen_luaL_addgsub(
     b: *mut luaL_Buffer,
     s: *const c_char,
     p: *const c_char,
-    r: *const c_char,
-) {
-    luaL_addgsub(b, s, p, r)
+    r: *const c_char
+)
+{
+    luaL_addgsub(
+        b,
+        s,
+        p,
+        r
+    )
 }
 
 #[no_mangle]
@@ -988,27 +1855,43 @@ pub unsafe extern "C" fn csbindgen_luaL_gsub(
     L: *mut lua_State,
     s: *const c_char,
     p: *const c_char,
-    r: *const c_char,
-) -> *const c_char {
-    luaL_gsub(L, s, p, r)
+    r: *const c_char
+) -> *const c_char
+{
+    luaL_gsub(
+        L,
+        s,
+        p,
+        r
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_luaL_setfuncs(
     L: *mut lua_State,
     l: *const luaL_Reg,
-    nup: c_int,
-) {
-    luaL_setfuncs(L, l, nup)
+    nup: c_int
+)
+{
+    luaL_setfuncs(
+        L,
+        l,
+        nup
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_luaL_getsubtable(
     L: *mut lua_State,
     idx: c_int,
-    fname: *const c_char,
-) -> c_int {
-    luaL_getsubtable(L, idx, fname)
+    fname: *const c_char
+) -> c_int
+{
+    luaL_getsubtable(
+        L,
+        idx,
+        fname
+    )
 }
 
 #[no_mangle]
@@ -1016,9 +1899,15 @@ pub unsafe extern "C" fn csbindgen_luaL_traceback(
     L: *mut lua_State,
     L1: *mut lua_State,
     msg: *const c_char,
-    level: c_int,
-) {
-    luaL_traceback(L, L1, msg, level)
+    level: c_int
+)
+{
+    luaL_traceback(
+        L,
+        L1,
+        msg,
+        level
+    )
 }
 
 #[no_mangle]
@@ -1026,58 +1915,111 @@ pub unsafe extern "C" fn csbindgen_luaL_requiref(
     L: *mut lua_State,
     modname: *const c_char,
     openf: lua_CFunction,
-    glb: c_int,
-) {
-    luaL_requiref(L, modname, openf, glb)
+    glb: c_int
+)
+{
+    luaL_requiref(
+        L,
+        modname,
+        openf,
+        glb
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_luaL_buffinit(L: *mut lua_State, B: *mut luaL_Buffer) {
-    luaL_buffinit(L, B)
+pub unsafe extern "C" fn csbindgen_luaL_buffinit(
+    L: *mut lua_State,
+    B: *mut luaL_Buffer
+)
+{
+    luaL_buffinit(
+        L,
+        B
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_luaL_prepbuffsize(
     B: *mut luaL_Buffer,
-    sz: usize,
-) -> *mut c_char {
-    luaL_prepbuffsize(B, sz)
+    sz: usize
+) -> *mut c_char
+{
+    luaL_prepbuffsize(
+        B,
+        sz
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_luaL_addlstring(
     B: *mut luaL_Buffer,
     s: *const c_char,
-    l: usize,
-) {
-    luaL_addlstring(B, s, l)
+    l: usize
+)
+{
+    luaL_addlstring(
+        B,
+        s,
+        l
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_luaL_addstring(B: *mut luaL_Buffer, s: *const c_char) {
-    luaL_addstring(B, s)
+pub unsafe extern "C" fn csbindgen_luaL_addstring(
+    B: *mut luaL_Buffer,
+    s: *const c_char
+)
+{
+    luaL_addstring(
+        B,
+        s
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_luaL_addvalue(B: *mut luaL_Buffer) {
-    luaL_addvalue(B)
+pub unsafe extern "C" fn csbindgen_luaL_addvalue(
+    B: *mut luaL_Buffer
+)
+{
+    luaL_addvalue(
+        B
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_luaL_pushresult(B: *mut luaL_Buffer) {
-    luaL_pushresult(B)
+pub unsafe extern "C" fn csbindgen_luaL_pushresult(
+    B: *mut luaL_Buffer
+)
+{
+    luaL_pushresult(
+        B
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn csbindgen_luaL_pushresultsize(B: *mut luaL_Buffer, sz: usize) {
-    luaL_pushresultsize(B, sz)
+pub unsafe extern "C" fn csbindgen_luaL_pushresultsize(
+    B: *mut luaL_Buffer,
+    sz: usize
+)
+{
+    luaL_pushresultsize(
+        B,
+        sz
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn csbindgen_luaL_buffinitsize(
     L: *mut lua_State,
     B: *mut luaL_Buffer,
-    sz: usize,
-) -> *mut c_char {
-    luaL_buffinitsize(L, B, sz)
+    sz: usize
+) -> *mut c_char
+{
+    luaL_buffinitsize(
+        L,
+        B,
+        sz
+    )
 }
+
+    

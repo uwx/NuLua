@@ -919,7 +919,7 @@ unsafe extern "C" {
 }
 unsafe extern "C" {
     pub fn luaL_execresult(L: *mut lua_State, stat: ::std::os::raw::c_int)
-        -> ::std::os::raw::c_int;
+    -> ::std::os::raw::c_int;
 }
 unsafe extern "C" {
     pub fn luaL_alloc(
