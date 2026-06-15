@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
 using NuLua.Internal;
 using NuLua.Interop.Lua55;
 
@@ -13,14 +12,20 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
     static readonly ConcurrentDictionary<nint, Lua55State> ptrToState = new();
 
     readonly List<LuaFunc<Lua55State>> funcs = new(8);
+    readonly Lua55State? from;
+    readonly int index;
     lua_State* ptr;
 
-    Lua55State(lua_State* ptr)
+    Lua55State? ILuaState<Lua55State>.From => from;
+
+    Lua55State(lua_State* ptr, Lua55State? from, int index)
     {
         this.ptr = ptr;
+        this.from = from;
+        this.index = index;
     }
 
-    public static Lua55State Create()
+    public static Lua55State Create(Lua55State? parent = null, int index = -1)
     {
         var ptr = NativeMethods.luaL_newstate();
         if (ptr == null)
@@ -28,12 +33,12 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
             throw new LuaException(NativeMethods.LUA_ERRMEM, "Failed to create Lua state.");
         }
 
-        var state = new Lua55State(ptr);
+        var state = new Lua55State(ptr, parent, index);
         ptrToState[(nint)ptr] = state;
         return state;
     }
 
-    static Lua55State GetOrCreate(lua_State* ptr)
+    static Lua55State GetOrCreate(lua_State* ptr, Lua55State? parent = null, int index = -1)
     {
         if (ptrToState.TryGetValue((nint)ptr, out var state))
         {
@@ -41,15 +46,38 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
         }
         else
         {
-            return Create();
+            return Create(parent, index);
         }
     }
 
     public lua_State* AsPointer() => ptr;
 
-    LuaObjectHandle ILuaObject.Handle => new(this, -1);
+    LuaObjectHandle ILuaObject.Handle => new(from ?? this, index);
 
     nint ILuaState.AsPointer() => (nint)ptr;
+
+    public bool IsYieldable
+    {
+        get
+        {
+            CheckDisposed();
+            return NativeMethods.lua_isyieldable(ptr) != 0;
+        }
+    }
+
+    public LuaThreadStatus Status
+    {
+        get
+        {
+            CheckDisposed();
+            var status = NativeMethods.lua_status(ptr);
+            return status switch
+            {
+                (int)NativeMethods.LUA_OK => LuaThreadStatus.Suspended,
+                _ => LuaThreadStatus.Dead,
+            };
+        }
+    }
 
     public void Dispose()
     {
@@ -71,7 +99,7 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
 
     void CheckResult(int code)
     {
-        if (code != 0)
+        if (code is not (int)NativeMethods.LUA_OK and not (int)NativeMethods.LUA_YIELD)
         {
             nuint len;
             var message = NativeMethods.luaL_tolstring(ptr, -1, &len);
@@ -97,7 +125,7 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
     public void OpenTableLibrary()
     {
         CheckDisposed();
-        byte* modname = (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("_G"u8));
+        byte* modname = (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("table"u8));
         NativeMethods.luaL_requiref(ptr, modname, NativeMethods.luaopen_table, 1);
         NativeMethods.lua_settop(ptr, -2);
     }
@@ -105,7 +133,7 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
     public void OpenStringLibrary()
     {
         CheckDisposed();
-        byte* modname = (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("_G"u8));
+        byte* modname = (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("string"u8));
         NativeMethods.luaL_requiref(ptr, modname, NativeMethods.luaopen_string, 1);
         NativeMethods.lua_settop(ptr, -2);
     }
@@ -113,7 +141,7 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
     public void OpenMathLibrary()
     {
         CheckDisposed();
-        byte* modname = (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("_G"u8));
+        byte* modname = (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("math"u8));
         NativeMethods.luaL_requiref(ptr, modname, NativeMethods.luaopen_math, 1);
         NativeMethods.lua_settop(ptr, -2);
     }
@@ -121,7 +149,7 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
     public void OpenCoroutineLibrary()
     {
         CheckDisposed();
-        byte* modname = (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("_G"u8));
+        byte* modname = (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("coroutine"u8));
         NativeMethods.luaL_requiref(ptr, modname, NativeMethods.luaopen_coroutine, 1);
         NativeMethods.lua_settop(ptr, -2);
     }
@@ -129,7 +157,7 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
     public void OpenIoLibrary()
     {
         CheckDisposed();
-        byte* modname = (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("_G"u8));
+        byte* modname = (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("io"u8));
         NativeMethods.luaL_requiref(ptr, modname, NativeMethods.luaopen_io, 1);
         NativeMethods.lua_settop(ptr, -2);
     }
@@ -137,7 +165,7 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
     public void OpenOsLibrary()
     {
         CheckDisposed();
-        byte* modname = (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("_G"u8));
+        byte* modname = (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("os"u8));
         NativeMethods.luaL_requiref(ptr, modname, NativeMethods.luaopen_os, 1);
         NativeMethods.lua_settop(ptr, -2);
     }
@@ -145,7 +173,7 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
     public void OpenPackageLibrary()
     {
         CheckDisposed();
-        byte* modname = (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("_G"u8));
+        byte* modname = (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("package"u8));
         NativeMethods.luaL_requiref(ptr, modname, NativeMethods.luaopen_package, 1);
         NativeMethods.lua_settop(ptr, -2);
     }
@@ -153,7 +181,7 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
     public void OpenDebugLibrary()
     {
         CheckDisposed();
-        byte* modname = (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("_G"u8));
+        byte* modname = (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("debug"u8));
         NativeMethods.luaL_requiref(ptr, modname, NativeMethods.luaopen_debug, 1);
         NativeMethods.lua_settop(ptr, -2);
     }
@@ -291,6 +319,12 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
         NativeMethods.lua_pushlightuserdata(ptr, (void*)data);
     }
 
+    public bool PushThread()
+    {
+        CheckDisposed();
+        return NativeMethods.lua_pushthread(ptr) != 0;
+    }
+
     public void PushValue(int index)
     {
         CheckDisposed();
@@ -322,6 +356,19 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
         CheckDisposed();
         return (nint)NativeMethods.lua_touserdata(ptr, index);
     }
+
+    public Lua55State ToThread(int index)
+    {
+        CheckDisposed();
+        var threadPtr = NativeMethods.lua_tothread(ptr, index);
+        if (threadPtr == null)
+        {
+            throw new InvalidOperationException("Value at the specified index is not a thread.");
+        }
+        return GetOrCreate(threadPtr, this);
+    }
+
+    ILuaState ILuaState.ToThread(int index) => ToThread(index);
 
     public void XMove(Lua55State target, int count)
     {
@@ -410,6 +457,17 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
         return new LuaFunction(this, NativeMethods.lua_gettop(ptr));
     }
 
+    public Lua55State CreateThread()
+    {
+        CheckDisposed();
+        var threadPtr = NativeMethods.lua_newthread(ptr);
+        if (threadPtr == null)
+        {
+            throw new LuaException(NativeMethods.LUA_ERRMEM, "Failed to create Lua thread.");
+        }
+        return GetOrCreate(threadPtr, this);
+    }
+
     public void Arith(LuaArithmeticOperator op)
     {
         CheckDisposed();
@@ -473,5 +531,20 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
     {
         CheckDisposed();
         NativeMethods.lua_callk(ptr, argCount, returnCount, 0, null);
+    }
+
+    public void Next(int index)
+    {
+        CheckDisposed();
+        var result = NativeMethods.lua_next(ptr, index);
+        CheckResult(result);
+    }
+
+    public void Resume(int argCount)
+    {
+        CheckDisposed();
+        int nres;
+        var result = NativeMethods.lua_resume(ptr, from == null ? null : from.ptr, argCount, &nres);
+        CheckResult(result);
     }
 }

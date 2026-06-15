@@ -15,4 +15,28 @@ var addFunc = state.CreateFunction(
 );
 
 state.SetGlobal("add", addFunc);
-state.DoString("print(add(10, 20))");
+var results = state.DoString("return add(10, 20)");
+Console.WriteLine($"{results[0].Read<double>()}");
+
+state.OpenCoroutineLibrary();
+var thread = state
+    .DoString(
+        """
+return coroutine.create(function()
+    for i = 1, 5 do
+        print("iter: ", i)
+        coroutine.yield(i)
+    end
+end)
+"""
+    )[0]
+    .Read<Lua55State>();
+
+Console.WriteLine($"thread status: {thread.Status}");
+
+state.Push(LuaValue.FromThread(thread));
+for (int i = 0; i < 5; i++)
+{
+    state.Resume(0);
+    Console.WriteLine($"yield: {state.ToNumber(-1)}");
+}

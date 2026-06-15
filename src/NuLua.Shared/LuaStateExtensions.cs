@@ -24,6 +24,7 @@ public static class LuaStateExtensions
             case LuaType.Table:
             case LuaType.Function:
             case LuaType.UserData:
+            case LuaType.Thread:
             {
                 var obj = value.UnsafeRead<ILuaObject>();
                 if (obj.Handle.State != state)
@@ -95,21 +96,28 @@ public static class LuaStateExtensions
             LuaType.String => (LuaValue)state.ToString(index),
             LuaType.Table => LuaValue.FromTable(new LuaTable(state, index)),
             LuaType.Function => LuaValue.FromFunction(new LuaFunction(state, index)),
+            LuaType.Thread => LuaValue.FromThread(state.ToThread(index)),
             _ => throw new NotSupportedException($"Unsupported Lua value type: {type}"),
         };
     }
 
     public static LuaValue[] DoString(this ILuaState state, ReadOnlySpan<char> code)
     {
+        var baseTop = state.GetTop();
+
         state.LoadString(code);
-        state.Call(0, 0);
-        var returnCount = state.GetTop();
+        state.Call(0, -1);
+
+        var currentTop = state.GetTop();
+        var returnCount = currentTop - baseTop;
+
         var results = new LuaValue[returnCount];
         for (int i = 0; i < returnCount; i++)
         {
-            results[i] = state.ToLuaValue(i - returnCount);
+            results[i] = state.ToLuaValue(baseTop + 1 + i);
         }
-        state.SetTop(0);
+        state.SetTop(baseTop);
+
         return results;
     }
 }
