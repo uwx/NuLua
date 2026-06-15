@@ -1,4 +1,6 @@
-﻿namespace NuLua;
+﻿using System.Numerics;
+
+namespace NuLua;
 
 public interface ILuaState : ILuaObject, IDisposable
 {
