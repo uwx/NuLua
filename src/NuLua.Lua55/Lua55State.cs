@@ -240,6 +240,12 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
         return NativeMethods.lua_absindex(ptr, index);
     }
 
+    public void Copy(int fromIndex, int toIndex)
+    {
+        CheckDisposed();
+        NativeMethods.lua_copy(ptr, fromIndex, toIndex);
+    }
+
     public void PushNil()
     {
         CheckDisposed();

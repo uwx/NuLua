@@ -18,6 +18,8 @@ public interface ILuaState : ILuaObject, IDisposable
     int GetAbsIndex(int index);
     LuaType GetType(int index);
 
+    void Copy(int fromIndex, int toIndex);
+
     void PushNil();
     void PushBoolean(bool value);
     void PushInteger(long value);
