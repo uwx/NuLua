@@ -70,15 +70,17 @@ public sealed unsafe class Lua55State : ILuaState
     public void OpenBaseLibrary()
     {
         CheckDisposed();
-        var code = NativeMethods.luaopen_base(ptr);
-        CheckResult(code);
+        byte* modname = (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("_G"u8));
+        NativeMethods.luaL_requiref(ptr, modname, NativeMethods.luaopen_base, 1);
+        NativeMethods.lua_settop(ptr, -2);
     }
 
     public void OpenTableLibrary()
     {
         CheckDisposed();
-        var code = NativeMethods.luaopen_table(ptr);
-        CheckResult(code);
+        byte* modname = (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("_G"u8));
+        NativeMethods.luaL_requiref(ptr, modname, NativeMethods.luaopen_table, 1);
+        NativeMethods.lua_settop(ptr, -2);
     }
 
     public void OpenStringLibrary()
