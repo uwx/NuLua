@@ -7,7 +7,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+  <ItemGroup>
     <Compile Include="..\Polyfills\CLong.cs" Link="Polyfills\CLong.cs" />
   </ItemGroup>
 </Project>

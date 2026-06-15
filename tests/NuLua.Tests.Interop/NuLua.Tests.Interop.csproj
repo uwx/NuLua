@@ -1,0 +1,93 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="TUnit" Version="1.5*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference
+      Include="..\..\src\NuLua.Interop.Lua51\NuLua.Interop.Lua51.csproj"
+      Aliases="Lua51"
+    />
+    <ProjectReference
+      Include="..\..\src\NuLua.Interop.Lua52\NuLua.Interop.Lua52.csproj"
+      Aliases="Lua52"
+    />
+    <ProjectReference
+      Include="..\..\src\NuLua.Interop.Lua53\NuLua.Interop.Lua53.csproj"
+      Aliases="Lua53"
+    />
+    <ProjectReference
+      Include="..\..\src\NuLua.Interop.Lua54\NuLua.Interop.Lua54.csproj"
+      Aliases="Lua54"
+    />
+    <ProjectReference
+      Include="..\..\src\NuLua.Interop.Lua55\NuLua.Interop.Lua55.csproj"
+      Aliases="Lua55"
+    />
+    <ProjectReference
+      Include="..\..\src\NuLua.Interop.LuaJit\NuLua.Interop.LuaJit.csproj"
+      Aliases="LuaJit"
+    />
+    <ProjectReference
+      Include="..\..\src\NuLua.Interop.Luau\NuLua.Interop.Luau.csproj"
+      Aliases="Luau"
+    />
+    <ProjectReference Include="..\..\src\NuLua.Runtime.Lua51\NuLua.Runtime.Lua51.csproj" />
+    <ProjectReference Include="..\..\src\NuLua.Runtime.Lua52\NuLua.Runtime.Lua52.csproj" />
+    <ProjectReference Include="..\..\src\NuLua.Runtime.Lua53\NuLua.Runtime.Lua53.csproj" />
+    <ProjectReference Include="..\..\src\NuLua.Runtime.Lua54\NuLua.Runtime.Lua54.csproj" />
+    <ProjectReference Include="..\..\src\NuLua.Runtime.Lua55\NuLua.Runtime.Lua55.csproj" />
+    <ProjectReference Include="..\..\src\NuLua.Runtime.LuaJit\NuLua.Runtime.LuaJit.csproj" />
+    <ProjectReference Include="..\..\src\NuLua.Runtime.Luau\NuLua.Runtime.Luau.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(NETCoreSdkRuntimeIdentifier)' == 'osx-arm64'">
+    <None Include="..\..\src\NuLua.Runtime.*\runtimes\osx-arm64\native\*.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>%(Filename)%(Extension)</TargetPath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(NETCoreSdkRuntimeIdentifier)' == 'osx-x64'">
+    <None Include="..\..\src\NuLua.Runtime.*\runtimes\osx-x64\native\*.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>%(Filename)%(Extension)</TargetPath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(NETCoreSdkRuntimeIdentifier)' == 'linux-arm64'">
+    <None Include="..\..\src\NuLua.Runtime.*\runtimes\linux-arm64\native\*.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>%(Filename)%(Extension)</TargetPath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(NETCoreSdkRuntimeIdentifier)' == 'linux-x64'">
+    <None Include="..\..\src\NuLua.Runtime.*\runtimes\linux-x64\native\*.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>%(Filename)%(Extension)</TargetPath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(NETCoreSdkRuntimeIdentifier)' == 'win-arm64'">
+    <None Include="..\..\src\NuLua.Runtime.*\runtimes\win-arm64\native\*.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>%(Filename)%(Extension)</TargetPath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(NETCoreSdkRuntimeIdentifier)' == 'win-x64'">
+    <None Include="..\..\src\NuLua.Runtime.*\runtimes\win-x64\native\*.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>%(Filename)%(Extension)</TargetPath>
+    </None>
+  </ItemGroup>
+</Project>

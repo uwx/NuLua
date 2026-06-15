@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("NuLua.Interop.Lua52")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2c0343b291ed84dd90a3e24581e8e4938d7b678a")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+da0ab786953453b3595a72b446ddfe4327151167")]
 [assembly: System.Reflection.AssemblyProductAttribute("NuLua.Interop.Lua52")]
 [assembly: System.Reflection.AssemblyTitleAttribute("NuLua.Interop.Lua52")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

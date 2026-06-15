@@ -56,6 +56,8 @@ fn generate_csharp_bindings(bindings_rs: &Path, out_cs: &Path) {
     std::fs::create_dir_all(out_cs.parent().unwrap()).expect("mkdir Generated/");
     csbindgen::Builder::default()
         .input_bindgen_file(bindings_rs)
+        .csharp_class_accessibility("public")
+        .csharp_file_header("using NuLua.Polyfills;")
         .csharp_dll_name(FLAVOR)
         .csharp_namespace(CSHARP_NAMESPACE)
         .csharp_class_name(CSHARP_CLASS)
