@@ -66,6 +66,7 @@ fn generate_csharp_bindings<T: AsRef<Path>>(bindings_rs: T, out_cs: &Path) {
         .csharp_dll_name(FLAVOR)
         .csharp_namespace(CSHARP_NAMESPACE)
         .csharp_class_name(CSHARP_CLASS)
+        .csharp_use_function_pointer(false)
         .csharp_entry_point_prefix("csbindgen_")
         .csharp_generate_const_filter(|name| name.starts_with("LUA_"))
         .generate_to_file("src/luau_ffi.rs", out_cs.to_str().unwrap())

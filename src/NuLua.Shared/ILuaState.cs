@@ -4,6 +4,7 @@ public interface ILuaState : ILuaObject, IDisposable
 {
     nint AsPointer();
 
+    void OpenLibraries();
     void OpenBaseLibrary();
     void OpenTableLibrary();
     void OpenStringLibrary();

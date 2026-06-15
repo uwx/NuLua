@@ -61,6 +61,12 @@ public sealed unsafe class Lua55State : ILuaState
         }
     }
 
+    public void OpenLibraries()
+    {
+        CheckDisposed();
+        NativeMethods.luaL_openselectedlibs(ptr, ~0, 0);
+    }
+
     public void OpenBaseLibrary()
     {
         CheckDisposed();
@@ -78,50 +84,57 @@ public sealed unsafe class Lua55State : ILuaState
     public void OpenStringLibrary()
     {
         CheckDisposed();
-        var code = NativeMethods.luaopen_string(ptr);
-        CheckResult(code);
+        byte* modname = (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("_G"u8));
+        NativeMethods.luaL_requiref(ptr, modname, NativeMethods.luaopen_string, 1);
+        NativeMethods.lua_settop(ptr, -2);
     }
 
     public void OpenMathLibrary()
     {
         CheckDisposed();
-        var code = NativeMethods.luaopen_math(ptr);
-        CheckResult(code);
+        byte* modname = (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("_G"u8));
+        NativeMethods.luaL_requiref(ptr, modname, NativeMethods.luaopen_math, 1);
+        NativeMethods.lua_settop(ptr, -2);
     }
 
     public void OpenCoroutineLibrary()
     {
         CheckDisposed();
-        var code = NativeMethods.luaopen_coroutine(ptr);
-        CheckResult(code);
+        byte* modname = (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("_G"u8));
+        NativeMethods.luaL_requiref(ptr, modname, NativeMethods.luaopen_coroutine, 1);
+        NativeMethods.lua_settop(ptr, -2);
     }
 
     public void OpenIoLibrary()
     {
         CheckDisposed();
-        var code = NativeMethods.luaopen_io(ptr);
-        CheckResult(code);
+        byte* modname = (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("_G"u8));
+        NativeMethods.luaL_requiref(ptr, modname, NativeMethods.luaopen_io, 1);
+        NativeMethods.lua_settop(ptr, -2);
     }
 
     public void OpenOsLibrary()
     {
         CheckDisposed();
-        var code = NativeMethods.luaopen_os(ptr);
-        CheckResult(code);
+        byte* modname = (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("_G"u8));
+        NativeMethods.luaL_requiref(ptr, modname, NativeMethods.luaopen_os, 1);
+        NativeMethods.lua_settop(ptr, -2);
     }
 
     public void OpenPackageLibrary()
     {
         CheckDisposed();
-        var code = NativeMethods.luaopen_package(ptr);
-        CheckResult(code);
+        byte* modname = (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("_G"u8));
+        NativeMethods.luaL_requiref(ptr, modname, NativeMethods.luaopen_package, 1);
+        NativeMethods.lua_settop(ptr, -2);
     }
 
     public void OpenDebugLibrary()
     {
         CheckDisposed();
-        var code = NativeMethods.luaopen_debug(ptr);
-        CheckResult(code);
+        byte* modname = (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("_G"u8));
+        NativeMethods.luaL_requiref(ptr, modname, NativeMethods.luaopen_debug, 1);
+        NativeMethods.lua_settop(ptr, -2);
     }
 
     public void LoadString(ReadOnlySpan<byte> utf8Code, ReadOnlySpan<byte> utf8ChunkName)
