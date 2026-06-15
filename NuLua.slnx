@@ -7,58 +7,73 @@
     <Project Path="src/NuLua.Interop.Lua55/NuLua.Interop.Lua55.csproj" />
     <Project Path="src/NuLua.Interop.LuaJit/NuLua.Interop.LuaJit.csproj" />
     <Project Path="src/NuLua.Interop.Luau/NuLua.Interop.Luau.csproj" />
-    <Project Path="src/NuLua.Shared/NuLua.Shared.csproj" />
-  </Folder>
-  <Folder Name="/src/Runtime/">
     <Project Path="src/NuLua.Runtime.Lua51/NuLua.Runtime.Lua51.csproj" />
-    <Project Path="src/NuLua.Runtime.Lua51/NuLua.Runtime.Lua51.win-x64.csproj" />
-    <Project Path="src/NuLua.Runtime.Lua51/NuLua.Runtime.Lua51.win-arm64.csproj" />
-    <Project Path="src/NuLua.Runtime.Lua51/NuLua.Runtime.Lua51.linux-x64.csproj" />
-    <Project Path="src/NuLua.Runtime.Lua51/NuLua.Runtime.Lua51.linux-arm64.csproj" />
-    <Project Path="src/NuLua.Runtime.Lua51/NuLua.Runtime.Lua51.osx-x64.csproj" />
-    <Project Path="src/NuLua.Runtime.Lua51/NuLua.Runtime.Lua51.osx-arm64.csproj" />
     <Project Path="src/NuLua.Runtime.Lua52/NuLua.Runtime.Lua52.csproj" />
-    <Project Path="src/NuLua.Runtime.Lua52/NuLua.Runtime.Lua52.win-x64.csproj" />
-    <Project Path="src/NuLua.Runtime.Lua52/NuLua.Runtime.Lua52.win-arm64.csproj" />
-    <Project Path="src/NuLua.Runtime.Lua52/NuLua.Runtime.Lua52.linux-x64.csproj" />
-    <Project Path="src/NuLua.Runtime.Lua52/NuLua.Runtime.Lua52.linux-arm64.csproj" />
-    <Project Path="src/NuLua.Runtime.Lua52/NuLua.Runtime.Lua52.osx-x64.csproj" />
-    <Project Path="src/NuLua.Runtime.Lua52/NuLua.Runtime.Lua52.osx-arm64.csproj" />
     <Project Path="src/NuLua.Runtime.Lua53/NuLua.Runtime.Lua53.csproj" />
-    <Project Path="src/NuLua.Runtime.Lua53/NuLua.Runtime.Lua53.win-x64.csproj" />
-    <Project Path="src/NuLua.Runtime.Lua53/NuLua.Runtime.Lua53.win-arm64.csproj" />
-    <Project Path="src/NuLua.Runtime.Lua53/NuLua.Runtime.Lua53.linux-x64.csproj" />
-    <Project Path="src/NuLua.Runtime.Lua53/NuLua.Runtime.Lua53.linux-arm64.csproj" />
-    <Project Path="src/NuLua.Runtime.Lua53/NuLua.Runtime.Lua53.osx-x64.csproj" />
-    <Project Path="src/NuLua.Runtime.Lua53/NuLua.Runtime.Lua53.osx-arm64.csproj" />
     <Project Path="src/NuLua.Runtime.Lua54/NuLua.Runtime.Lua54.csproj" />
-    <Project Path="src/NuLua.Runtime.Lua54/NuLua.Runtime.Lua54.win-x64.csproj" />
-    <Project Path="src/NuLua.Runtime.Lua54/NuLua.Runtime.Lua54.win-arm64.csproj" />
-    <Project Path="src/NuLua.Runtime.Lua54/NuLua.Runtime.Lua54.linux-x64.csproj" />
-    <Project Path="src/NuLua.Runtime.Lua54/NuLua.Runtime.Lua54.linux-arm64.csproj" />
-    <Project Path="src/NuLua.Runtime.Lua54/NuLua.Runtime.Lua54.osx-x64.csproj" />
-    <Project Path="src/NuLua.Runtime.Lua54/NuLua.Runtime.Lua54.osx-arm64.csproj" />
     <Project Path="src/NuLua.Runtime.Lua55/NuLua.Runtime.Lua55.csproj" />
-    <Project Path="src/NuLua.Runtime.Lua55/NuLua.Runtime.Lua55.win-x64.csproj" />
-    <Project Path="src/NuLua.Runtime.Lua55/NuLua.Runtime.Lua55.win-arm64.csproj" />
-    <Project Path="src/NuLua.Runtime.Lua55/NuLua.Runtime.Lua55.linux-x64.csproj" />
-    <Project Path="src/NuLua.Runtime.Lua55/NuLua.Runtime.Lua55.linux-arm64.csproj" />
-    <Project Path="src/NuLua.Runtime.Lua55/NuLua.Runtime.Lua55.osx-x64.csproj" />
-    <Project Path="src/NuLua.Runtime.Lua55/NuLua.Runtime.Lua55.osx-arm64.csproj" />
     <Project Path="src/NuLua.Runtime.LuaJit/NuLua.Runtime.LuaJit.csproj" />
-    <Project Path="src/NuLua.Runtime.LuaJit/NuLua.Runtime.LuaJit.win-x64.csproj" />
-    <Project Path="src/NuLua.Runtime.LuaJit/NuLua.Runtime.LuaJit.win-arm64.csproj" />
-    <Project Path="src/NuLua.Runtime.LuaJit/NuLua.Runtime.LuaJit.linux-x64.csproj" />
-    <Project Path="src/NuLua.Runtime.LuaJit/NuLua.Runtime.LuaJit.linux-arm64.csproj" />
-    <Project Path="src/NuLua.Runtime.LuaJit/NuLua.Runtime.LuaJit.osx-x64.csproj" />
-    <Project Path="src/NuLua.Runtime.LuaJit/NuLua.Runtime.LuaJit.osx-arm64.csproj" />
     <Project Path="src/NuLua.Runtime.Luau/NuLua.Runtime.Luau.csproj" />
-    <Project Path="src/NuLua.Runtime.Luau/NuLua.Runtime.Luau.win-x64.csproj" />
-    <Project Path="src/NuLua.Runtime.Luau/NuLua.Runtime.Luau.win-arm64.csproj" />
-    <Project Path="src/NuLua.Runtime.Luau/NuLua.Runtime.Luau.linux-x64.csproj" />
-    <Project Path="src/NuLua.Runtime.Luau/NuLua.Runtime.Luau.linux-arm64.csproj" />
-    <Project Path="src/NuLua.Runtime.Luau/NuLua.Runtime.Luau.osx-x64.csproj" />
-    <Project Path="src/NuLua.Runtime.Luau/NuLua.Runtime.Luau.osx-arm64.csproj" />
+    <Project Path="src/NuLua.Shared/NuLua.Shared.csproj" />
+    <Project Path="src/NuLua/NuLua.csproj" />
   </Folder>
-  <Project Path="src/NuLua/NuLua.csproj" />
+  <Folder Name="/src/NuLua.Runtime.Lua51/">
+    <Project Path="src/NuLua.Runtime.Lua51/NuLua.Runtime.Lua51.linux-arm64.csproj" />
+    <Project Path="src/NuLua.Runtime.Lua51/NuLua.Runtime.Lua51.linux-x64.csproj" />
+    <Project Path="src/NuLua.Runtime.Lua51/NuLua.Runtime.Lua51.osx-arm64.csproj" />
+    <Project Path="src/NuLua.Runtime.Lua51/NuLua.Runtime.Lua51.osx-x64.csproj" />
+    <Project Path="src/NuLua.Runtime.Lua51/NuLua.Runtime.Lua51.win-arm64.csproj" />
+    <Project Path="src/NuLua.Runtime.Lua51/NuLua.Runtime.Lua51.win-x64.csproj" />
+  </Folder>
+  <Folder Name="/src/NuLua.Runtime.Lua52/">
+    <Project Path="src/NuLua.Runtime.Lua52/NuLua.Runtime.Lua52.linux-arm64.csproj" />
+    <Project Path="src/NuLua.Runtime.Lua52/NuLua.Runtime.Lua52.linux-x64.csproj" />
+    <Project Path="src/NuLua.Runtime.Lua52/NuLua.Runtime.Lua52.osx-arm64.csproj" />
+    <Project Path="src/NuLua.Runtime.Lua52/NuLua.Runtime.Lua52.osx-x64.csproj" />
+    <Project Path="src/NuLua.Runtime.Lua52/NuLua.Runtime.Lua52.win-arm64.csproj" />
+    <Project Path="src/NuLua.Runtime.Lua52/NuLua.Runtime.Lua52.win-x64.csproj" />
+  </Folder>
+  <Folder Name="/src/NuLua.Runtime.Lua53/">
+    <Project Path="src/NuLua.Runtime.Lua53/NuLua.Runtime.Lua53.linux-arm64.csproj" />
+    <Project Path="src/NuLua.Runtime.Lua53/NuLua.Runtime.Lua53.linux-x64.csproj" />
+    <Project Path="src/NuLua.Runtime.Lua53/NuLua.Runtime.Lua53.osx-arm64.csproj" />
+    <Project Path="src/NuLua.Runtime.Lua53/NuLua.Runtime.Lua53.osx-x64.csproj" />
+    <Project Path="src/NuLua.Runtime.Lua53/NuLua.Runtime.Lua53.win-arm64.csproj" />
+    <Project Path="src/NuLua.Runtime.Lua53/NuLua.Runtime.Lua53.win-x64.csproj" />
+  </Folder>
+  <Folder Name="/src/NuLua.Runtime.Lua54/">
+    <Project Path="src/NuLua.Runtime.Lua54/NuLua.Runtime.Lua54.linux-arm64.csproj" />
+    <Project Path="src/NuLua.Runtime.Lua54/NuLua.Runtime.Lua54.linux-x64.csproj" />
+    <Project Path="src/NuLua.Runtime.Lua54/NuLua.Runtime.Lua54.osx-arm64.csproj" />
+    <Project Path="src/NuLua.Runtime.Lua54/NuLua.Runtime.Lua54.osx-x64.csproj" />
+    <Project Path="src/NuLua.Runtime.Lua54/NuLua.Runtime.Lua54.win-arm64.csproj" />
+    <Project Path="src/NuLua.Runtime.Lua54/NuLua.Runtime.Lua54.win-x64.csproj" />
+  </Folder>
+  <Folder Name="/src/NuLua.Runtime.Lua55/">
+    <Project Path="src/NuLua.Runtime.Lua55/NuLua.Runtime.Lua55.linux-arm64.csproj" />
+    <Project Path="src/NuLua.Runtime.Lua55/NuLua.Runtime.Lua55.linux-x64.csproj" />
+    <Project Path="src/NuLua.Runtime.Lua55/NuLua.Runtime.Lua55.osx-arm64.csproj" />
+    <Project Path="src/NuLua.Runtime.Lua55/NuLua.Runtime.Lua55.osx-x64.csproj" />
+    <Project Path="src/NuLua.Runtime.Lua55/NuLua.Runtime.Lua55.win-arm64.csproj" />
+    <Project Path="src/NuLua.Runtime.Lua55/NuLua.Runtime.Lua55.win-x64.csproj" />
+  </Folder>
+  <Folder Name="/src/NuLua.Runtime.LuaJit/">
+    <Project Path="src/NuLua.Runtime.LuaJit/NuLua.Runtime.LuaJit.linux-arm64.csproj" />
+    <Project Path="src/NuLua.Runtime.LuaJit/NuLua.Runtime.LuaJit.linux-x64.csproj" />
+    <Project Path="src/NuLua.Runtime.LuaJit/NuLua.Runtime.LuaJit.osx-arm64.csproj" />
+    <Project Path="src/NuLua.Runtime.LuaJit/NuLua.Runtime.LuaJit.osx-x64.csproj" />
+    <Project Path="src/NuLua.Runtime.LuaJit/NuLua.Runtime.LuaJit.win-arm64.csproj" />
+    <Project Path="src/NuLua.Runtime.LuaJit/NuLua.Runtime.LuaJit.win-x64.csproj" />
+  </Folder>
+  <Folder Name="/src/NuLua.Runtime.Luau/">
+    <Project Path="src/NuLua.Runtime.Luau/NuLua.Runtime.Luau.linux-arm64.csproj" />
+    <Project Path="src/NuLua.Runtime.Luau/NuLua.Runtime.Luau.linux-x64.csproj" />
+    <Project Path="src/NuLua.Runtime.Luau/NuLua.Runtime.Luau.osx-arm64.csproj" />
+    <Project Path="src/NuLua.Runtime.Luau/NuLua.Runtime.Luau.osx-x64.csproj" />
+    <Project Path="src/NuLua.Runtime.Luau/NuLua.Runtime.Luau.win-arm64.csproj" />
+    <Project Path="src/NuLua.Runtime.Luau/NuLua.Runtime.Luau.win-x64.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/NuLua.Tests.Interop/NuLua.Tests.Interop.csproj" />
+  </Folder>
 </Solution>
