@@ -8,7 +8,7 @@ using NuLua.Interop.Lua55;
 
 namespace NuLua.Lua55;
 
-public sealed unsafe class Lua55State : ILuaState
+public sealed unsafe class Lua55State : ILuaState<Lua55State>
 {
     static readonly ConcurrentDictionary<nint, Lua55State> ptrToState = new();
 
@@ -349,10 +349,11 @@ public sealed unsafe class Lua55State : ILuaState
         return value;
     }
 
-    public void SetGlobal(ReadOnlySpan<char> name)
+    public void SetGlobal(ReadOnlySpan<char> name, LuaValue value)
     {
         CheckDisposed();
         using var nameBytes = new NullTerminatedString(name);
+        this.Push(value);
         NativeMethods.lua_setglobal(
             ptr,
             (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(nameBytes.AsSpan()))

@@ -32,7 +32,7 @@ public interface ILuaState : ILuaObject, IDisposable
     nint ToLightUserData(int index);
 
     LuaValue GetGlobal(ReadOnlySpan<char> name);
-    void SetGlobal(ReadOnlySpan<char> name);
+    void SetGlobal(ReadOnlySpan<char> name, LuaValue value);
 
     LuaTable CreateTable(int initialArraySize = 0, int initialRecordsSize = 0);
     void GetTable(int index);
@@ -46,4 +46,10 @@ public interface ILuaState : ILuaObject, IDisposable
 
     void LoadString(ReadOnlySpan<char> chunk, ReadOnlySpan<char> chunkName = default);
     void LoadString(ReadOnlySpan<byte> utf8Chunk, ReadOnlySpan<byte> utf8ChunkName = default);
+}
+
+public interface ILuaState<T> : ILuaState
+    where T : ILuaState<T>
+{
+    void XMove(T target, int count);
 }
