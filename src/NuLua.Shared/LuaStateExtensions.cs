@@ -61,6 +61,7 @@ public static class LuaStateExtensions
             LuaType.Number => (LuaValue)state.ToNumber(index),
             LuaType.String => (LuaValue)state.ToString(index),
             LuaType.Table => LuaValue.FromTable(new LuaTable(state, index)),
+            LuaType.Function => LuaValue.FromFunction(new LuaFunction(state, index)),
             _ => throw new NotSupportedException($"Unsupported Lua value type: {type}"),
         };
     }

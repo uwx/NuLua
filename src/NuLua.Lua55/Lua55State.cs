@@ -1,4 +1,5 @@
 ﻿using System.Buffers;
+using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -9,6 +10,9 @@ namespace NuLua.Lua55;
 
 public sealed unsafe class Lua55State : ILuaState
 {
+    static readonly ConcurrentDictionary<nint, Lua55State> ptrToState = new();
+
+    readonly List<LuaFunc<Lua55State>> funcs = new(8);
     lua_State* ptr;
 
     Lua55State(lua_State* ptr)
@@ -24,7 +28,21 @@ public sealed unsafe class Lua55State : ILuaState
             throw new LuaException(NativeMethods.LUA_ERRMEM, "Failed to create Lua state.");
         }
 
-        return new Lua55State(ptr);
+        var state = new Lua55State(ptr);
+        ptrToState[(nint)ptr] = state;
+        return state;
+    }
+
+    static Lua55State GetOrCreate(lua_State* ptr)
+    {
+        if (ptrToState.TryGetValue((nint)ptr, out var state))
+        {
+            return state;
+        }
+        else
+        {
+            return Create();
+        }
     }
 
     public lua_State* AsPointer() => ptr;
@@ -38,6 +56,7 @@ public sealed unsafe class Lua55State : ILuaState
         if (ptr != null)
         {
             NativeMethods.lua_close(ptr);
+            ptrToState.TryRemove((nint)ptr, out _);
             ptr = null;
         }
     }
@@ -314,7 +333,7 @@ public sealed unsafe class Lua55State : ILuaState
     {
         CheckDisposed();
         NativeMethods.lua_createtable(ptr, initialArraySize, initialRecordsSize);
-        return new LuaTable(this, GetTop() - 1);
+        return new LuaTable(this, GetTop());
     }
 
     public LuaValue GetGlobal(ReadOnlySpan<char> name)
@@ -351,6 +370,43 @@ public sealed unsafe class Lua55State : ILuaState
     {
         CheckDisposed();
         NativeMethods.lua_settable(ptr, index);
+    }
+
+    public LuaFunction CreateFunction(LuaFunc<Lua55State> func)
+    {
+        static int Fn(lua_State* L)
+        {
+            var state = GetOrCreate(L);
+            var funcIndex = NativeMethods.lua_tointegerx(
+                L,
+                NativeMethods.LUA_REGISTRYINDEX - 1,
+                null
+            );
+            var func = state.funcs[(int)funcIndex];
+
+            var numArgs = NativeMethods.lua_gettop(L);
+            var buffer = ArrayPool<LuaValue>.Shared.Rent(numArgs);
+            try
+            {
+                for (int i = 0; i < numArgs; i++)
+                {
+                    buffer[i] = state.ToLuaValue(i + 1);
+                }
+                return func(state, buffer.AsSpan(0, numArgs));
+            }
+            finally
+            {
+                ArrayPool<LuaValue>.Shared.Return(buffer);
+            }
+        }
+
+        CheckDisposed();
+
+        var funcIndex = funcs.Count;
+        funcs.Add(func);
+        NativeMethods.lua_pushinteger(ptr, funcIndex);
+        NativeMethods.lua_pushcclosure(ptr, Fn, 1);
+        return new LuaFunction(this, NativeMethods.lua_gettop(ptr));
     }
 
     public void Arith(LuaArithmeticOperator op)

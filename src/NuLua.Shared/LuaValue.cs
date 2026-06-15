@@ -286,6 +286,12 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                     result = Unsafe.As<LuaTable, T>(ref r);
                     return true;
                 }
+                if (typeof(ILuaObject).IsAssignableFrom(typeof(T)))
+                {
+                    var r = (ILuaObject)reference!;
+                    result = Unsafe.As<ILuaObject, T>(ref r);
+                    return true;
+                }
                 if (typeof(T) == typeof(object))
                 {
                     var r = (object)(LuaTable)reference!;
@@ -298,6 +304,12 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                 {
                     var r = (LuaFunction)reference!;
                     result = Unsafe.As<LuaFunction, T>(ref r);
+                    return true;
+                }
+                if (typeof(ILuaObject).IsAssignableFrom(typeof(T)))
+                {
+                    var r = (ILuaObject)reference!;
+                    result = Unsafe.As<ILuaObject, T>(ref r);
                     return true;
                 }
                 if (typeof(T) == typeof(object))
@@ -314,6 +326,12 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                     result = Unsafe.As<ILuaState, T>(ref r);
                     return true;
                 }
+                if (typeof(ILuaObject).IsAssignableFrom(typeof(T)))
+                {
+                    var r = (ILuaObject)reference!;
+                    result = Unsafe.As<ILuaObject, T>(ref r);
+                    return true;
+                }
                 if (typeof(T) == typeof(object))
                 {
                     var r = (object)(ILuaState)reference!;
@@ -326,6 +344,12 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                 {
                     var r = (ILuaBuffer)reference!;
                     result = Unsafe.As<ILuaBuffer, T>(ref r);
+                    return true;
+                }
+                if (typeof(ILuaObject).IsAssignableFrom(typeof(T)))
+                {
+                    var r = (ILuaObject)reference!;
+                    result = Unsafe.As<ILuaObject, T>(ref r);
                     return true;
                 }
                 if (typeof(T) == typeof(object))
@@ -386,4 +410,6 @@ public readonly struct LuaValue : IEquatable<LuaValue>
     public static implicit operator LuaValue(string value) => FromString(value);
 
     public static implicit operator LuaValue(Vector3 value) => FromVector(value);
+
+    public static implicit operator LuaValue(LuaFunction value) => FromFunction(value);
 }
