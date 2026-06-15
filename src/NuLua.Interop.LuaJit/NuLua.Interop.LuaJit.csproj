@@ -10,4 +10,8 @@
   <ItemGroup>
     <Compile Include="..\Polyfills\CLong.cs" Link="Polyfills\CLong.cs" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NuLua.Shared\NuLua.Shared.csproj" />
+  </ItemGroup>
 </Project>
