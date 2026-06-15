@@ -62,6 +62,23 @@ public static class LuaStateExtensions
         return value;
     }
 
+    public static void Insert(this ILuaState state, int index)
+    {
+        state.Rotate(index, 1);
+    }
+
+    public static void Remove(this ILuaState state, int index)
+    {
+        state.Rotate(index, -1);
+        state.SetTop(state.GetTop() - 1);
+    }
+
+    public static void Replace(this ILuaState state, int index)
+    {
+        state.Copy(-1, index);
+        state.SetTop(state.GetTop() - 1);
+    }
+
     public static LuaValue ToLuaValue(this ILuaState state, int index)
     {
         var type = state.GetType(index);

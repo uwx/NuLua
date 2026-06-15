@@ -246,6 +246,12 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
         NativeMethods.lua_copy(ptr, fromIndex, toIndex);
     }
 
+    public void Rotate(int index, int n)
+    {
+        CheckDisposed();
+        NativeMethods.lua_rotate(ptr, index, n);
+    }
+
     public void PushNil()
     {
         CheckDisposed();

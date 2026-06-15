@@ -19,6 +19,7 @@ public interface ILuaState : ILuaObject, IDisposable
     LuaType GetType(int index);
 
     void Copy(int fromIndex, int toIndex);
+    void Rotate(int index, int n);
 
     void PushNil();
     void PushBoolean(bool value);
