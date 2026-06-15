@@ -1,3 +1,6 @@
-﻿namespace NuLua.Shared;
+﻿namespace NuLua;
 
-public interface ILuaState : IDisposable { }
+public interface ILuaState : IDisposable
+{
+    void OpenLibrary(string name);
+}
