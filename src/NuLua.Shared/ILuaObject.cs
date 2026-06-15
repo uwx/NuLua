@@ -2,7 +2,5 @@ namespace NuLua;
 
 public interface ILuaObject : IDisposable
 {
-    LuaObjectHandle Handle { get; }
+    IntPtr AsPointer();
 }
-
-public record struct LuaObjectHandle(ILuaState State, int Index);
