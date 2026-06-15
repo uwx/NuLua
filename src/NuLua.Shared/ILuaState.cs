@@ -31,7 +31,7 @@ public interface ILuaState : ILuaObject, IDisposable
     string ToString(int index);
     nint ToLightUserData(int index);
 
-    void GetGlobal(ReadOnlySpan<char> name);
+    LuaValue GetGlobal(ReadOnlySpan<char> name);
     void SetGlobal(ReadOnlySpan<char> name);
 
     LuaTable CreateTable(int initialArraySize = 0, int initialRecordsSize = 0);

@@ -2,6 +2,12 @@ namespace NuLua;
 
 public static class LuaStateExtensions
 {
+    public static void SetGlobal(this ILuaState state, ReadOnlySpan<char> name, LuaValue value)
+    {
+        state.Push(value);
+        state.SetGlobal(name);
+    }
+
     public static void Push(this ILuaState state, LuaValue value)
     {
         switch (value.Type)

@@ -317,7 +317,7 @@ public sealed unsafe class Lua55State : ILuaState
         return new LuaTable(this, GetTop() - 1);
     }
 
-    public void GetGlobal(ReadOnlySpan<char> name)
+    public LuaValue GetGlobal(ReadOnlySpan<char> name)
     {
         CheckDisposed();
         using var nameBytes = new NullTerminatedString(name);
@@ -326,6 +326,8 @@ public sealed unsafe class Lua55State : ILuaState
             (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(nameBytes.AsSpan()))
         );
         CheckResult(result);
+        var value = this.ToLuaValue(-1);
+        return value;
     }
 
     public void SetGlobal(ReadOnlySpan<char> name)
