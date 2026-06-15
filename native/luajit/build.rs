@@ -12,26 +12,30 @@ const CSHARP_PROJECT: &str = "NuLua.Interop.LuaJit";
 // is in place.
 fn main() {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let workspace_root = manifest_dir.parent().unwrap().parent().unwrap().to_path_buf();
+    let workspace_root = manifest_dir
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .to_path_buf();
     let luajit_root = workspace_root.join("submodules").join("luajit");
     let header_dir = luajit_root.join("src");
-    let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
 
-    let bindings_rs = out_dir.join("bindings.rs");
-    generate_rust_bindings(&header_dir, &bindings_rs);
+    let bindings_rs = "src/luajit.rs";
+    generate_rust_bindings(&header_dir, bindings_rs);
 
     let cs_out = workspace_root
         .join("src")
         .join(CSHARP_PROJECT)
         .join("Generated")
         .join(format!("{CSHARP_CLASS}.g.cs"));
-    generate_csharp_bindings(&bindings_rs, &cs_out);
+    generate_csharp_bindings(bindings_rs, &cs_out);
 
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-changed={}", header_dir.display());
 }
 
-fn generate_rust_bindings(header_dir: &Path, out: &Path) {
+fn generate_rust_bindings<T: AsRef<Path>>(header_dir: &Path, out: T) {
     let bindings = bindgen::Builder::default()
         .header(header_dir.join("lua.h").to_string_lossy())
         .header(header_dir.join("lualib.h").to_string_lossy())
@@ -55,15 +59,17 @@ fn generate_rust_bindings(header_dir: &Path, out: &Path) {
     bindings.write_to_file(out).expect("write bindings.rs");
 }
 
-fn generate_csharp_bindings(bindings_rs: &Path, out_cs: &Path) {
+fn generate_csharp_bindings<T: AsRef<Path>>(bindings_rs: T, out_cs: &Path) {
     std::fs::create_dir_all(out_cs.parent().unwrap()).expect("mkdir Generated/");
     csbindgen::Builder::default()
         .input_bindgen_file(bindings_rs)
+        .rust_file_header("use crate::luajit::*;")
         .csharp_class_accessibility("public")
         .csharp_file_header("using NuLua.Polyfills;")
         .csharp_dll_name(FLAVOR)
         .csharp_namespace(CSHARP_NAMESPACE)
         .csharp_class_name(CSHARP_CLASS)
-        .generate_csharp_file(out_cs)
+        .csharp_entry_point_prefix("csbindgen")
+        .generate_to_file("src/luajit_ffi.rs", out_cs.to_str().unwrap())
         .expect("csbindgen failed");
 }
