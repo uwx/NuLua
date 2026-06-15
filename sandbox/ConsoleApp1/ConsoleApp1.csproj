@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <ItemGroup>
     <ProjectReference Include="..\..\src\NuLua.Lua55\NuLua.Lua55.csproj" />
   </ItemGroup>
