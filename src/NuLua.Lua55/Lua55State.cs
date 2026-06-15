@@ -1,0 +1,403 @@
+﻿using System.Buffers;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Text;
+using NuLua.Internal;
+using NuLua.Interop.Lua55;
+
+namespace NuLua.Lua55;
+
+public sealed unsafe class Lua55State : ILuaState
+{
+    lua_State* ptr;
+
+    Lua55State(lua_State* ptr)
+    {
+        this.ptr = ptr;
+    }
+
+    public static Lua55State Create()
+    {
+        var ptr = NativeMethods.luaL_newstate();
+        if (ptr == null)
+        {
+            throw new LuaException(NativeMethods.LUA_ERRMEM, "Failed to create Lua state.");
+        }
+
+        return new Lua55State(ptr);
+    }
+
+    public lua_State* AsPointer() => ptr;
+
+    LuaObjectHandle ILuaObject.Handle => new(this, -1);
+
+    nint ILuaState.AsPointer() => (nint)ptr;
+
+    public void Dispose()
+    {
+        if (ptr != null)
+        {
+            NativeMethods.lua_close(ptr);
+            ptr = null;
+        }
+    }
+
+    void CheckDisposed()
+    {
+        if (ptr == null)
+        {
+            throw new ObjectDisposedException(nameof(Lua55State));
+        }
+    }
+
+    void CheckResult(int code)
+    {
+        if (code != 0)
+        {
+            nuint len;
+            var message = NativeMethods.luaL_tolstring(ptr, -1, &len);
+            var messageStr = new string((sbyte*)message, 0, (int)len);
+            throw new LuaException((uint)code, messageStr);
+        }
+    }
+
+    public void OpenBaseLibrary()
+    {
+        CheckDisposed();
+        var code = NativeMethods.luaopen_base(ptr);
+        CheckResult(code);
+    }
+
+    public void OpenTableLibrary()
+    {
+        CheckDisposed();
+        var code = NativeMethods.luaopen_table(ptr);
+        CheckResult(code);
+    }
+
+    public void OpenStringLibrary()
+    {
+        CheckDisposed();
+        var code = NativeMethods.luaopen_string(ptr);
+        CheckResult(code);
+    }
+
+    public void OpenMathLibrary()
+    {
+        CheckDisposed();
+        var code = NativeMethods.luaopen_math(ptr);
+        CheckResult(code);
+    }
+
+    public void OpenCoroutineLibrary()
+    {
+        CheckDisposed();
+        var code = NativeMethods.luaopen_coroutine(ptr);
+        CheckResult(code);
+    }
+
+    public void OpenIoLibrary()
+    {
+        CheckDisposed();
+        var code = NativeMethods.luaopen_io(ptr);
+        CheckResult(code);
+    }
+
+    public void OpenOsLibrary()
+    {
+        CheckDisposed();
+        var code = NativeMethods.luaopen_os(ptr);
+        CheckResult(code);
+    }
+
+    public void OpenPackageLibrary()
+    {
+        CheckDisposed();
+        var code = NativeMethods.luaopen_package(ptr);
+        CheckResult(code);
+    }
+
+    public void OpenDebugLibrary()
+    {
+        CheckDisposed();
+        var code = NativeMethods.luaopen_debug(ptr);
+        CheckResult(code);
+    }
+
+    public void LoadString(ReadOnlySpan<byte> utf8Code, ReadOnlySpan<byte> utf8ChunkName)
+    {
+        CheckDisposed();
+        fixed (byte* codePtr = utf8Code)
+        {
+            var result = NativeMethods.luaL_loadbufferx(
+                ptr,
+                codePtr,
+                (nuint)utf8Code.Length,
+                (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(utf8ChunkName)),
+                (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("t"u8))
+            );
+            CheckResult(result);
+        }
+    }
+
+    public void LoadString(ReadOnlySpan<char> code, ReadOnlySpan<char> chunkName)
+    {
+        using var codeBytes = new NullTerminatedString(code);
+        using var chunkNameBytes = new NullTerminatedString(chunkName);
+        LoadString(codeBytes.AsSpan(), chunkNameBytes.AsSpan());
+    }
+
+    public void LoadBuffer(ReadOnlySpan<byte> buffer, ReadOnlySpan<byte> utf8ChunkName)
+    {
+        CheckDisposed();
+        fixed (byte* bufferPtr = buffer)
+        {
+            var result = NativeMethods.luaL_loadbufferx(
+                ptr,
+                bufferPtr,
+                (nuint)buffer.Length,
+                (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(utf8ChunkName)),
+                (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("b"u8))
+            );
+            CheckResult(result);
+        }
+    }
+
+    public void LoadBuffer(ReadOnlySpan<byte> buffer, ReadOnlySpan<char> chunkName)
+    {
+        using var chunkNameBytes = new NullTerminatedString(chunkName);
+        LoadBuffer(buffer, chunkNameBytes.AsSpan());
+    }
+
+    public LuaType GetType(int index)
+    {
+        CheckDisposed();
+        var t = (uint)NativeMethods.lua_type(ptr, index);
+        return t switch
+        {
+            NativeMethods.LUA_TBOOLEAN => LuaType.Boolean,
+            NativeMethods.LUA_TNUMBER => LuaType.Number,
+            NativeMethods.LUA_TSTRING => LuaType.String,
+            NativeMethods.LUA_TTABLE => LuaType.Table,
+            NativeMethods.LUA_TFUNCTION => LuaType.Function,
+            NativeMethods.LUA_TUSERDATA => LuaType.UserData,
+            NativeMethods.LUA_TTHREAD => LuaType.Thread,
+            NativeMethods.LUA_TLIGHTUSERDATA => LuaType.LightUserData,
+            NativeMethods.LUA_TNIL => LuaType.Nil,
+            _ => throw new NotSupportedException($"Unsupported Lua type code: {t}"),
+        };
+    }
+
+    public int GetTop()
+    {
+        CheckDisposed();
+        return NativeMethods.lua_gettop(ptr);
+    }
+
+    public void SetTop(int index)
+    {
+        CheckDisposed();
+        NativeMethods.lua_settop(ptr, index);
+    }
+
+    public void PushNil()
+    {
+        CheckDisposed();
+        NativeMethods.lua_pushnil(ptr);
+    }
+
+    public void PushBoolean(bool value)
+    {
+        CheckDisposed();
+        NativeMethods.lua_pushboolean(ptr, value ? 1 : 0);
+    }
+
+    public void PushInteger(long value)
+    {
+        CheckDisposed();
+        NativeMethods.lua_pushinteger(ptr, value);
+    }
+
+    public void PushNumber(double value)
+    {
+        CheckDisposed();
+        NativeMethods.lua_pushnumber(ptr, value);
+    }
+
+    public void PushString(ReadOnlySpan<byte> utf8Str)
+    {
+        CheckDisposed();
+        fixed (byte* strPtr = utf8Str)
+        {
+            NativeMethods.lua_pushlstring(ptr, strPtr, (nuint)utf8Str.Length);
+        }
+    }
+
+    public void PushString(ReadOnlySpan<char> str)
+    {
+        CheckDisposed();
+        var buffer = ArrayPool<byte>.Shared.Rent(str.Length * 3);
+        try
+        {
+            var len = Encoding.UTF8.GetBytes(str, buffer);
+            fixed (byte* strPtr = buffer)
+            {
+                NativeMethods.lua_pushlstring(ptr, strPtr, (nuint)len);
+            }
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
+        }
+    }
+
+    public void PushLightUserData(nint data)
+    {
+        CheckDisposed();
+        NativeMethods.lua_pushlightuserdata(ptr, (void*)data);
+    }
+
+    public void PushValue(int index)
+    {
+        CheckDisposed();
+        NativeMethods.lua_pushvalue(ptr, index);
+    }
+
+    public bool ToBoolean(int index)
+    {
+        CheckDisposed();
+        return NativeMethods.lua_toboolean(ptr, index) != 0;
+    }
+
+    public double ToNumber(int index)
+    {
+        CheckDisposed();
+        return NativeMethods.lua_tonumberx(ptr, index, null);
+    }
+
+    public string ToString(int index)
+    {
+        CheckDisposed();
+        nuint len;
+        var strPtr = NativeMethods.lua_tolstring(ptr, index, &len);
+        return new string((sbyte*)strPtr, 0, (int)len);
+    }
+
+    public nint ToLightUserData(int index)
+    {
+        CheckDisposed();
+        return (nint)NativeMethods.lua_touserdata(ptr, index);
+    }
+
+    public void XMove(Lua55State target, int count)
+    {
+        CheckDisposed();
+        NativeMethods.lua_xmove(ptr, target.ptr, count);
+    }
+
+    public LuaTable CreateTable(int initialArraySize = 0, int initialRecordsSize = 0)
+    {
+        CheckDisposed();
+        NativeMethods.lua_createtable(ptr, initialArraySize, initialRecordsSize);
+        return new LuaTable(this, GetTop() - 1);
+    }
+
+    public void GetGlobal(ReadOnlySpan<char> name)
+    {
+        CheckDisposed();
+        using var nameBytes = new NullTerminatedString(name);
+        var result = NativeMethods.lua_getglobal(
+            ptr,
+            (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(nameBytes.AsSpan()))
+        );
+        CheckResult(result);
+    }
+
+    public void SetGlobal(ReadOnlySpan<char> name)
+    {
+        CheckDisposed();
+        using var nameBytes = new NullTerminatedString(name);
+        NativeMethods.lua_setglobal(
+            ptr,
+            (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(nameBytes.AsSpan()))
+        );
+    }
+
+    public void GetTable(int index)
+    {
+        CheckDisposed();
+        var result = NativeMethods.lua_gettable(ptr, index);
+        CheckResult(result);
+    }
+
+    public void SetTable(int index)
+    {
+        CheckDisposed();
+        NativeMethods.lua_settable(ptr, index);
+    }
+
+    public void Arith(LuaArithmeticOperator op)
+    {
+        CheckDisposed();
+        switch (op)
+        {
+            case LuaArithmeticOperator.Add:
+                NativeMethods.lua_arith(ptr, (int)NativeMethods.LUA_OPADD);
+                break;
+            case LuaArithmeticOperator.Sub:
+                NativeMethods.lua_arith(ptr, (int)NativeMethods.LUA_OPSUB);
+                break;
+            case LuaArithmeticOperator.Mul:
+                NativeMethods.lua_arith(ptr, (int)NativeMethods.LUA_OPMUL);
+                break;
+            case LuaArithmeticOperator.Div:
+                NativeMethods.lua_arith(ptr, (int)NativeMethods.LUA_OPDIV);
+                break;
+            case LuaArithmeticOperator.Mod:
+                NativeMethods.lua_arith(ptr, (int)NativeMethods.LUA_OPMOD);
+                break;
+            case LuaArithmeticOperator.Pow:
+                NativeMethods.lua_arith(ptr, (int)NativeMethods.LUA_OPPOW);
+                break;
+            default:
+                throw new NotSupportedException($"Unsupported Lua arithmetic operator: {op}");
+        }
+    }
+
+    public void Compare(LuaComparisonOperator op)
+    {
+        CheckDisposed();
+        var result = NativeMethods.lua_compare(
+            ptr,
+            -2,
+            -1,
+            op switch
+            {
+                LuaComparisonOperator.Equal => (int)NativeMethods.LUA_OPEQ,
+                LuaComparisonOperator.Less => (int)NativeMethods.LUA_OPLT,
+                LuaComparisonOperator.LessOrEqual => (int)NativeMethods.LUA_OPLE,
+                _ => throw new NotSupportedException($"Unsupported Lua comparison operator: {op}"),
+            }
+        );
+
+        CheckResult(result);
+    }
+
+    public void Concat(int count)
+    {
+        CheckDisposed();
+        NativeMethods.lua_concat(ptr, count);
+    }
+
+    public void Len(int index)
+    {
+        CheckDisposed();
+        NativeMethods.lua_len(ptr, index);
+    }
+
+    public void Call(int argCount, int returnCount)
+    {
+        CheckDisposed();
+        NativeMethods.lua_callk(ptr, argCount, returnCount, 0, null);
+    }
+}

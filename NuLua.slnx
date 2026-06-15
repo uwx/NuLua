@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/sandbox/">
+    <Project Path="sandbox/ConsoleApp1/ConsoleApp1.csproj" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/NuLua.Interop.Lua51/NuLua.Interop.Lua51.csproj" />
     <Project Path="src/NuLua.Interop.Lua52/NuLua.Interop.Lua52.csproj" />
@@ -7,6 +10,7 @@
     <Project Path="src/NuLua.Interop.Lua55/NuLua.Interop.Lua55.csproj" />
     <Project Path="src/NuLua.Interop.LuaJit/NuLua.Interop.LuaJit.csproj" />
     <Project Path="src/NuLua.Interop.Luau/NuLua.Interop.Luau.csproj" />
+    <Project Path="src/NuLua.Lua55/NuLua.Lua55.csproj" />
     <Project Path="src/NuLua.Runtime.Lua51/NuLua.Runtime.Lua51.csproj" />
     <Project Path="src/NuLua.Runtime.Lua52/NuLua.Runtime.Lua52.csproj" />
     <Project Path="src/NuLua.Runtime.Lua53/NuLua.Runtime.Lua53.csproj" />

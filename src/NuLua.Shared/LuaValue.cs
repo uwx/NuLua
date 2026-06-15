@@ -56,12 +56,12 @@ public readonly struct LuaValue : IEquatable<LuaValue>
         return new(LuaType.Vector, new() { VectorValue = value }, null);
     }
 
-    public static LuaValue FromTable(ILuaTable value)
+    public static LuaValue FromTable(LuaTable value)
     {
         return new(LuaType.Table, default, value);
     }
 
-    public static LuaValue FromFunction(ILuaFunction value)
+    public static LuaValue FromFunction(LuaFunction value)
     {
         return new(LuaType.Function, default, value);
     }
@@ -99,8 +99,8 @@ public readonly struct LuaValue : IEquatable<LuaValue>
             LuaType.Number => value.NumberValue.ToString(),
             LuaType.Vector => VectorToString(value.VectorValue),
             LuaType.String => ((string)reference!).ToString(),
-            LuaType.Table => ((ILuaTable)reference!).ToString(),
-            LuaType.Function => ((ILuaFunction)reference!).ToString()!,
+            LuaType.Table => ((LuaTable)reference!).ToString(),
+            LuaType.Function => ((LuaFunction)reference!).ToString()!,
             LuaType.UserData => ((ILuaUserData)reference!).ToString(),
             LuaType.Thread => ((ILuaState)reference!).ToString()!,
             LuaType.Buffer => ((ILuaBuffer)reference!).ToString()!,
@@ -280,29 +280,29 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                 }
                 break;
             case LuaType.Table:
-                if (typeof(T) == typeof(ILuaTable))
+                if (typeof(T) == typeof(LuaTable))
                 {
-                    var r = (ILuaTable)reference!;
-                    result = Unsafe.As<ILuaTable, T>(ref r);
+                    var r = (LuaTable)reference!;
+                    result = Unsafe.As<LuaTable, T>(ref r);
                     return true;
                 }
                 if (typeof(T) == typeof(object))
                 {
-                    var r = (object)(ILuaTable)reference!;
+                    var r = (object)(LuaTable)reference!;
                     result = Unsafe.As<object, T>(ref r);
                     return true;
                 }
                 break;
             case LuaType.Function:
-                if (typeof(T) == typeof(ILuaFunction))
+                if (typeof(T) == typeof(LuaFunction))
                 {
-                    var r = (ILuaFunction)reference!;
-                    result = Unsafe.As<ILuaFunction, T>(ref r);
+                    var r = (LuaFunction)reference!;
+                    result = Unsafe.As<LuaFunction, T>(ref r);
                     return true;
                 }
                 if (typeof(T) == typeof(object))
                 {
-                    var r = (object)(ILuaFunction)reference!;
+                    var r = (object)(LuaFunction)reference!;
                     result = Unsafe.As<object, T>(ref r);
                     return true;
                 }
