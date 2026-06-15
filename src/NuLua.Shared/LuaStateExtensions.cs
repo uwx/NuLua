@@ -99,9 +99,17 @@ public static class LuaStateExtensions
         };
     }
 
-    public static void DoString(this ILuaState state, ReadOnlySpan<char> code)
+    public static LuaValue[] DoString(this ILuaState state, ReadOnlySpan<char> code)
     {
         state.LoadString(code);
         state.Call(0, 0);
+        var returnCount = state.GetTop();
+        var results = new LuaValue[returnCount];
+        for (int i = 0; i < returnCount; i++)
+        {
+            results[i] = state.ToLuaValue(i - returnCount);
+        }
+        state.SetTop(0);
+        return results;
     }
 }
