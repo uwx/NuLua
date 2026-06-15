@@ -24,7 +24,6 @@ var thread = state
         """
 return coroutine.create(function()
     for i = 1, 5 do
-        print("iter: ", i)
         coroutine.yield(i)
     end
 end)
@@ -34,9 +33,9 @@ end)
 
 Console.WriteLine($"thread status: {thread.Status}");
 
-state.Push(LuaValue.FromThread(thread));
 for (int i = 0; i < 5; i++)
 {
-    state.Resume(0);
-    Console.WriteLine($"yield: {state.ToNumber(-1)}");
+    thread.Resume(0);
+    Console.WriteLine($"yield: {thread.ToNumber(-1)}");
+    thread.Pop(1);
 }
