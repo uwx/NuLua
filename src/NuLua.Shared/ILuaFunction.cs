@@ -1,7 +1,6 @@
 namespace NuLua;
 
-public interface ILuaFunction : IDisposable
+public interface ILuaFunction : ILuaObject
 {
-    IntPtr AsPointer();
     int Invoke(ILuaState state, int argCount);
 }

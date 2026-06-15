@@ -1,8 +1,7 @@
 namespace NuLua;
 
-public interface ILuaTable : IDisposable
+public interface ILuaTable : ILuaObject
 {
-    IntPtr AsPointer();
     LuaValue GetValue(LuaValue key);
     void SetValue(LuaValue key, LuaValue value);
 }

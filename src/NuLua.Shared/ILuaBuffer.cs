@@ -1,7 +1,6 @@
 namespace NuLua;
 
-public interface ILuaBuffer : IDisposable
+public interface ILuaBuffer : ILuaObject
 {
-    IntPtr AsPointer();
     Span<byte> AsSpan();
 }

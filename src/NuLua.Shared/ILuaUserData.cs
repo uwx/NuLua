@@ -1,7 +1,6 @@
 namespace NuLua;
 
-public interface ILuaUserData
+public interface ILuaUserData : ILuaObject
 {
-    IntPtr AsPointer();
     bool TryRead<T>(out T result);
 }

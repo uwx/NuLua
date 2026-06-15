@@ -1,6 +1,6 @@
 ﻿namespace NuLua;
 
-public interface ILuaState : IDisposable
+public interface ILuaState : ILuaObject
 {
     void OpenLibrary(string name);
     void Push(LuaValue value);
