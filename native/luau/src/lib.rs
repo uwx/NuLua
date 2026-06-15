@@ -5,4 +5,7 @@
     dead_code
 )]
 
-include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+mod luau;
+mod luau_ffi;
+
+pub use luau_ffi::*;

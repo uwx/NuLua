@@ -5,4 +5,7 @@
     dead_code
 )]
 
-include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+mod lua52;
+mod lua52_ffi;
+
+pub use lua52_ffi::*;
