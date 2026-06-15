@@ -5,4 +5,7 @@
     dead_code
 )]
 
-include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+mod luajit;
+mod luajit_ffi;
+
+pub use luajit_ffi::*;
