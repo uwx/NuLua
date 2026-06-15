@@ -46,7 +46,9 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
         }
         else
         {
-            return Create(parent, index);
+            state = new Lua55State(ptr, parent, index);
+            ptrToState[(nint)ptr] = state;
+            return state;
         }
     }
 
