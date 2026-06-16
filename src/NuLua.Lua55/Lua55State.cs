@@ -793,10 +793,7 @@ public sealed unsafe partial class Lua55State : ILuaState<Lua55State>
         CheckResult(result);
     }
 
-    public ValueTask CompleteAsync(
-        int initialArgCount,
-        CancellationToken cancellationToken = default
-    )
+    ValueTask ILuaState.CompleteAsync(int initialArgCount, CancellationToken cancellationToken)
     {
         CheckDisposed();
         return Lua55AsyncDriver.RunAsync(this, initialArgCount, cancellationToken);
