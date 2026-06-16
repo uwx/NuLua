@@ -170,6 +170,12 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                     result = Unsafe.As<LuaUserData, T>(ref r);
                     return true;
                 }
+                if (typeof(ILuaObject).IsAssignableFrom(typeof(T)))
+                {
+                    var r = (ILuaObject)reference!;
+                    result = Unsafe.As<ILuaObject, T>(ref r);
+                    return true;
+                }
                 if (typeof(T) == typeof(object))
                 {
                     var r = (object)(LuaUserData)reference!;
@@ -406,5 +412,6 @@ public readonly struct LuaValue : IEquatable<LuaValue>
     public static implicit operator LuaValue(LuaFunction value) => FromFunction(value);
 
     public static implicit operator LuaValue(LuaTable value) => FromTable(value);
+
     public static implicit operator LuaValue(LuaUserData value) => FromUserData(value);
 }
