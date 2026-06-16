@@ -118,8 +118,14 @@ public sealed unsafe partial class Lua55State : ILuaState<Lua55State>
     {
         if (ptr != null)
         {
-            from?.Unref(reference);
-            NativeMethods.lua_close(ptr);
+            if (from == null)
+            {
+                NativeMethods.lua_close(ptr);
+            }
+            else
+            {
+                from.Unref(reference);
+            }
             ptrToState.TryRemove((nint)ptr, out _);
             ptr = null;
         }
@@ -437,7 +443,19 @@ public sealed unsafe partial class Lua55State : ILuaState<Lua55State>
         {
             throw new InvalidOperationException("Value at the specified index is not a thread.");
         }
-        return GetOrCreate(threadPtr, reference);
+
+        if (ptrToState.TryGetValue((nint)threadPtr, out var threadState))
+        {
+            return threadState;
+        }
+        else
+        {
+            NativeMethods.lua_pushvalue(ptr, index);
+            var reference = this.Ref();
+            threadState = new Lua55State(threadPtr, this, reference);
+            ptrToState[(nint)threadPtr] = threadState;
+            return threadState;
+        }
     }
 
     ILuaState ILuaState.ToThread(int index) => ToThread(index);
