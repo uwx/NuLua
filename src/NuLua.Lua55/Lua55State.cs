@@ -83,6 +83,20 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
         }
     }
 
+    public LuaValue this[ReadOnlySpan<char> name]
+    {
+        get
+        {
+            GetGlobal(name);
+            return this.Pop();
+        }
+        set
+        {
+            this.Push(value);
+            SetGlobal(name);
+        }
+    }
+
     public void Dispose()
     {
         if (ptr != null)
@@ -386,10 +400,15 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
         return new string((sbyte*)strPtr, 0, (int)len);
     }
 
-    public nint ToLightUserData(int index)
+    public nint ToUserDataPointer(int index)
     {
         CheckDisposed();
-        return (nint)NativeMethods.lua_touserdata(ptr, index);
+        var userData = NativeMethods.lua_touserdata(ptr, index);
+        if (userData == null)
+        {
+            throw new InvalidOperationException("Value at the specified index is not user data.");
+        }
+        return (nint)userData;
     }
 
     public Lua55State ToThread(int index)
@@ -407,7 +426,12 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
 
     public void* ToPointer(int index)
     {
-        CheckDisposed();
+        if (GetType(index) != LuaType.LightUserData)
+        {
+            throw new InvalidOperationException(
+                "Value at the specified index is not light user data."
+            );
+        }
         return NativeMethods.lua_topointer(ptr, index);
     }
 
@@ -426,14 +450,13 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
         NativeMethods.lua_xmove(ptr, target.ptr, count);
     }
 
-    public LuaTable CreateTable(int initialArraySize = 0, int initialRecordsSize = 0)
+    public void NewTable(int initialArraySize = 0, int initialRecordsSize = 0)
     {
         CheckDisposed();
         NativeMethods.lua_createtable(ptr, initialArraySize, initialRecordsSize);
-        return new LuaTable(this, this.Ref());
     }
 
-    public LuaValue GetGlobal(ReadOnlySpan<char> name)
+    public void GetGlobal(ReadOnlySpan<char> name)
     {
         CheckDisposed();
         using var nameBytes = new NullTerminatedString(name);
@@ -442,15 +465,12 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
             (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(nameBytes.AsSpan()))
         );
         CheckResult(result);
-        var value = this.ToLuaValue(-1);
-        return value;
     }
 
-    public void SetGlobal(ReadOnlySpan<char> name, LuaValue value)
+    public void SetGlobal(ReadOnlySpan<char> name)
     {
         CheckDisposed();
         using var nameBytes = new NullTerminatedString(name);
-        this.Push(value);
         NativeMethods.lua_setglobal(
             ptr,
             (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(nameBytes.AsSpan()))
@@ -468,6 +488,45 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
     {
         CheckDisposed();
         NativeMethods.lua_settable(ptr, index);
+    }
+
+    public void NewUserData(int size, int userValueCount)
+    {
+        CheckDisposed();
+        NativeMethods.lua_newuserdatauv(ptr, (nuint)size, userValueCount);
+    }
+
+    public bool TryGetUserValue(int index, int userValueIndex, out LuaType type)
+    {
+        CheckDisposed();
+        var result = NativeMethods.lua_getiuservalue(ptr, index, userValueIndex);
+        if (result == NativeMethods.LUA_TNONE)
+        {
+            type = default;
+            return false;
+        }
+        else
+        {
+            type = CodeToType((uint)result);
+            this.Pop(1);
+            return true;
+        }
+    }
+
+    public bool TrySetUserValue(int index, int userValueIndex, out LuaType type)
+    {
+        CheckDisposed();
+        var result = NativeMethods.lua_setiuservalue(ptr, index, userValueIndex);
+        if (result == NativeMethods.LUA_TNONE)
+        {
+            type = default;
+            return false;
+        }
+        else
+        {
+            type = CodeToType((uint)result);
+            return true;
+        }
     }
 
     public LuaFunction CreateFunction(LuaFunc<Lua55State> func)

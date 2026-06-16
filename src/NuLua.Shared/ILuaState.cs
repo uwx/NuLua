@@ -8,6 +8,8 @@ public interface ILuaState : ILuaObject
     LuaThreadStatus Status { get; }
     int RegistryIndex { get; }
 
+    LuaValue this[ReadOnlySpan<char> name] { get; set; }
+
     nint AsPointer();
 
     void OpenLibraries();
@@ -41,16 +43,20 @@ public interface ILuaState : ILuaObject
     bool ToBoolean(int index);
     double ToNumber(int index);
     string ToString(int index);
-    nint ToLightUserData(int index);
+    nint ToUserDataPointer(int index);
     ILuaState ToThread(int index);
 
-    LuaValue GetGlobal(ReadOnlySpan<char> name);
-    void SetGlobal(ReadOnlySpan<char> name, LuaValue value);
+    void GetGlobal(ReadOnlySpan<char> name);
+    void SetGlobal(ReadOnlySpan<char> name);
 
-    LuaTable CreateTable(int initialArraySize = 0, int initialRecordsSize = 0);
+    void NewTable(int initialArraySize = 0, int initialRecordsSize = 0);
     void GetTable(int index);
     void SetTable(int index);
     void Next(int index);
+
+    void NewUserData(int size, int userValueCount);
+    bool TryGetUserValue(int index, int userValueIndex, out LuaType type);
+    bool TrySetUserValue(int index, int userValueIndex, out LuaType type);
 
     void Arith(LuaArithmeticOperator op);
     void Compare(LuaComparisonOperator op);

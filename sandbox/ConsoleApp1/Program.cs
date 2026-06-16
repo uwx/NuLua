@@ -1,43 +1,19 @@
-﻿using NuLua;
+﻿using System.Runtime.CompilerServices;
+using NuLua;
 using NuLua.Lua55;
 
 using var state = Lua55State.Create();
 state.OpenBaseLibrary();
 
-var addFunc = state.CreateFunction(
-    (state, args) =>
-    {
-        var a = args[0].Read<double>();
-        var b = args[1].Read<double>();
-        state.Push(a + b);
-        return 1;
-    }
-);
+var userData = state.CreateUserData(Unsafe.SizeOf<Point>());
+Console.WriteLine(userData.Size);
 
-state.SetGlobal("add", addFunc);
-var results = state.DoString("return add(10, 20)");
-Console.WriteLine($"{results[0].Read<double>()}");
+userData.Write(new Point { X = 10, Y = 20 });
+var point = userData.Read<Point>();
+Console.WriteLine(point);
 
-state.OpenCoroutineLibrary();
-var thread = state
-    .DoString(
-        """
-return coroutine.create(function()
-    for i = 1, 5 do
-        coroutine.yield(i)
-    end
-end)
-"""
-    )[0]
-    .Read<Lua55State>();
-
-Console.WriteLine($"thread status: {thread.Status}");
-
-for (int i = 0; i < 5; i++)
+record struct Point
 {
-    thread.Resume(0);
-    Console.WriteLine($"yield: {thread.ToNumber(-1)}");
-    thread.Pop(1);
+    public int X;
+    public int Y;
 }
-
-Console.WriteLine($"thread status: {thread.Status}");

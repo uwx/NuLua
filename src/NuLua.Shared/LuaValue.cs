@@ -46,7 +46,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>
         return new(LuaType.LightUserData, new() { PointerValue = value }, null);
     }
 
-    public static LuaValue FromUserData(ILuaUserData value)
+    public static LuaValue FromUserData(LuaUserData value)
     {
         return new(LuaType.UserData, default, value);
     }
@@ -101,7 +101,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>
             LuaType.String => ((string)reference!).ToString(),
             LuaType.Table => ((LuaTable)reference!).ToString(),
             LuaType.Function => ((LuaFunction)reference!).ToString()!,
-            LuaType.UserData => ((ILuaUserData)reference!).ToString(),
+            LuaType.UserData => ((LuaUserData)reference!).ToString(),
             LuaType.Thread => ((ILuaState)reference!).ToString()!,
             LuaType.Buffer => ((ILuaBuffer)reference!).ToString()!,
             _ => "",
@@ -164,24 +164,16 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                 }
                 break;
             case LuaType.UserData:
-                if (typeof(T) == typeof(ILuaUserData))
+                if (typeof(T) == typeof(LuaUserData))
                 {
-                    var r = (ILuaUserData)reference!;
-                    result = Unsafe.As<ILuaUserData, T>(ref r);
+                    var r = (LuaUserData)reference!;
+                    result = Unsafe.As<LuaUserData, T>(ref r);
                     return true;
                 }
                 if (typeof(T) == typeof(object))
                 {
-                    var r = (object)(ILuaUserData)reference!;
+                    var r = (object)(LuaUserData)reference!;
                     result = Unsafe.As<object, T>(ref r);
-                    return true;
-                }
-                if (
-                    reference is ILuaUserData userData
-                    && userData.TryRead<T>(out var userDataResult)
-                )
-                {
-                    result = userDataResult;
                     return true;
                 }
                 break;

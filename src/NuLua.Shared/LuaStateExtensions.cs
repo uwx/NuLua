@@ -78,6 +78,32 @@ public static class LuaStateExtensions
         state.SetTop(state.GetTop() - 1);
     }
 
+    public static LuaReference ToReference(this ILuaState state, int index)
+    {
+        state.PushValue(index);
+        var reference = state.Ref();
+        state.Pop(1);
+        return reference;
+    }
+
+    public static LuaTable ToTable(this ILuaState state, int index)
+    {
+        if (state.GetType(index) != LuaType.Table)
+        {
+            throw new InvalidOperationException("Value at the specified index is not a table.");
+        }
+        return new LuaTable(state, state.ToReference(index));
+    }
+
+    public static LuaUserData ToUserData(this ILuaState state, int index)
+    {
+        if (state.GetType(index) != LuaType.UserData)
+        {
+            throw new InvalidOperationException("Value at the specified index is not user data.");
+        }
+        return new LuaUserData(state, state.ToReference(index));
+    }
+
     public static LuaValue ToLuaValue(this ILuaState state, int index)
     {
         var type = state.GetType(index);
@@ -264,6 +290,22 @@ public static class LuaStateExtensions
         state.Push(b);
         state.Compare(LuaComparisonOperator.LessOrEqual);
         return state.ToBoolean(-1);
+    }
+
+    public static LuaTable CreateTable(
+        this ILuaState state,
+        int initialArraySize = 0,
+        int initialRecordsSize = 0
+    )
+    {
+        state.NewTable(initialArraySize, initialRecordsSize);
+        return new LuaTable(state, state.Ref());
+    }
+
+    public static LuaUserData CreateUserData(this ILuaState state, int size, int userValueCount = 1)
+    {
+        state.NewUserData(size, userValueCount);
+        return new LuaUserData(state, state.Ref());
     }
 
     public static LuaValue[] DoString(this ILuaState state, ReadOnlySpan<char> code)
