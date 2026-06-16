@@ -670,6 +670,12 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
         CheckResult(result);
     }
 
+    public bool RawEqual(int index1, int index2)
+    {
+        CheckDisposed();
+        return NativeMethods.lua_rawequal(ptr, index1, index2) != 0;
+    }
+
     public LuaType RawGet(int index)
     {
         CheckDisposed();

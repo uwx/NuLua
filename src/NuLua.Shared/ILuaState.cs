@@ -65,6 +65,7 @@ public interface ILuaState : ILuaObject
     void Call(int argCount, int returnCount);
     void Resume(int argCount);
 
+    bool RawEqual(int index1, int index2);
     LuaType RawGet(int index);
     int RawLen(int index);
     void RawSet(int index);
