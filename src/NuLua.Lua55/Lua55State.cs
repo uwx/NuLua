@@ -545,11 +545,7 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
             var buffer = ArrayPool<LuaValue>.Shared.Rent(numArgs);
             try
             {
-                for (int i = 0; i < numArgs; i++)
-                {
-                    buffer[i] = state.ToLuaValue(i + 1);
-                }
-                return func(state, buffer.AsSpan(0, numArgs));
+                return func(state, new LuaFuncArguments(state, numArgs));
             }
             finally
             {
