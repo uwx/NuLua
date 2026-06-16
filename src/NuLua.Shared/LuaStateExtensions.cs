@@ -139,6 +139,13 @@ public static class LuaStateExtensions
                 state.PushValue(reference);
                 return LuaValue.FromThread(state.ToThread(-1));
             }
+            case LuaType.UserData:
+            {
+                state.PushValue(index);
+                var reference = state.Ref();
+                state.Pop(1);
+                return new LuaUserData(state, reference);
+            }
             default:
                 throw new NotSupportedException($"Unsupported Lua value type: {type}");
         }
