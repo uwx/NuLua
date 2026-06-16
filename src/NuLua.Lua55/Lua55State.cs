@@ -486,6 +486,11 @@ public sealed unsafe partial class Lua55State : ILuaState<Lua55State>
         NativeMethods.lua_xmove(ptr, target.ptr, count);
     }
 
+    void ILuaState.XMove(ILuaState target, int count)
+    {
+        XMove((Lua55State)target, count);
+    }
+
     public void NewTable(int initialArraySize = 0, int initialRecordsSize = 0)
     {
         CheckDisposed();

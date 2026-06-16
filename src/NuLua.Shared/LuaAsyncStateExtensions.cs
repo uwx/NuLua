@@ -13,21 +13,17 @@ public static class LuaAsyncStateExtensions
         return new AsyncLuaFunction(state, state.Ref());
     }
 
-    public static ValueTask<LuaValue[]> CallAsync(
+    public static ValueTask CallAsync(
         this ILuaState state,
-        LuaFunctionBase function,
-        ReadOnlyMemory<LuaValue> args = default,
+        int argCount,
+        int resultCount,
         CancellationToken cancellationToken = default
     )
     {
         var co = state.CreateThread();
-        co.PushValue(function.Reference);
-        var span = args.Span;
-        for (int i = 0; i < span.Length; i++)
-        {
-            co.Push(span[i]);
-        }
-        return RunAndCollectAsync(state, co, args.Length, cancellationToken);
+        state.Pop(1);
+        state.XMove(co, argCount + 1);
+        return RunAndPushAsync(state, co, argCount, resultCount, cancellationToken);
     }
 
     public static ValueTask<LuaValue[]> DoStringAsync(
@@ -38,17 +34,53 @@ public static class LuaAsyncStateExtensions
     )
     {
         var co = state.CreateThread();
+        state.Pop(1);
         co.LoadString(code);
         var span = args.Span;
         for (int i = 0; i < span.Length; i++)
         {
             co.Push(span[i]);
         }
-        return RunAndCollectAsync(state, co, args.Length, cancellationToken);
+        return RunAndCollectAsync(co, args.Length, cancellationToken);
+    }
+
+    static async ValueTask RunAndPushAsync(
+        ILuaState state,
+        ILuaState co,
+        int argCount,
+        int resultCount,
+        CancellationToken cancellationToken
+    )
+    {
+        try
+        {
+            await co.CompleteAsync(argCount, cancellationToken).ConfigureAwait(false);
+            int actual = co.GetTop();
+            if (resultCount < 0)
+            {
+                if (actual > 0) co.XMove(state, actual);
+            }
+            else if (actual >= resultCount)
+            {
+                co.SetTop(resultCount);
+                if (resultCount > 0) co.XMove(state, resultCount);
+            }
+            else
+            {
+                if (actual > 0) co.XMove(state, actual);
+                for (int i = 0; i < resultCount - actual; i++)
+                {
+                    state.PushNil();
+                }
+            }
+        }
+        finally
+        {
+            co.Dispose();
+        }
     }
 
     static async ValueTask<LuaValue[]> RunAndCollectAsync(
-        ILuaState state,
         ILuaState co,
         int initialArgCount,
         CancellationToken cancellationToken

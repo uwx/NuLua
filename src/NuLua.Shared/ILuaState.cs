@@ -23,6 +23,7 @@ public interface ILuaState : ILuaObject
 
     void Copy(int fromIndex, int toIndex);
     void Rotate(int index, int n);
+    void XMove(ILuaState target, int count);
 
     void PushNil();
     void PushBoolean(bool value);
