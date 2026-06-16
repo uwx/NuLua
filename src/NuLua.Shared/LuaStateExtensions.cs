@@ -326,6 +326,19 @@ public static class LuaStateExtensions
         return new LuaFunction(state, state.Ref());
     }
 
+    public static ILuaState CreateThread(this ILuaState state)
+    {
+        state.NewThread();
+        return state.ToThread(-1);
+    }
+
+    public static TState CreateThread<TState>(this ILuaState<TState> state)
+        where TState : ILuaState<TState>
+    {
+        state.NewThread();
+        return state.ToThread(-1);
+    }
+
     public static LuaValue[] DoString(this ILuaState state, ReadOnlySpan<char> code)
     {
         var baseTop = state.GetTop();

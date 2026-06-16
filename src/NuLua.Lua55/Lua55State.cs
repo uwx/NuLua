@@ -565,15 +565,14 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
         NativeMethods.lua_pushcclosure(ptr, Fn, 1);
     }
 
-    public Lua55State CreateThread()
+    public void NewThread()
     {
         CheckDisposed();
         var threadPtr = NativeMethods.lua_newthread(ptr);
         if (threadPtr == null)
         {
-            throw new LuaException(NativeMethods.LUA_ERRMEM, "Failed to create Lua thread.");
+            throw new LuaException(NativeMethods.LUA_ERRMEM, "Failed to create new thread.");
         }
-        return GetOrCreate(threadPtr, this.Ref());
     }
 
     public void Arith(LuaArithmeticOperator op)

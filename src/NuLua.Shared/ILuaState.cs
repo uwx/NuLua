@@ -58,6 +58,8 @@ public interface ILuaState : ILuaObject
     bool TryGetUserValue(int index, int userValueIndex, out LuaValueType type);
     bool TrySetUserValue(int index, int userValueIndex, out LuaValueType type);
 
+    void NewThread();
+
     void Arith(LuaArithmeticOperator op);
     void Compare(LuaComparisonOperator op);
     void Concat(int count);
