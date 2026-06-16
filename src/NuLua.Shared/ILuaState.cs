@@ -66,6 +66,7 @@ public interface ILuaState : ILuaObject
 
     void LoadString(ReadOnlySpan<char> chunk, ReadOnlySpan<char> chunkName = default);
     void LoadString(ReadOnlySpan<byte> utf8Chunk, ReadOnlySpan<byte> utf8ChunkName = default);
+    bool TryDump(int index, Span<byte> buffer, out int bytesWritten);
 }
 
 public interface ILuaState<T> : ILuaState

@@ -234,6 +234,37 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
         LoadBuffer(buffer, chunkNameBytes.AsSpan());
     }
 
+    public bool TryDump(int index, Span<byte> buffer, out int bytesWritten)
+    {
+        static int Writer(lua_State* L, void* p, nuint sz, void* ud)
+        {
+            var bufferPtr = (byte*)ud;
+            if (sz > int.MaxValue || (nuint)bufferPtr + sz < (nuint)bufferPtr)
+            {
+                // Size is too large or overflowed
+                return 1;
+            }
+            Buffer.MemoryCopy(p, bufferPtr, sz, sz);
+            return 0;
+        }
+
+        CheckDisposed();
+        fixed (byte* bufferPtr = buffer)
+        {
+            var result = NativeMethods.lua_dump(ptr, Writer, bufferPtr, 0);
+            if (result == 0)
+            {
+                bytesWritten = 0;
+                return false;
+            }
+            else
+            {
+                bytesWritten = (int)(nuint)bufferPtr;
+                return true;
+            }
+        }
+    }
+
     public LuaType GetType(int index)
     {
         CheckDisposed();

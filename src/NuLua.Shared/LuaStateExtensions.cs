@@ -285,4 +285,27 @@ public static class LuaStateExtensions
 
         return results;
     }
+
+    public static byte[] Dump(this ILuaState state, int index)
+    {
+        var buffer = ArrayPool<byte>.Shared.Rent(1024);
+        try
+        {
+            while (true)
+            {
+                if (state.TryDump(index, buffer, out var bytesWritten))
+                {
+                    return buffer.AsSpan(0, bytesWritten).ToArray();
+                }
+                var newBuffer = ArrayPool<byte>.Shared.Rent(buffer.Length * 2);
+                Array.Copy(buffer, newBuffer, buffer.Length);
+                ArrayPool<byte>.Shared.Return(buffer);
+                buffer = newBuffer;
+            }
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
+        }
+    }
 }
