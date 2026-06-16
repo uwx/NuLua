@@ -1,4 +1,4 @@
-﻿using System.Runtime.CompilerServices;
+using System.Runtime.CompilerServices;
 using NuLua;
 using NuLua.Lua55;
 
@@ -44,6 +44,49 @@ var results = state.DoString(
 """
 );
 Console.WriteLine(results[0]);
+
+Console.WriteLine("--- async ---");
+
+var fetchAsync = state.CreateFunction(
+    async (state, args, ct) =>
+    {
+        var x = args[0].Read<int>();
+        await Task.Delay(50, ct);
+        state.Push(x * 10);
+        return 1;
+    }
+);
+state["fetch"] = fetchAsync;
+
+var asyncResults = await state.DoStringAsync(
+    """
+    local a = fetch(3)
+    local b = fetch(4)
+    return a + b
+    """
+);
+Console.WriteLine($"fetch(3) + fetch(4) = {asyncResults[0]}");
+
+var greet = state.CreateFunction(
+    async (state, args, ct) =>
+    {
+        var name = args[0].Read<string>();
+        await Task.Delay(1000, ct);
+        state.Push($"hello, {name}!");
+        return 1;
+    }
+);
+var greetResults = await greet.InvokeAsync(new LuaValue[] { "world" });
+Console.WriteLine(greetResults[0]);
+
+try
+{
+    state.DoString("return fetch(1)");
+}
+catch (LuaException ex)
+{
+    Console.WriteLine($"sync call of async function failed as expected: {ex.Message}");
+}
 
 record struct Point
 {

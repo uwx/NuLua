@@ -8,14 +8,19 @@ using NuLua.Interop.Lua55;
 
 namespace NuLua.Lua55;
 
-public sealed unsafe class Lua55State : ILuaState<Lua55State>
+public sealed unsafe partial class Lua55State : ILuaState<Lua55State>
 {
     static readonly ConcurrentDictionary<nint, Lua55State> ptrToState = new();
 
     readonly List<LuaFunc<Lua55State>> funcs = new(8);
+    readonly List<AsyncLuaFunc<Lua55State>> asyncFuncs = new(8);
     readonly LuaReference reference;
     Lua55State? from;
     lua_State* ptr;
+
+    ValueTask<int> pendingAsyncTask;
+    bool hasPendingTask;
+    CancellationToken asyncCancellationToken;
 
     Lua55State? ILuaState<Lua55State>.From => from;
 
@@ -51,6 +56,18 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
             ptrToState[(nint)ptr] = state;
             return state;
         }
+    }
+
+    static Lua55State GetMainState(lua_State* L)
+    {
+        NativeMethods.lua_rawgeti(
+            L,
+            NativeMethods.LUA_REGISTRYINDEX,
+            NativeMethods.LUA_RIDX_MAINTHREAD
+        );
+        var mainPtr = NativeMethods.lua_tothread(L, -1);
+        NativeMethods.lua_settop(L, NativeMethods.lua_gettop(L) - 1);
+        return ptrToState[(nint)mainPtr];
     }
 
     public lua_State* AsPointer() => ptr;
@@ -460,11 +477,10 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
     {
         CheckDisposed();
         using var nameBytes = new NullTerminatedString(name);
-        var result = NativeMethods.lua_getglobal(
+        _ = NativeMethods.lua_getglobal(
             ptr,
             (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(nameBytes.AsSpan()))
         );
-        CheckResult(result);
     }
 
     public void SetGlobal(ReadOnlySpan<char> name)
@@ -534,23 +550,16 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
         static int Fn(lua_State* L)
         {
             var state = GetOrCreate(L, default);
+            var main = GetMainState(L);
             var funcIndex = NativeMethods.lua_tointegerx(
                 L,
                 NativeMethods.LUA_REGISTRYINDEX - 1,
                 null
             );
-            var func = state.funcs[(int)funcIndex];
+            var func = main.funcs[(int)funcIndex];
 
             var numArgs = NativeMethods.lua_gettop(L);
-            var buffer = ArrayPool<LuaValue>.Shared.Rent(numArgs);
-            try
-            {
-                return func(state, new LuaFuncArguments(state, numArgs));
-            }
-            finally
-            {
-                ArrayPool<LuaValue>.Shared.Return(buffer);
-            }
+            return func(state, new LuaFuncArguments(state, numArgs));
         }
 
         CheckDisposed();
@@ -559,6 +568,62 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
         funcs.Add(func);
         NativeMethods.lua_pushinteger(ptr, funcIndex);
         NativeMethods.lua_pushcclosure(ptr, Fn, 1);
+    }
+
+    public void NewFunction(AsyncLuaFunc<Lua55State> func, int upvalueCount)
+    {
+        static int AsyncCFn(lua_State* L)
+        {
+            var state = GetOrCreate(L, default);
+            var main = GetMainState(L);
+
+            if (NativeMethods.lua_isyieldable(L) == 0)
+            {
+                ReadOnlySpan<byte> errMsg =
+                    "attempt to call async function from a non-yieldable context"u8;
+                return NativeMethods.luaL_error(
+                    L,
+                    (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(errMsg))
+                );
+            }
+
+            var funcIndex = (int)
+                NativeMethods.lua_tointegerx(L, NativeMethods.LUA_REGISTRYINDEX - 1, null);
+            var func = main.asyncFuncs[funcIndex];
+
+            var numArgs = NativeMethods.lua_gettop(L);
+            var snapshot = numArgs == 0 ? Array.Empty<LuaValue>() : new LuaValue[numArgs];
+            for (int i = 0; i < numArgs; i++)
+            {
+                snapshot[i] = state.ToLuaValue(i + 1);
+            }
+            var args = new LuaFuncArguments(snapshot, numArgs);
+            var ct = state.asyncCancellationToken;
+
+            var task = func(state, args, ct);
+
+            if (task.IsCompletedSuccessfully)
+            {
+                return task.Result;
+            }
+
+            state.pendingAsyncTask = task;
+            state.hasPendingTask = true;
+            NativeMethods.lua_settop(L, 0);
+            return NativeMethods.lua_yieldk(L, 0, 0, AsyncContinuation);
+        }
+
+        static int AsyncContinuation(lua_State* L, int status, nint ctx)
+        {
+            return NativeMethods.lua_gettop(L);
+        }
+
+        CheckDisposed();
+
+        var funcIndex = asyncFuncs.Count;
+        asyncFuncs.Add(func);
+        NativeMethods.lua_pushinteger(ptr, funcIndex);
+        NativeMethods.lua_pushcclosure(ptr, AsyncCFn, 1);
     }
 
     public void NewThread()
@@ -725,6 +790,47 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
         int nres;
         var result = NativeMethods.lua_resume(ptr, from == null ? null : from.ptr, argCount, &nres);
         CheckResult(result);
+    }
+
+    public ValueTask CompleteAsync(
+        int initialArgCount,
+        CancellationToken cancellationToken = default
+    )
+    {
+        CheckDisposed();
+        return Lua55AsyncDriver.RunAsync(this, initialArgCount, cancellationToken);
+    }
+
+    internal void SetAsyncCancellationToken(CancellationToken cancellationToken)
+    {
+        asyncCancellationToken = cancellationToken;
+    }
+
+    internal bool TryTakePendingAsyncTask(out ValueTask<int> task)
+    {
+        if (hasPendingTask)
+        {
+            task = pendingAsyncTask;
+            hasPendingTask = false;
+            pendingAsyncTask = default;
+            return true;
+        }
+        task = default;
+        return false;
+    }
+
+    internal int RunResumeStep(int argCount)
+    {
+        int nres;
+        var status = NativeMethods.lua_resume(ptr, from == null ? null : from.ptr, argCount, &nres);
+        if (status != (int)NativeMethods.LUA_OK && status != (int)NativeMethods.LUA_YIELD)
+        {
+            nuint len;
+            var message = NativeMethods.luaL_tolstring(ptr, -1, &len);
+            var messageStr = new string((sbyte*)message, 0, (int)len);
+            throw new LuaException((uint)status, messageStr);
+        }
+        return status;
     }
 
     public LuaReference Ref(int index)

@@ -61,7 +61,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>
         return new(LuaValueType.Table, default, value);
     }
 
-    public static LuaValue FromFunction(LuaFunction value)
+    public static LuaValue FromFunction(LuaFunctionBase value)
     {
         return new(LuaValueType.Function, default, value);
     }
@@ -95,7 +95,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>
             LuaValueType.Vector => VectorToString(value.VectorValue),
             LuaValueType.String => ((string)reference!).ToString()!,
             LuaValueType.Table => ((LuaTable)reference!).ToString()!,
-            LuaValueType.Function => ((LuaFunction)reference!).ToString()!,
+            LuaValueType.Function => ((LuaFunctionBase)reference!).ToString()!,
             LuaValueType.UserData => ((LuaUserData)reference!).ToString()!,
             LuaValueType.Thread => ((ILuaState)reference!).ToString()!,
             _ => "",
@@ -306,6 +306,12 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                     result = Unsafe.As<LuaFunction, T>(ref r)!;
                     return true;
                 }
+                if (typeof(T) == typeof(AsyncLuaFunction))
+                {
+                    var r = (AsyncLuaFunction)reference!;
+                    result = Unsafe.As<AsyncLuaFunction, T>(ref r)!;
+                    return true;
+                }
                 if (typeof(ILuaObject).IsAssignableFrom(typeof(T)))
                 {
                     var r = (ILuaObject)reference!;
@@ -391,7 +397,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>
 
     public static implicit operator LuaValue(Vector3 value) => FromVector(value);
 
-    public static implicit operator LuaValue(LuaFunction value) => FromFunction(value);
+    public static implicit operator LuaValue(LuaFunctionBase value) => FromFunction(value);
 
     public static implicit operator LuaValue(LuaTable value) => FromTable(value);
 

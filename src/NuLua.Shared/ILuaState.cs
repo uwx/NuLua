@@ -59,6 +59,7 @@ public interface ILuaState : ILuaObject
     void Len(int index);
     void Call(int argCount, int returnCount);
     void Resume(int argCount);
+    ValueTask CompleteAsync(int initialArgCount, CancellationToken cancellationToken);
 
     bool RawEqual(int index1, int index2);
     LuaValueType RawGet(int index);
@@ -84,4 +85,5 @@ public interface ILuaState<T> : ILuaState
     void XMove(T target, int count);
     new T ToThread(int index);
     void NewFunction(LuaFunc<T> function, int upvalueCount);
+    void NewFunction(AsyncLuaFunc<T> function, int upvalueCount);
 }
