@@ -344,12 +344,20 @@ public static class LuaStateExtensions
         return state.ToThread(-1);
     }
 
-    public static LuaValue[] DoString(this ILuaState state, ReadOnlySpan<char> code)
+    public static LuaValue[] DoString(
+        this ILuaState state,
+        ReadOnlySpan<char> code,
+        ReadOnlySpan<LuaValue> args = default
+    )
     {
         var baseTop = state.GetTop();
 
         state.LoadString(code);
-        state.Call(0, -1);
+        for (int i = 0; i < args.Length; i++)
+        {
+            state.Push(args[i]);
+        }
+        state.Call(args.Length, -1);
 
         var currentTop = state.GetTop();
         var returnCount = currentTop - baseTop;
