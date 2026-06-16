@@ -24,7 +24,7 @@ public interface ILuaState : ILuaObject
     int GetTop();
     void SetTop(int index);
     int GetAbsIndex(int index);
-    LuaType GetType(int index);
+    LuaValueType GetType(int index);
     bool CheckStack(int n);
 
     void Copy(int fromIndex, int toIndex);
@@ -55,8 +55,8 @@ public interface ILuaState : ILuaObject
     void Next(int index);
 
     void NewUserData(int size, int userValueCount);
-    bool TryGetUserValue(int index, int userValueIndex, out LuaType type);
-    bool TrySetUserValue(int index, int userValueIndex, out LuaType type);
+    bool TryGetUserValue(int index, int userValueIndex, out LuaValueType type);
+    bool TrySetUserValue(int index, int userValueIndex, out LuaValueType type);
 
     void Arith(LuaArithmeticOperator op);
     void Compare(LuaComparisonOperator op);
@@ -66,7 +66,7 @@ public interface ILuaState : ILuaObject
     void Resume(int argCount);
 
     bool RawEqual(int index1, int index2);
-    LuaType RawGet(int index);
+    LuaValueType RawGet(int index);
     int RawLen(int index);
     void RawSet(int index);
 

@@ -28,61 +28,61 @@ public readonly struct LuaValue : IEquatable<LuaValue>
 
     public static LuaValue FromNumber(double value)
     {
-        return new(LuaType.Number, new() { NumberValue = value }, null);
+        return new(LuaValueType.Number, new() { NumberValue = value }, null);
     }
 
     public static LuaValue FromBoolean(bool value)
     {
-        return new(LuaType.Boolean, new() { BooleanValue = value }, null);
+        return new(LuaValueType.Boolean, new() { BooleanValue = value }, null);
     }
 
     public static LuaValue FromString(string value)
     {
-        return new(LuaType.String, default, value);
+        return new(LuaValueType.String, default, value);
     }
 
     public static LuaValue FromLightUserData(IntPtr value)
     {
-        return new(LuaType.LightUserData, new() { PointerValue = value }, null);
+        return new(LuaValueType.LightUserData, new() { PointerValue = value }, null);
     }
 
     public static LuaValue FromUserData(LuaUserData value)
     {
-        return new(LuaType.UserData, default, value);
+        return new(LuaValueType.UserData, default, value);
     }
 
     public static LuaValue FromVector(Vector3 value)
     {
-        return new(LuaType.Vector, new() { VectorValue = value }, null);
+        return new(LuaValueType.Vector, new() { VectorValue = value }, null);
     }
 
     public static LuaValue FromTable(LuaTable value)
     {
-        return new(LuaType.Table, default, value);
+        return new(LuaValueType.Table, default, value);
     }
 
     public static LuaValue FromFunction(LuaFunction value)
     {
-        return new(LuaType.Function, default, value);
+        return new(LuaValueType.Function, default, value);
     }
 
     public static LuaValue FromThread(ILuaState value)
     {
-        return new(LuaType.Thread, default, value);
+        return new(LuaValueType.Thread, default, value);
     }
 
     public static LuaValue FromBuffer(ILuaBuffer value)
     {
-        return new(LuaType.Buffer, default, value);
+        return new(LuaValueType.Buffer, default, value);
     }
 
-    readonly LuaType type;
+    readonly LuaValueType type;
     readonly ValueUnion value;
     readonly object? reference;
 
-    public LuaType Type => type;
+    public LuaValueType Type => type;
 
-    LuaValue(LuaType type, ValueUnion value, object? reference)
+    LuaValue(LuaValueType type, ValueUnion value, object? reference)
     {
         this.type = type;
         this.value = value;
@@ -93,17 +93,17 @@ public readonly struct LuaValue : IEquatable<LuaValue>
     {
         return type switch
         {
-            LuaType.Nil => "nil",
-            LuaType.Boolean => value.BooleanValue ? "true" : "false",
-            LuaType.LightUserData => $"lightuserdata: 0x{value.PointerValue:X}",
-            LuaType.Number => value.NumberValue.ToString(),
-            LuaType.Vector => VectorToString(value.VectorValue),
-            LuaType.String => ((string)reference!).ToString(),
-            LuaType.Table => ((LuaTable)reference!).ToString(),
-            LuaType.Function => ((LuaFunction)reference!).ToString()!,
-            LuaType.UserData => ((LuaUserData)reference!).ToString(),
-            LuaType.Thread => ((ILuaState)reference!).ToString()!,
-            LuaType.Buffer => ((ILuaBuffer)reference!).ToString()!,
+            LuaValueType.Nil => "nil",
+            LuaValueType.Boolean => value.BooleanValue ? "true" : "false",
+            LuaValueType.LightUserData => $"lightuserdata: 0x{value.PointerValue:X}",
+            LuaValueType.Number => value.NumberValue.ToString(),
+            LuaValueType.Vector => VectorToString(value.VectorValue),
+            LuaValueType.String => ((string)reference!).ToString(),
+            LuaValueType.Table => ((LuaTable)reference!).ToString(),
+            LuaValueType.Function => ((LuaFunction)reference!).ToString()!,
+            LuaValueType.UserData => ((LuaUserData)reference!).ToString(),
+            LuaValueType.Thread => ((ILuaState)reference!).ToString()!,
+            LuaValueType.Buffer => ((ILuaBuffer)reference!).ToString()!,
             _ => "",
         };
     }
@@ -114,7 +114,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>
         return $"{vector.X}, {vector.Y}, {vector.Z}";
     }
 
-    public bool IsNil => Type == LuaType.Nil;
+    public bool IsNil => Type == LuaValueType.Nil;
 
     public T Read<T>()
     {
@@ -142,14 +142,14 @@ public readonly struct LuaValue : IEquatable<LuaValue>
 
         switch (Type)
         {
-            case LuaType.Nil:
+            case LuaValueType.Nil:
                 if (typeof(T) == typeof(object))
                 {
                     result = Unsafe.NullRef<T>()!;
                     return true;
                 }
                 break;
-            case LuaType.Boolean:
+            case LuaValueType.Boolean:
                 if (typeof(T) == typeof(bool))
                 {
                     var r = value.BooleanValue;
@@ -163,7 +163,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                     return true;
                 }
                 break;
-            case LuaType.UserData:
+            case LuaValueType.UserData:
                 if (typeof(T) == typeof(LuaUserData))
                 {
                     var r = (LuaUserData)reference!;
@@ -191,7 +191,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                         return true;
                 }
                 break;
-            case LuaType.LightUserData:
+            case LuaValueType.LightUserData:
                 if (typeof(T) == typeof(IntPtr))
                 {
                     var r = value.PointerValue;
@@ -205,7 +205,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                     return true;
                 }
                 break;
-            case LuaType.Number:
+            case LuaValueType.Number:
                 if (typeof(T) == typeof(double))
                 {
                     var r = value.NumberValue;
@@ -257,7 +257,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                     return true;
                 }
                 break;
-            case LuaType.Vector:
+            case LuaValueType.Vector:
                 if (typeof(T) == typeof(Vector3))
                 {
                     var r = value.VectorValue;
@@ -271,7 +271,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                     return true;
                 }
                 break;
-            case LuaType.String:
+            case LuaValueType.String:
                 if (typeof(T) == typeof(string))
                 {
                     var r = (string)reference!;
@@ -285,7 +285,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                     return true;
                 }
                 break;
-            case LuaType.Table:
+            case LuaValueType.Table:
                 if (typeof(T) == typeof(LuaTable))
                 {
                     var r = (LuaTable)reference!;
@@ -305,7 +305,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                     return true;
                 }
                 break;
-            case LuaType.Function:
+            case LuaValueType.Function:
                 if (typeof(T) == typeof(LuaFunction))
                 {
                     var r = (LuaFunction)reference!;
@@ -325,7 +325,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                     return true;
                 }
                 break;
-            case LuaType.Thread:
+            case LuaValueType.Thread:
                 if (typeof(T) == typeof(ILuaState))
                 {
                     var r = (ILuaState)reference!;
@@ -345,7 +345,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                     return true;
                 }
                 break;
-            case LuaType.Buffer:
+            case LuaValueType.Buffer:
                 if (typeof(T) == typeof(ILuaBuffer))
                 {
                     var r = (ILuaBuffer)reference!;
@@ -378,13 +378,13 @@ public readonly struct LuaValue : IEquatable<LuaValue>
 
         return type switch
         {
-            LuaType.Nil => true,
-            LuaType.Boolean => value.BooleanValue == other.value.BooleanValue,
-            LuaType.LightUserData or LuaType.UserData => value.PointerValue
+            LuaValueType.Nil => true,
+            LuaValueType.Boolean => value.BooleanValue == other.value.BooleanValue,
+            LuaValueType.LightUserData or LuaValueType.UserData => value.PointerValue
                 == other.value.PointerValue,
-            LuaType.Number => value.NumberValue == other.value.NumberValue,
-            LuaType.Vector => value.VectorValue == other.value.VectorValue,
-            LuaType.String => ((string)reference!).Equals((string)other.reference!),
+            LuaValueType.Number => value.NumberValue == other.value.NumberValue,
+            LuaValueType.Vector => value.VectorValue == other.value.VectorValue,
+            LuaValueType.String => ((string)reference!).Equals((string)other.reference!),
             _ => reference == other.reference,
         };
     }

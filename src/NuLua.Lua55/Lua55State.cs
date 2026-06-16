@@ -280,7 +280,7 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
         }
     }
 
-    public LuaType GetType(int index)
+    public LuaValueType GetType(int index)
     {
         CheckDisposed();
         var t = (uint)NativeMethods.lua_type(ptr, index);
@@ -426,7 +426,7 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
 
     public void* ToPointer(int index)
     {
-        if (GetType(index) != LuaType.LightUserData)
+        if (GetType(index) != LuaValueType.LightUserData)
         {
             throw new InvalidOperationException(
                 "Value at the specified index is not light user data."
@@ -437,7 +437,7 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
 
     public LuaFunction ToFunction(int index)
     {
-        if (GetType(index) != LuaType.Function)
+        if (GetType(index) != LuaValueType.Function)
         {
             throw new InvalidOperationException("Value at the specified index is not a function.");
         }
@@ -496,7 +496,7 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
         NativeMethods.lua_newuserdatauv(ptr, (nuint)size, userValueCount);
     }
 
-    public bool TryGetUserValue(int index, int userValueIndex, out LuaType type)
+    public bool TryGetUserValue(int index, int userValueIndex, out LuaValueType type)
     {
         CheckDisposed();
         var result = NativeMethods.lua_getiuservalue(ptr, index, userValueIndex);
@@ -513,7 +513,7 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
         }
     }
 
-    public bool TrySetUserValue(int index, int userValueIndex, out LuaType type)
+    public bool TrySetUserValue(int index, int userValueIndex, out LuaValueType type)
     {
         CheckDisposed();
         var result = NativeMethods.lua_setiuservalue(ptr, index, userValueIndex);
@@ -675,7 +675,7 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
         return NativeMethods.lua_rawequal(ptr, index1, index2) != 0;
     }
 
-    public LuaType RawGet(int index)
+    public LuaValueType RawGet(int index)
     {
         CheckDisposed();
         var t = (uint)NativeMethods.lua_rawget(ptr, index);
@@ -749,19 +749,19 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
         NativeMethods.luaL_unref(ptr, reference.TableIndex, reference.Id);
     }
 
-    static LuaType CodeToType(uint code)
+    static LuaValueType CodeToType(uint code)
     {
         return code switch
         {
-            NativeMethods.LUA_TBOOLEAN => LuaType.Boolean,
-            NativeMethods.LUA_TNUMBER => LuaType.Number,
-            NativeMethods.LUA_TSTRING => LuaType.String,
-            NativeMethods.LUA_TTABLE => LuaType.Table,
-            NativeMethods.LUA_TFUNCTION => LuaType.Function,
-            NativeMethods.LUA_TUSERDATA => LuaType.UserData,
-            NativeMethods.LUA_TTHREAD => LuaType.Thread,
-            NativeMethods.LUA_TLIGHTUSERDATA => LuaType.LightUserData,
-            NativeMethods.LUA_TNIL => LuaType.Nil,
+            NativeMethods.LUA_TBOOLEAN => LuaValueType.Boolean,
+            NativeMethods.LUA_TNUMBER => LuaValueType.Number,
+            NativeMethods.LUA_TSTRING => LuaValueType.String,
+            NativeMethods.LUA_TTABLE => LuaValueType.Table,
+            NativeMethods.LUA_TFUNCTION => LuaValueType.Function,
+            NativeMethods.LUA_TUSERDATA => LuaValueType.UserData,
+            NativeMethods.LUA_TTHREAD => LuaValueType.Thread,
+            NativeMethods.LUA_TLIGHTUSERDATA => LuaValueType.LightUserData,
+            NativeMethods.LUA_TNIL => LuaValueType.Nil,
             _ => throw new NotSupportedException($"Unsupported Lua type code: {code}"),
         };
     }

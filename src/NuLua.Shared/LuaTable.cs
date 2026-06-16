@@ -25,7 +25,7 @@ public sealed class LuaTable(ILuaState state, LuaReference reference) : ILuaObje
 
             table.state.PushValue(table.Reference);
             table.state.Next(-2);
-            if (table.state.GetType(-2) == LuaType.Nil)
+            if (table.state.GetType(-2) == LuaValueType.Nil)
             {
                 return false;
             }

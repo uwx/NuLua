@@ -9,22 +9,22 @@ public static class LuaStateExtensions
     {
         switch (value.Type)
         {
-            case LuaType.Nil:
+            case LuaValueType.Nil:
                 state.PushNil();
                 break;
-            case LuaType.Boolean:
+            case LuaValueType.Boolean:
                 state.PushBoolean(value.UnsafeRead<bool>());
                 break;
-            case LuaType.Number:
+            case LuaValueType.Number:
                 state.PushNumber(value.UnsafeRead<double>());
                 break;
-            case LuaType.String:
+            case LuaValueType.String:
                 state.PushString(value.UnsafeRead<string>());
                 break;
-            case LuaType.Table:
-            case LuaType.Function:
-            case LuaType.UserData:
-            case LuaType.Thread:
+            case LuaValueType.Table:
+            case LuaValueType.Function:
+            case LuaValueType.UserData:
+            case LuaValueType.Thread:
             {
                 var obj = value.UnsafeRead<ILuaObject>();
                 state.PushValue(obj.Reference);
@@ -88,7 +88,7 @@ public static class LuaStateExtensions
 
     public static LuaTable ToTable(this ILuaState state, int index)
     {
-        if (state.GetType(index) != LuaType.Table)
+        if (state.GetType(index) != LuaValueType.Table)
         {
             throw new InvalidOperationException("Value at the specified index is not a table.");
         }
@@ -97,7 +97,7 @@ public static class LuaStateExtensions
 
     public static LuaUserData ToUserData(this ILuaState state, int index)
     {
-        if (state.GetType(index) != LuaType.UserData)
+        if (state.GetType(index) != LuaValueType.UserData)
         {
             throw new InvalidOperationException("Value at the specified index is not user data.");
         }
@@ -109,29 +109,29 @@ public static class LuaStateExtensions
         var type = state.GetType(index);
         switch (type)
         {
-            case LuaType.Nil:
+            case LuaValueType.Nil:
                 return LuaValue.Nil;
-            case LuaType.Boolean:
+            case LuaValueType.Boolean:
                 return state.ToBoolean(index);
-            case LuaType.Number:
+            case LuaValueType.Number:
                 return state.ToNumber(index);
-            case LuaType.String:
+            case LuaValueType.String:
                 return state.ToString(index);
-            case LuaType.Table:
+            case LuaValueType.Table:
             {
                 state.PushValue(index);
                 var reference = state.Ref();
                 state.Pop(1);
                 return new LuaTable(state, reference);
             }
-            case LuaType.Function:
+            case LuaValueType.Function:
             {
                 state.PushValue(index);
                 var reference = state.Ref();
                 state.Pop(1);
                 return new LuaFunction(state, reference);
             }
-            case LuaType.Thread:
+            case LuaValueType.Thread:
             {
                 state.PushValue(index);
                 var reference = state.Ref();
@@ -139,7 +139,7 @@ public static class LuaStateExtensions
                 state.PushValue(reference);
                 return LuaValue.FromThread(state.ToThread(-1));
             }
-            case LuaType.UserData:
+            case LuaValueType.UserData:
             {
                 state.PushValue(index);
                 var reference = state.Ref();

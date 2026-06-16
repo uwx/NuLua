@@ -1,6 +1,6 @@
 namespace NuLua;
 
-public enum LuaType : byte
+public enum LuaValueType : byte
 {
     Nil,
     Boolean,
