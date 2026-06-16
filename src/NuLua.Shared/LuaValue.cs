@@ -131,12 +131,12 @@ public readonly struct LuaValue : IEquatable<LuaValue>
         return result!;
     }
 
-    public bool TryRead<T>(out T result)
+    public bool TryRead<T>([NotNullWhen(true)] out T? result)
     {
         if (typeof(T) == typeof(LuaValue))
         {
             var r = this;
-            result = Unsafe.As<LuaValue, T>(ref r);
+            result = Unsafe.As<LuaValue, T>(ref r)!;
             return true;
         }
 
@@ -145,7 +145,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>
             case LuaType.Nil:
                 if (typeof(T) == typeof(object))
                 {
-                    result = Unsafe.NullRef<T>();
+                    result = Unsafe.NullRef<T>()!;
                     return true;
                 }
                 break;
@@ -153,13 +153,13 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                 if (typeof(T) == typeof(bool))
                 {
                     var r = value.BooleanValue;
-                    result = Unsafe.As<bool, T>(ref r);
+                    result = Unsafe.As<bool, T>(ref r)!;
                     return true;
                 }
                 if (typeof(T) == typeof(object))
                 {
                     var r = (object)value.BooleanValue;
-                    result = Unsafe.As<object, T>(ref r);
+                    result = Unsafe.As<object, T>(ref r)!;
                     return true;
                 }
                 break;
@@ -167,33 +167,41 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                 if (typeof(T) == typeof(LuaUserData))
                 {
                     var r = (LuaUserData)reference!;
-                    result = Unsafe.As<LuaUserData, T>(ref r);
+                    result = Unsafe.As<LuaUserData, T>(ref r)!;
                     return true;
                 }
                 if (typeof(ILuaObject).IsAssignableFrom(typeof(T)))
                 {
                     var r = (ILuaObject)reference!;
-                    result = Unsafe.As<ILuaObject, T>(ref r);
+                    result = Unsafe.As<ILuaObject, T>(ref r)!;
                     return true;
                 }
                 if (typeof(T) == typeof(object))
                 {
                     var r = (object)(LuaUserData)reference!;
-                    result = Unsafe.As<object, T>(ref r);
+                    result = Unsafe.As<object, T>(ref r)!;
                     return true;
+                }
+                if (
+                    !RuntimeHelpers.IsReferenceOrContainsReferences<T>()
+                    && reference is LuaUserData ud
+                )
+                {
+                    if (ud.TryRead(out result))
+                        return true;
                 }
                 break;
             case LuaType.LightUserData:
                 if (typeof(T) == typeof(IntPtr))
                 {
                     var r = value.PointerValue;
-                    result = Unsafe.As<IntPtr, T>(ref r);
+                    result = Unsafe.As<IntPtr, T>(ref r)!;
                     return true;
                 }
                 if (typeof(T) == typeof(object))
                 {
                     var r = (object)value.PointerValue;
-                    result = Unsafe.As<object, T>(ref r);
+                    result = Unsafe.As<object, T>(ref r)!;
                     return true;
                 }
                 break;
@@ -201,25 +209,25 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                 if (typeof(T) == typeof(double))
                 {
                     var r = value.NumberValue;
-                    result = Unsafe.As<double, T>(ref r);
+                    result = Unsafe.As<double, T>(ref r)!;
                     return true;
                 }
                 if (typeof(T) == typeof(float))
                 {
                     var r = (float)value.NumberValue;
-                    result = Unsafe.As<float, T>(ref r);
+                    result = Unsafe.As<float, T>(ref r)!;
                     return true;
                 }
                 if (typeof(T) == typeof(int) && MathEx.IsInteger(value.NumberValue))
                 {
                     var r = (int)value.NumberValue;
-                    result = Unsafe.As<int, T>(ref r);
+                    result = Unsafe.As<int, T>(ref r)!;
                     return true;
                 }
                 if (typeof(T) == typeof(long) && MathEx.IsInteger(value.NumberValue))
                 {
                     var r = (long)value.NumberValue;
-                    result = Unsafe.As<long, T>(ref r);
+                    result = Unsafe.As<long, T>(ref r)!;
                     return true;
                 }
                 if (
@@ -229,7 +237,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                 )
                 {
                     var r = (uint)value.NumberValue;
-                    result = Unsafe.As<uint, T>(ref r);
+                    result = Unsafe.As<uint, T>(ref r)!;
                     return true;
                 }
                 if (
@@ -239,13 +247,13 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                 )
                 {
                     var r = (ulong)value.NumberValue;
-                    result = Unsafe.As<ulong, T>(ref r);
+                    result = Unsafe.As<ulong, T>(ref r)!;
                     return true;
                 }
                 if (typeof(T) == typeof(object))
                 {
                     var r = (object)value.NumberValue;
-                    result = Unsafe.As<object, T>(ref r);
+                    result = Unsafe.As<object, T>(ref r)!;
                     return true;
                 }
                 break;
@@ -253,13 +261,13 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                 if (typeof(T) == typeof(Vector3))
                 {
                     var r = value.VectorValue;
-                    result = Unsafe.As<Vector3, T>(ref r);
+                    result = Unsafe.As<Vector3, T>(ref r)!;
                     return true;
                 }
                 if (typeof(T) == typeof(object))
                 {
                     var r = (object)value.VectorValue;
-                    result = Unsafe.As<object, T>(ref r);
+                    result = Unsafe.As<object, T>(ref r)!;
                     return true;
                 }
                 break;
@@ -267,13 +275,13 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                 if (typeof(T) == typeof(string))
                 {
                     var r = (string)reference!;
-                    result = Unsafe.As<string, T>(ref r);
+                    result = Unsafe.As<string, T>(ref r)!;
                     return true;
                 }
                 if (typeof(T) == typeof(object))
                 {
                     var r = (object)(string)reference!;
-                    result = Unsafe.As<object, T>(ref r);
+                    result = Unsafe.As<object, T>(ref r)!;
                     return true;
                 }
                 break;
@@ -281,19 +289,19 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                 if (typeof(T) == typeof(LuaTable))
                 {
                     var r = (LuaTable)reference!;
-                    result = Unsafe.As<LuaTable, T>(ref r);
+                    result = Unsafe.As<LuaTable, T>(ref r)!;
                     return true;
                 }
                 if (typeof(ILuaObject).IsAssignableFrom(typeof(T)))
                 {
                     var r = (ILuaObject)reference!;
-                    result = Unsafe.As<ILuaObject, T>(ref r);
+                    result = Unsafe.As<ILuaObject, T>(ref r)!;
                     return true;
                 }
                 if (typeof(T) == typeof(object))
                 {
                     var r = (object)(LuaTable)reference!;
-                    result = Unsafe.As<object, T>(ref r);
+                    result = Unsafe.As<object, T>(ref r)!;
                     return true;
                 }
                 break;
@@ -301,19 +309,19 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                 if (typeof(T) == typeof(LuaFunction))
                 {
                     var r = (LuaFunction)reference!;
-                    result = Unsafe.As<LuaFunction, T>(ref r);
+                    result = Unsafe.As<LuaFunction, T>(ref r)!;
                     return true;
                 }
                 if (typeof(ILuaObject).IsAssignableFrom(typeof(T)))
                 {
                     var r = (ILuaObject)reference!;
-                    result = Unsafe.As<ILuaObject, T>(ref r);
+                    result = Unsafe.As<ILuaObject, T>(ref r)!;
                     return true;
                 }
                 if (typeof(T) == typeof(object))
                 {
                     var r = (object)(LuaFunction)reference!;
-                    result = Unsafe.As<object, T>(ref r);
+                    result = Unsafe.As<object, T>(ref r)!;
                     return true;
                 }
                 break;
@@ -321,19 +329,19 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                 if (typeof(T) == typeof(ILuaState))
                 {
                     var r = (ILuaState)reference!;
-                    result = Unsafe.As<ILuaState, T>(ref r);
+                    result = Unsafe.As<ILuaState, T>(ref r)!;
                     return true;
                 }
                 if (typeof(ILuaObject).IsAssignableFrom(typeof(T)))
                 {
                     var r = (ILuaObject)reference!;
-                    result = Unsafe.As<ILuaObject, T>(ref r);
+                    result = Unsafe.As<ILuaObject, T>(ref r)!;
                     return true;
                 }
                 if (typeof(T) == typeof(object))
                 {
                     var r = (object)(ILuaState)reference!;
-                    result = Unsafe.As<object, T>(ref r);
+                    result = Unsafe.As<object, T>(ref r)!;
                     return true;
                 }
                 break;
@@ -341,19 +349,19 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                 if (typeof(T) == typeof(ILuaBuffer))
                 {
                     var r = (ILuaBuffer)reference!;
-                    result = Unsafe.As<ILuaBuffer, T>(ref r);
+                    result = Unsafe.As<ILuaBuffer, T>(ref r)!;
                     return true;
                 }
                 if (typeof(ILuaObject).IsAssignableFrom(typeof(T)))
                 {
                     var r = (ILuaObject)reference!;
-                    result = Unsafe.As<ILuaObject, T>(ref r);
+                    result = Unsafe.As<ILuaObject, T>(ref r)!;
                     return true;
                 }
                 if (typeof(T) == typeof(object))
                 {
                     var r = (object)(ILuaBuffer)reference!;
-                    result = Unsafe.As<object, T>(ref r);
+                    result = Unsafe.As<object, T>(ref r)!;
                     return true;
                 }
                 break;

@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace NuLua;
@@ -53,31 +54,34 @@ public sealed class LuaUserData(ILuaState state, LuaReference reference) : ILuaO
         }
     }
 
-    public bool TryRead<T>(out T result)
-        where T : unmanaged
+    public bool TryRead<T>([NotNullWhen(true)] out T? result)
     {
+        if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+        {
+            result = default;
+            return false;
+        }
+
         if (Size != Unsafe.SizeOf<T>())
         {
             state.Pop(1);
             result = default;
             return false;
         }
-        result = UnsafeRead<T>();
+        result = UnsafeRead<T>()!;
         return true;
     }
 
     public T Read<T>()
-        where T : unmanaged
     {
         if (!TryRead<T>(out var result))
         {
-            throw new InvalidOperationException($"User data size mismatch");
+            throw new InvalidOperationException($"Cannot convert user data to {typeof(T).Name}");
         }
         return result;
     }
 
     public unsafe T UnsafeRead<T>()
-        where T : unmanaged
     {
         state.PushValue(Reference);
         var ptr = state.ToUserDataPointer(-1);
@@ -87,7 +91,6 @@ public sealed class LuaUserData(ILuaState state, LuaReference reference) : ILuaO
     }
 
     public bool TryWrite<T>(in T value)
-        where T : unmanaged
     {
         if (Size != Unsafe.SizeOf<T>())
         {
@@ -98,16 +101,14 @@ public sealed class LuaUserData(ILuaState state, LuaReference reference) : ILuaO
     }
 
     public void Write<T>(in T value)
-        where T : unmanaged
     {
         if (!TryWrite(value))
         {
-            throw new InvalidOperationException($"User data size mismatch");
+            throw new InvalidOperationException($"Cannot convert {typeof(T).Name} to user data");
         }
     }
 
     public unsafe void UnsafeWrite<T>(in T value)
-        where T : unmanaged
     {
         state.PushValue(Reference);
         var ptr = state.ToUserDataPointer(-1);
