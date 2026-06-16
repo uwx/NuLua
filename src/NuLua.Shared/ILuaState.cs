@@ -21,6 +21,7 @@ public interface ILuaState : ILuaObject
     void SetTop(int index);
     int GetAbsIndex(int index);
     LuaType GetType(int index);
+    bool CheckStack(int n);
 
     void Copy(int fromIndex, int toIndex);
     void Rotate(int index, int n);
