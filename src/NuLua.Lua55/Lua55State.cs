@@ -1,5 +1,4 @@
-﻿using System.Buffers;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -15,7 +14,7 @@ public sealed unsafe partial class Lua55State : ILuaState<Lua55State>
     readonly List<LuaFunc<Lua55State>> funcs = new(8);
     readonly List<AsyncLuaFunc<Lua55State>> asyncFuncs = new(8);
     readonly LuaReference reference;
-    Lua55State? from;
+    readonly Lua55State? from;
     lua_State* ptr;
 
     ValueTask<int> pendingAsyncTask;
@@ -23,6 +22,7 @@ public sealed unsafe partial class Lua55State : ILuaState<Lua55State>
     CancellationToken asyncCancellationToken;
 
     Lua55State? ILuaState<Lua55State>.From => from;
+    ILuaState? ILuaState.From => from;
 
     Lua55State(lua_State* ptr, Lua55State? from, LuaReference reference)
     {
@@ -60,7 +60,7 @@ public sealed unsafe partial class Lua55State : ILuaState<Lua55State>
 
     static Lua55State GetMainState(lua_State* L)
     {
-        NativeMethods.lua_rawgeti(
+        _ = NativeMethods.lua_rawgeti(
             L,
             NativeMethods.LUA_REGISTRYINDEX,
             NativeMethods.LUA_RIDX_MAINTHREAD
@@ -592,7 +592,7 @@ public sealed unsafe partial class Lua55State : ILuaState<Lua55State>
             var func = main.asyncFuncs[funcIndex];
 
             var numArgs = NativeMethods.lua_gettop(L);
-            var snapshot = numArgs == 0 ? Array.Empty<LuaValue>() : new LuaValue[numArgs];
+            var snapshot = numArgs == 0 ? [] : new LuaValue[numArgs];
             for (int i = 0; i < numArgs; i++)
             {
                 snapshot[i] = state.ToLuaValue(i + 1);

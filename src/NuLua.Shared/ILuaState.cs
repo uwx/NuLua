@@ -4,6 +4,7 @@ namespace NuLua;
 
 public interface ILuaState : ILuaObject
 {
+    ILuaState? From { get; }
     bool IsYieldable { get; }
     LuaThreadStatus Status { get; }
     int RegistryIndex { get; }
@@ -80,7 +81,7 @@ public interface ILuaState : ILuaObject
 public interface ILuaState<T> : ILuaState
     where T : ILuaState<T>
 {
-    T? From { get; }
+    new T? From { get; }
 
     void XMove(T target, int count);
     new T ToThread(int index);
