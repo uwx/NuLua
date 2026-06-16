@@ -78,6 +78,11 @@ public static class LuaStateExtensions
         state.SetTop(state.GetTop() - 1);
     }
 
+    public static int GetUpvalueIndex(this ILuaState state, int index)
+    {
+        return state.RegistryIndex - index;
+    }
+
     public static LuaReference ToReference(this ILuaState state, int index)
     {
         state.PushValue(index);
