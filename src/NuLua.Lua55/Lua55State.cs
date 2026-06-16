@@ -118,6 +118,7 @@ public sealed unsafe partial class Lua55State : ILuaState<Lua55State>
     {
         if (ptr != null)
         {
+            from?.Unref(reference);
             NativeMethods.lua_close(ptr);
             ptrToState.TryRemove((nint)ptr, out _);
             ptr = null;
