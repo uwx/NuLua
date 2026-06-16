@@ -13,13 +13,6 @@ public interface ILuaState : ILuaObject
     nint AsPointer();
 
     void OpenLibraries();
-    void OpenBaseLibrary();
-    void OpenTableLibrary();
-    void OpenStringLibrary();
-    void OpenMathLibrary();
-    void OpenCoroutineLibrary();
-    void OpenPackageLibrary();
-    void OpenDebugLibrary();
 
     int GetTop();
     void SetTop(int index);
