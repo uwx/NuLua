@@ -1,5 +1,6 @@
 ﻿using System.Buffers;
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using NuLua.Internal;
@@ -627,6 +628,36 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
     {
         CheckDisposed();
         NativeMethods.lua_rawset(ptr, index);
+    }
+
+    public bool TryGetMetatable(int index, [NotNullWhen(true)] out LuaTable? metatable)
+    {
+        CheckDisposed();
+        if (NativeMethods.lua_getmetatable(ptr, index) == 0)
+        {
+            metatable = default;
+            return false;
+        }
+        else
+        {
+            metatable = new LuaTable(this, this.Ref());
+            return true;
+        }
+    }
+
+    public void SetMetatable(int index, LuaTable? metatable)
+    {
+        CheckDisposed();
+        if (metatable == null)
+        {
+            NativeMethods.lua_pushnil(ptr);
+            _ = NativeMethods.lua_setmetatable(ptr, index);
+        }
+        else
+        {
+            PushValue(metatable.Reference);
+            _ = NativeMethods.lua_setmetatable(ptr, index);
+        }
     }
 
     public void Resume(int argCount)

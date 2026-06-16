@@ -1,4 +1,6 @@
-﻿namespace NuLua;
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace NuLua;
 
 public interface ILuaState : ILuaObject
 {
@@ -60,6 +62,9 @@ public interface ILuaState : ILuaObject
     LuaType RawGet(int index);
     int RawLen(int index);
     void RawSet(int index);
+
+    bool TryGetMetatable(int index, [NotNullWhen(true)] out LuaTable? metatable);
+    void SetMetatable(int index, LuaTable? metatable);
 
     LuaReference Ref(int index);
     void Unref(LuaReference reference);
