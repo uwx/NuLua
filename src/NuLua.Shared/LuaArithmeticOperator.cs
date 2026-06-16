@@ -8,4 +8,11 @@ public enum LuaArithmeticOperator : byte
     Div,
     Mod,
     Pow,
+    Unm,    
+    BNot,
+    BAnd,
+    BOr,
+    BXor,
+    Shl,
+    Shr,
 }

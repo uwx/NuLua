@@ -503,6 +503,27 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
             case LuaArithmeticOperator.Pow:
                 NativeMethods.lua_arith(ptr, (int)NativeMethods.LUA_OPPOW);
                 break;
+            case LuaArithmeticOperator.Unm:
+                NativeMethods.lua_arith(ptr, (int)NativeMethods.LUA_OPUNM);
+                break;
+            case LuaArithmeticOperator.BNot:
+                NativeMethods.lua_arith(ptr, (int)NativeMethods.LUA_OPBNOT);
+                break;
+            case LuaArithmeticOperator.BAnd:
+                NativeMethods.lua_arith(ptr, (int)NativeMethods.LUA_OPBAND);
+                break;
+            case LuaArithmeticOperator.BOr:
+                NativeMethods.lua_arith(ptr, (int)NativeMethods.LUA_OPBOR);
+                break;
+            case LuaArithmeticOperator.BXor:
+                NativeMethods.lua_arith(ptr, (int)NativeMethods.LUA_OPBXOR);
+                break;
+            case LuaArithmeticOperator.Shl:
+                NativeMethods.lua_arith(ptr, (int)NativeMethods.LUA_OPSHL);
+                break;
+            case LuaArithmeticOperator.Shr:
+                NativeMethods.lua_arith(ptr, (int)NativeMethods.LUA_OPSHR);
+                break;
             default:
                 throw new NotSupportedException($"Unsupported Lua arithmetic operator: {op}");
         }
