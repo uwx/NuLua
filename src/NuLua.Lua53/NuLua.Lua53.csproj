@@ -6,8 +6,8 @@
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
-    <CodeGenName>Lua55</CodeGenName>
-    <CodeGenVersion>505</CodeGenVersion>
+    <CodeGenName>Lua53</CodeGenName>
+    <CodeGenVersion>503</CodeGenVersion>
     <CodeGenProject>$(MSBuildThisFileDirectory)..\..\tools\CodeGen\CodeGen.csproj</CodeGenProject>
     <CodeGenTemplateDir>$(MSBuildThisFileDirectory)..\..\tools\CodeGen\Templates</CodeGenTemplateDir>
     <CodeGenOutputDir>$(MSBuildThisFileDirectory)Generated</CodeGenOutputDir>
@@ -17,8 +17,8 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\NuLua.Shared\NuLua.Shared.csproj" />
-    <ProjectReference Include="..\NuLua.Runtime.Lua55\NuLua.Runtime.Lua55.csproj" />
-    <ProjectReference Include="..\NuLua.Interop.Lua55\NuLua.Interop.Lua55.csproj" />
+    <ProjectReference Include="..\NuLua.Runtime.Lua53\NuLua.Runtime.Lua53.csproj" />
+    <ProjectReference Include="..\NuLua.Interop.Lua53\NuLua.Interop.Lua53.csproj" />
   </ItemGroup>
   <ItemGroup>
     <CodeGenTemplate Include="$(CodeGenTemplateDir)\*.scriban-cs" />
