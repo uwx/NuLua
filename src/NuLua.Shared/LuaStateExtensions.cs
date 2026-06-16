@@ -308,6 +308,17 @@ public static class LuaStateExtensions
         return new LuaUserData(state, state.Ref());
     }
 
+    public static LuaFunction CreateFunction<TState>(
+        this ILuaState<TState> state,
+        LuaFunc<TState> function,
+        int upvalueCount = 0
+    )
+        where TState : ILuaState<TState>
+    {
+        state.NewFunction(function, upvalueCount);
+        return new LuaFunction(state, state.Ref());
+    }
+
     public static LuaValue[] DoString(this ILuaState state, ReadOnlySpan<char> code)
     {
         var baseTop = state.GetTop();

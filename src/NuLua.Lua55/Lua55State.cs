@@ -529,7 +529,7 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
         }
     }
 
-    public LuaFunction CreateFunction(LuaFunc<Lua55State> func)
+    public void NewFunction(LuaFunc<Lua55State> func, int upvalueCount)
     {
         static int Fn(lua_State* L)
         {
@@ -563,7 +563,6 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
         funcs.Add(func);
         NativeMethods.lua_pushinteger(ptr, funcIndex);
         NativeMethods.lua_pushcclosure(ptr, Fn, 1);
-        return new LuaFunction(this, this.Ref());
     }
 
     public Lua55State CreateThread()

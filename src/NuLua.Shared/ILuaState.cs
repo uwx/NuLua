@@ -88,4 +88,5 @@ public interface ILuaState<T> : ILuaState
 
     void XMove(T target, int count);
     new T ToThread(int index);
+    void NewFunction(LuaFunc<T> function, int upvalueCount);
 }
