@@ -39,3 +39,5 @@ for (int i = 0; i < 5; i++)
     Console.WriteLine($"yield: {thread.ToNumber(-1)}");
     thread.Pop(1);
 }
+
+Console.WriteLine($"thread status: {thread.Status}");

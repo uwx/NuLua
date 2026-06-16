@@ -1,8 +1,7 @@
 namespace NuLua;
 
-public interface ILuaObject
+public interface ILuaObject : IDisposable
 {
-    LuaObjectHandle Handle { get; }
+    LuaReference Reference { get; }
 }
 
-public record struct LuaObjectHandle(ILuaState State, int Index);

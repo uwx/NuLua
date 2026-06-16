@@ -27,14 +27,7 @@ public static class LuaStateExtensions
             case LuaType.Thread:
             {
                 var obj = value.UnsafeRead<ILuaObject>();
-                if (obj.Handle.State != state)
-                {
-                    throw new ArgumentException(
-                        "Cannot push a Lua object from a different Lua state.",
-                        nameof(value)
-                    );
-                }
-                state.PushValue(obj.Handle.Index);
+                state.PushValue(obj.Reference);
                 break;
             }
             default:
@@ -88,17 +81,46 @@ public static class LuaStateExtensions
     public static LuaValue ToLuaValue(this ILuaState state, int index)
     {
         var type = state.GetType(index);
-        return type switch
+        switch (type)
         {
-            LuaType.Nil => LuaValue.Nil,
-            LuaType.Boolean => (LuaValue)state.ToBoolean(index),
-            LuaType.Number => (LuaValue)state.ToNumber(index),
-            LuaType.String => (LuaValue)state.ToString(index),
-            LuaType.Table => LuaValue.FromTable(new LuaTable(state, index)),
-            LuaType.Function => LuaValue.FromFunction(new LuaFunction(state, index)),
-            LuaType.Thread => LuaValue.FromThread(state.ToThread(index)),
-            _ => throw new NotSupportedException($"Unsupported Lua value type: {type}"),
-        };
+            case LuaType.Nil:
+                return LuaValue.Nil;
+            case LuaType.Boolean:
+                return state.ToBoolean(index);
+            case LuaType.Number:
+                return state.ToNumber(index);
+            case LuaType.String:
+                return state.ToString(index);
+            case LuaType.Table:
+            {
+                state.PushValue(index);
+                var reference = state.Ref();
+                state.Pop(1);
+                return new LuaTable(state, reference);
+            }
+            case LuaType.Function:
+            {
+                state.PushValue(index);
+                var reference = state.Ref();
+                state.Pop(1);
+                return new LuaFunction(state, reference);
+            }
+            case LuaType.Thread:
+            {
+                state.PushValue(index);
+                var reference = state.Ref();
+                state.Pop(1);
+                state.PushValue(reference);
+                return LuaValue.FromThread(state.ToThread(-1));
+            }
+            default:
+                throw new NotSupportedException($"Unsupported Lua value type: {type}");
+        }
+    }
+
+    public static LuaReference Ref(this ILuaState state)
+    {
+        return state.Ref(state.RegistryIndex);
     }
 
     public static LuaValue[] DoString(this ILuaState state, ReadOnlySpan<char> code)

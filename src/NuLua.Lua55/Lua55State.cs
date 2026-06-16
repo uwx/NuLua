@@ -12,20 +12,20 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
     static readonly ConcurrentDictionary<nint, Lua55State> ptrToState = new();
 
     readonly List<LuaFunc<Lua55State>> funcs = new(8);
-    readonly Lua55State? from;
-    readonly int index;
+    readonly LuaReference reference;
+    Lua55State? from;
     lua_State* ptr;
 
     Lua55State? ILuaState<Lua55State>.From => from;
 
-    Lua55State(lua_State* ptr, Lua55State? from, int index)
+    Lua55State(lua_State* ptr, Lua55State? from, LuaReference reference)
     {
         this.ptr = ptr;
         this.from = from;
-        this.index = index;
+        this.reference = reference;
     }
 
-    public static Lua55State Create(Lua55State? parent = null, int index = -1)
+    public static Lua55State Create()
     {
         var ptr = NativeMethods.luaL_newstate();
         if (ptr == null)
@@ -33,12 +33,12 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
             throw new LuaException(NativeMethods.LUA_ERRMEM, "Failed to create Lua state.");
         }
 
-        var state = new Lua55State(ptr, parent, index);
+        var state = new Lua55State(ptr, null, default);
         ptrToState[(nint)ptr] = state;
         return state;
     }
 
-    static Lua55State GetOrCreate(lua_State* ptr, Lua55State? parent = null, int index = -1)
+    static Lua55State GetOrCreate(lua_State* ptr, LuaReference reference)
     {
         if (ptrToState.TryGetValue((nint)ptr, out var state))
         {
@@ -46,7 +46,7 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
         }
         else
         {
-            state = new Lua55State(ptr, parent, index);
+            state = new Lua55State(ptr, null, reference);
             ptrToState[(nint)ptr] = state;
             return state;
         }
@@ -54,10 +54,9 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
 
     public lua_State* AsPointer() => ptr;
 
-    LuaObjectHandle ILuaObject.Handle => new(from ?? this, index);
-
     nint ILuaState.AsPointer() => (nint)ptr;
 
+    public LuaReference Reference => reference;
     public bool IsYieldable
     {
         get
@@ -66,6 +65,8 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
             return NativeMethods.lua_isyieldable(ptr) != 0;
         }
     }
+
+    public int RegistryIndex => NativeMethods.LUA_REGISTRYINDEX;
 
     public LuaThreadStatus Status
     {
@@ -237,19 +238,7 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
     {
         CheckDisposed();
         var t = (uint)NativeMethods.lua_type(ptr, index);
-        return t switch
-        {
-            NativeMethods.LUA_TBOOLEAN => LuaType.Boolean,
-            NativeMethods.LUA_TNUMBER => LuaType.Number,
-            NativeMethods.LUA_TSTRING => LuaType.String,
-            NativeMethods.LUA_TTABLE => LuaType.Table,
-            NativeMethods.LUA_TFUNCTION => LuaType.Function,
-            NativeMethods.LUA_TUSERDATA => LuaType.UserData,
-            NativeMethods.LUA_TTHREAD => LuaType.Thread,
-            NativeMethods.LUA_TLIGHTUSERDATA => LuaType.LightUserData,
-            NativeMethods.LUA_TNIL => LuaType.Nil,
-            _ => throw new NotSupportedException($"Unsupported Lua type code: {t}"),
-        };
+        return CodeToType(t);
     }
 
     public int GetTop()
@@ -333,6 +322,12 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
         NativeMethods.lua_pushvalue(ptr, index);
     }
 
+    public void PushValue(LuaReference reference)
+    {
+        CheckDisposed();
+        _ = NativeMethods.lua_rawgeti(ptr, reference.TableIndex, reference.Id);
+    }
+
     public bool ToBoolean(int index)
     {
         CheckDisposed();
@@ -367,10 +362,25 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
         {
             throw new InvalidOperationException("Value at the specified index is not a thread.");
         }
-        return GetOrCreate(threadPtr, this);
+        return GetOrCreate(threadPtr, reference);
     }
 
     ILuaState ILuaState.ToThread(int index) => ToThread(index);
+
+    public void* ToPointer(int index)
+    {
+        CheckDisposed();
+        return NativeMethods.lua_topointer(ptr, index);
+    }
+
+    public LuaFunction ToFunction(int index)
+    {
+        if (GetType(index) != LuaType.Function)
+        {
+            throw new InvalidOperationException("Value at the specified index is not a function.");
+        }
+        return new LuaFunction(this, this.Ref());
+    }
 
     public void XMove(Lua55State target, int count)
     {
@@ -382,7 +392,7 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
     {
         CheckDisposed();
         NativeMethods.lua_createtable(ptr, initialArraySize, initialRecordsSize);
-        return new LuaTable(this, GetTop());
+        return new LuaTable(this, this.Ref());
     }
 
     public LuaValue GetGlobal(ReadOnlySpan<char> name)
@@ -426,7 +436,7 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
     {
         static int Fn(lua_State* L)
         {
-            var state = GetOrCreate(L);
+            var state = GetOrCreate(L, default);
             var funcIndex = NativeMethods.lua_tointegerx(
                 L,
                 NativeMethods.LUA_REGISTRYINDEX - 1,
@@ -456,7 +466,7 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
         funcs.Add(func);
         NativeMethods.lua_pushinteger(ptr, funcIndex);
         NativeMethods.lua_pushcclosure(ptr, Fn, 1);
-        return new LuaFunction(this, NativeMethods.lua_gettop(ptr));
+        return new LuaFunction(this, this.Ref());
     }
 
     public Lua55State CreateThread()
@@ -467,7 +477,7 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
         {
             throw new LuaException(NativeMethods.LUA_ERRMEM, "Failed to create Lua thread.");
         }
-        return GetOrCreate(threadPtr, this);
+        return GetOrCreate(threadPtr, this.Ref());
     }
 
     public void Arith(LuaArithmeticOperator op)
@@ -542,11 +552,64 @@ public sealed unsafe class Lua55State : ILuaState<Lua55State>
         CheckResult(result);
     }
 
+    public LuaType RawGet(int index)
+    {
+        CheckDisposed();
+        var t = (uint)NativeMethods.lua_rawget(ptr, index);
+        return CodeToType(t);
+    }
+
+    public int RawLen(int index)
+    {
+        CheckDisposed();
+        return (int)NativeMethods.lua_rawlen(ptr, index);
+    }
+
+    public void RawSet(int index)
+    {
+        CheckDisposed();
+        NativeMethods.lua_rawset(ptr, index);
+    }
+
     public void Resume(int argCount)
     {
         CheckDisposed();
         int nres;
         var result = NativeMethods.lua_resume(ptr, from == null ? null : from.ptr, argCount, &nres);
         CheckResult(result);
+    }
+
+    public LuaReference Ref(int index)
+    {
+        CheckDisposed();
+        var reference = NativeMethods.luaL_ref(ptr, index);
+        if (reference == NativeMethods.LUA_REFNIL)
+        {
+            throw new LuaException(NativeMethods.LUA_ERRMEM, "Failed to create reference.");
+        }
+        return new LuaReference(reference, index);
+    }
+
+    public void Unref(LuaReference reference)
+    {
+        CheckDisposed();
+        NativeMethods.luaL_unref(ptr, reference.TableIndex, reference.Id);
+    }
+
+    static LuaType CodeToType(uint code)
+    {
+        return code switch
+        {
+            NativeMethods.LUA_TBOOLEAN => LuaType.Boolean,
+            NativeMethods.LUA_TNUMBER => LuaType.Number,
+            NativeMethods.LUA_TSTRING => LuaType.String,
+            NativeMethods.LUA_TTABLE => LuaType.Table,
+            NativeMethods.LUA_TFUNCTION => LuaType.Function,
+            NativeMethods.LUA_TUSERDATA => LuaType.UserData,
+            NativeMethods.LUA_TTHREAD => LuaType.Thread,
+            NativeMethods.LUA_TLIGHTUSERDATA => LuaType.LightUserData,
+            NativeMethods.LUA_TNIL => LuaType.Nil,
+            _ => throw new NotSupportedException($"Unsupported Lua type code: {code}"),
+        };
     }
 }

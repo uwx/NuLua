@@ -1,9 +1,10 @@
 ﻿namespace NuLua;
 
-public interface ILuaState : ILuaObject, IDisposable
+public interface ILuaState : ILuaObject
 {
     bool IsYieldable { get; }
     LuaThreadStatus Status { get; }
+    int RegistryIndex { get; }
 
     nint AsPointer();
 
@@ -32,6 +33,7 @@ public interface ILuaState : ILuaObject, IDisposable
     void PushLightUserData(nint data);
     bool PushThread();
     void PushValue(int index);
+    void PushValue(LuaReference reference);
 
     bool ToBoolean(int index);
     double ToNumber(int index);
@@ -53,6 +55,13 @@ public interface ILuaState : ILuaObject, IDisposable
     void Len(int index);
     void Call(int argCount, int returnCount);
     void Resume(int argCount);
+
+    LuaType RawGet(int index);
+    int RawLen(int index);
+    void RawSet(int index);
+
+    LuaReference Ref(int index);
+    void Unref(LuaReference reference);
 
     void LoadString(ReadOnlySpan<char> chunk, ReadOnlySpan<char> chunkName = default);
     void LoadString(ReadOnlySpan<byte> utf8Chunk, ReadOnlySpan<byte> utf8ChunkName = default);

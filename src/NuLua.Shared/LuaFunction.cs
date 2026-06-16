@@ -1,25 +1,22 @@
 namespace NuLua;
 
-public sealed class LuaFunction(ILuaState state, int index) : ILuaObject
+public sealed class LuaFunction(ILuaState state, LuaReference reference) : ILuaObject
 {
-    public LuaObjectHandle Handle => new(state, index);
+    public LuaReference Reference => reference;
 
-    public int Invoke(ILuaState state, ReadOnlySpan<LuaValue> args)
+    public int Invoke(ReadOnlySpan<LuaValue> args)
     {
-        if (Handle.State != state)
-        {
-            throw new ArgumentException(
-                "Cannot invoke a Lua function from a different Lua state.",
-                nameof(state)
-            );
-        }
-
-        state.PushValue(Handle.Index);
+        state.PushValue(Reference);
         foreach (var arg in args)
         {
             state.Push(arg);
         }
         state.Call(args.Length, 0);
         return 0;
+    }
+
+    public void Dispose()
+    {
+        state.Unref(Reference);
     }
 }
