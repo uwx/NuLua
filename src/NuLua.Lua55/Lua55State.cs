@@ -719,7 +719,8 @@ public sealed unsafe partial class Lua55State : ILuaState<Lua55State>
     public void Call(int argCount, int returnCount)
     {
         CheckDisposed();
-        NativeMethods.lua_callk(ptr, argCount, returnCount, 0, null);
+        var result = NativeMethods.lua_pcallk(ptr, argCount, returnCount, 0, 0, null);
+        CheckResult(result);
     }
 
     public void Next(int index)
