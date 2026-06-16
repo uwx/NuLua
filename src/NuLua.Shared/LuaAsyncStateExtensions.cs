@@ -20,16 +20,14 @@ public static class LuaAsyncStateExtensions
         CancellationToken cancellationToken = default
     )
     {
-        state.NewThread();
-        var co = state.ToThread(-1);
-        var coRef = state.Ref();
+        var co = state.CreateThread();
         co.PushValue(function.Reference);
         var span = args.Span;
         for (int i = 0; i < span.Length; i++)
         {
             co.Push(span[i]);
         }
-        return RunAndCollectAsync(state, co, coRef, args.Length, cancellationToken);
+        return RunAndCollectAsync(state, co, args.Length, cancellationToken);
     }
 
     public static ValueTask<LuaValue[]> DoStringAsync(
@@ -39,22 +37,19 @@ public static class LuaAsyncStateExtensions
         CancellationToken cancellationToken = default
     )
     {
-        state.NewThread();
-        var co = state.ToThread(-1);
-        var coRef = state.Ref();
+        var co = state.CreateThread();
         co.LoadString(code);
         var span = args.Span;
         for (int i = 0; i < span.Length; i++)
         {
             co.Push(span[i]);
         }
-        return RunAndCollectAsync(state, co, coRef, args.Length, cancellationToken);
+        return RunAndCollectAsync(state, co, args.Length, cancellationToken);
     }
 
     static async ValueTask<LuaValue[]> RunAndCollectAsync(
         ILuaState state,
         ILuaState co,
-        LuaReference coRef,
         int initialArgCount,
         CancellationToken cancellationToken
     )
@@ -77,7 +72,7 @@ public static class LuaAsyncStateExtensions
         }
         finally
         {
-            state.Unref(coRef);
+            co.Dispose();
         }
     }
 }
