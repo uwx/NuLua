@@ -123,6 +123,149 @@ public static class LuaStateExtensions
         return state.Ref(state.RegistryIndex);
     }
 
+    public static LuaValue Add(this ILuaState state, LuaValue a, LuaValue b)
+    {
+        state.Push(a);
+        state.Push(b);
+        state.Arith(LuaArithmeticOperator.Add);
+        return state.Pop();
+    }
+
+    public static LuaValue Sub(this ILuaState state, LuaValue a, LuaValue b)
+    {
+        state.Push(a);
+        state.Push(b);
+        state.Arith(LuaArithmeticOperator.Sub);
+        return state.Pop();
+    }
+
+    public static LuaValue Mul(this ILuaState state, LuaValue a, LuaValue b)
+    {
+        state.Push(a);
+        state.Push(b);
+        state.Arith(LuaArithmeticOperator.Mul);
+        return state.Pop();
+    }
+
+    public static LuaValue Div(this ILuaState state, LuaValue a, LuaValue b)
+    {
+        state.Push(a);
+        state.Push(b);
+        state.Arith(LuaArithmeticOperator.Div);
+        return state.Pop();
+    }
+
+    public static LuaValue Mod(this ILuaState state, LuaValue a, LuaValue b)
+    {
+        state.Push(a);
+        state.Push(b);
+        state.Arith(LuaArithmeticOperator.Mod);
+        return state.Pop();
+    }
+
+    public static LuaValue Pow(this ILuaState state, LuaValue a, LuaValue b)
+    {
+        state.Push(a);
+        state.Push(b);
+        state.Arith(LuaArithmeticOperator.Pow);
+        return state.Pop();
+    }
+
+    public static LuaValue Unm(this ILuaState state, LuaValue a)
+    {
+        state.Push(a);
+        state.Arith(LuaArithmeticOperator.Unm);
+        return state.Pop();
+    }
+
+    public static LuaValue BNot(this ILuaState state, LuaValue a)
+    {
+        state.Push(a);
+        state.Arith(LuaArithmeticOperator.BNot);
+        return state.Pop();
+    }
+
+    public static LuaValue BAnd(this ILuaState state, LuaValue a, LuaValue b)
+    {
+        state.Push(a);
+        state.Push(b);
+        state.Arith(LuaArithmeticOperator.BAnd);
+        return state.Pop();
+    }
+
+    public static LuaValue BOr(this ILuaState state, LuaValue a, LuaValue b)
+    {
+        state.Push(a);
+        state.Push(b);
+        state.Arith(LuaArithmeticOperator.BOr);
+        return state.Pop();
+    }
+
+    public static LuaValue BXor(this ILuaState state, LuaValue a, LuaValue b)
+    {
+        state.Push(a);
+        state.Push(b);
+        state.Arith(LuaArithmeticOperator.BXor);
+        return state.Pop();
+    }
+
+    public static LuaValue Shl(this ILuaState state, LuaValue a, LuaValue b)
+    {
+        state.Push(a);
+        state.Push(b);
+        state.Arith(LuaArithmeticOperator.Shl);
+        return state.Pop();
+    }
+
+    public static LuaValue Shr(this ILuaState state, LuaValue a, LuaValue b)
+    {
+        state.Push(a);
+        state.Push(b);
+        state.Arith(LuaArithmeticOperator.Shr);
+        return state.Pop();
+    }
+
+    public static LuaValue Len(this ILuaState state, LuaValue a)
+    {
+        state.Push(a);
+        state.Len(-1);
+        return state.Pop();
+    }
+
+    public static LuaValue Concat(this ILuaState state, params ReadOnlySpan<LuaValue> values)
+    {
+        foreach (var value in values)
+        {
+            state.Push(value);
+        }
+        state.Concat(values.Length);
+        return state.Pop();
+    }
+
+    public static bool Equals(this ILuaState state, LuaValue a, LuaValue b)
+    {
+        state.Push(a);
+        state.Push(b);
+        state.Compare(LuaComparisonOperator.Equal);
+        return state.ToBoolean(-1);
+    }
+
+    public static bool LessThan(this ILuaState state, LuaValue a, LuaValue b)
+    {
+        state.Push(a);
+        state.Push(b);
+        state.Compare(LuaComparisonOperator.Less);
+        return state.ToBoolean(-1);
+    }
+
+    public static bool LessThanOrEqual(this ILuaState state, LuaValue a, LuaValue b)
+    {
+        state.Push(a);
+        state.Push(b);
+        state.Compare(LuaComparisonOperator.LessOrEqual);
+        return state.ToBoolean(-1);
+    }
+
     public static LuaValue[] DoString(this ILuaState state, ReadOnlySpan<char> code)
     {
         var baseTop = state.GetTop();
