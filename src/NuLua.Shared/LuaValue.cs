@@ -406,4 +406,5 @@ public readonly struct LuaValue : IEquatable<LuaValue>
     public static implicit operator LuaValue(LuaFunction value) => FromFunction(value);
 
     public static implicit operator LuaValue(LuaTable value) => FromTable(value);
+    public static implicit operator LuaValue(LuaUserData value) => FromUserData(value);
 }
