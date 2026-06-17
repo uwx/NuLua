@@ -128,6 +128,9 @@ namespace NuLua.Interop.LuaJit
         public delegate int lua_tocfunction_return_delegate(lua_State* L);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void luaJIT_profile_start_cb_delegate(void* data, lua_State* L, int samples, int vmstate);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void lua_gethook_return_delegate(lua_State* L, lua_Debug* ar);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -575,6 +578,21 @@ namespace NuLua.Interop.LuaJit
 
         [DllImport(__DllName, EntryPoint = "luaL_pushresult", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void luaL_pushresult(luaL_Buffer* B);
+
+        [DllImport(__DllName, EntryPoint = "luaJIT_setmode", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern int luaJIT_setmode(lua_State* L, int idx, int mode);
+
+        [DllImport(__DllName, EntryPoint = "luaJIT_profile_start", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void luaJIT_profile_start(lua_State* L, byte* mode, luaJIT_profile_start_cb_delegate cb, void* data);
+
+        [DllImport(__DllName, EntryPoint = "luaJIT_profile_stop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void luaJIT_profile_stop(lua_State* L);
+
+        [DllImport(__DllName, EntryPoint = "luaJIT_profile_dumpstack", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern byte* luaJIT_profile_dumpstack(lua_State* L, byte* fmt, int depth, nuint* len);
+
+        [DllImport(__DllName, EntryPoint = "luaJIT_version_2_1_1781341259", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void luaJIT_version_2_1_1781341259();
 
 
     }
