@@ -10,10 +10,12 @@
     <Project Path="src/NuLua.Interop.Lua55/NuLua.Interop.Lua55.csproj" />
     <Project Path="src/NuLua.Interop.LuaJit/NuLua.Interop.LuaJit.csproj" />
     <Project Path="src/NuLua.Interop.Luau/NuLua.Interop.Luau.csproj" />
+    <Project Path="src/NuLua.Lua51/NuLua.Lua51.csproj" />
     <Project Path="src/NuLua.Lua52/NuLua.Lua52.csproj" />
     <Project Path="src/NuLua.Lua53/NuLua.Lua53.csproj" />
     <Project Path="src/NuLua.Lua54/NuLua.Lua54.csproj" />
     <Project Path="src/NuLua.Lua55/NuLua.Lua55.csproj" />
+    <Project Path="src/NuLua.LuaJit/NuLua.LuaJit.csproj" />
     <Project Path="src/NuLua.Runtime.Lua51/NuLua.Runtime.Lua51.csproj" />
     <Project Path="src/NuLua.Runtime.Lua52/NuLua.Runtime.Lua52.csproj" />
     <Project Path="src/NuLua.Runtime.Lua53/NuLua.Runtime.Lua53.csproj" />

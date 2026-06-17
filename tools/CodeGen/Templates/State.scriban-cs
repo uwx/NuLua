@@ -989,3 +989,37 @@ public sealed unsafe partial class {{ name }}State : ILuaState<{{ name }}State>
         };
     }
 }
+
+internal static partial class {{ name }}AsyncDriver
+{
+    public static async ValueTask RunAsync(
+        {{ name }}State state,
+        int initialArgCount,
+        CancellationToken cancellationToken
+    )
+    {
+        state.SetAsyncCancellationToken(cancellationToken);
+        int currentArgs = initialArgCount;
+        while (true)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var status = state.RunResumeStep(currentArgs);
+            if (status == (int)NativeMethods.LUA_OK)
+            {
+                state.SetAsyncCancellationToken(default);
+                return;
+            }
+
+            if (!state.TryTakePendingAsyncTask(out var task))
+            {
+                state.SetAsyncCancellationToken(default);
+                throw new LuaException(
+                    NativeMethods.LUA_ERRRUN,
+                    "Coroutine yielded without a pending async task."
+                );
+            }
+
+            currentArgs = await task.ConfigureAwait(false);
+        }
+    }
+}

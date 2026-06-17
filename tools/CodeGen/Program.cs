@@ -6,6 +6,7 @@ string? name = null;
 int? version = null;
 string? templateDir = null;
 string? outputDir = null;
+bool isJit = false;
 
 for (int i = 0; i < args.Length; i++)
 {
@@ -23,6 +24,9 @@ for (int i = 0; i < args.Length; i++)
         case "--output-dir":
             outputDir = args[++i];
             break;
+        case "--is-jit":
+            isJit = true;
+            break;
         default:
             Console.Error.WriteLine($"Unknown argument: {args[i]}");
             return 1;
@@ -32,7 +36,7 @@ for (int i = 0; i < args.Length; i++)
 if (name is null || version is null || templateDir is null || outputDir is null)
 {
     Console.Error.WriteLine(
-        "Usage: CodeGen --name <Name> --version <NNN> --template-dir <dir> --output-dir <dir>"
+        "Usage: CodeGen --name <Name> --version <NNN> --template-dir <dir> --output-dir <dir> [--is-jit]"
     );
     return 1;
 }
@@ -42,6 +46,7 @@ Directory.CreateDirectory(outputDir);
 var model = new ScriptObject();
 model["name"] = name;
 model["version"] = version.Value;
+model["is_jit"] = isJit;
 
 var templates = Directory.GetFiles(templateDir, "*.scriban-cs", SearchOption.TopDirectoryOnly);
 if (templates.Length == 0)

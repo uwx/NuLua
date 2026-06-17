@@ -32,7 +32,7 @@
   <Target Name="RunCodeGen"
           BeforeTargets="CoreCompile"
           Inputs="@(CodeGenTemplate)"
-          Outputs="$(CodeGenOutputDir)\$(CodeGenName)State.g.cs;$(CodeGenOutputDir)\$(CodeGenName)AsyncDriver.g.cs">
+          Outputs="$(CodeGenOutputDir)\$(CodeGenName)State.g.cs">
     <MakeDir Directories="$(CodeGenOutputDir)" />
     <Exec Command="dotnet run --project &quot;$(CodeGenProject)&quot; --no-build -- --name $(CodeGenName) --version $(CodeGenVersion) --template-dir &quot;$(CodeGenTemplateDir)&quot; --output-dir &quot;$(CodeGenOutputDir)&quot;" />
   </Target>
