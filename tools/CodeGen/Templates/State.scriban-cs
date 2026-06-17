@@ -78,20 +78,6 @@ public sealed unsafe partial class {{ name }}State : ILuaState<{{ name }}State>
     nint ILuaState.AsPointer() => (nint)ptr;
 
     public LuaReference Reference => reference;
-    public bool IsYieldable
-    {
-        get
-        {
-            CheckDisposed();
-{{~ if version >= 503 ~}}
-            return NativeMethods.lua_isyieldable(ptr) != 0;
-{{~ else ~}}
-            var isMain = NativeMethods.lua_pushthread(ptr);
-            NativeMethods.lua_settop(ptr, NativeMethods.lua_gettop(ptr) - 1);
-            return isMain == 0;
-{{~ end ~}}
-        }
-    }
 
     public int RegistryIndex => NativeMethods.LUA_REGISTRYINDEX;
 
@@ -286,7 +272,7 @@ public sealed unsafe partial class {{ name }}State : ILuaState<{{ name }}State>
         LoadBuffer(buffer, chunkNameBytes.AsSpan());
     }
 
-    public bool TryDump(int index, Span<byte> buffer, out int bytesWritten)
+    public bool TryDump(int index, bool strip, Span<byte> buffer, out int bytesWritten)
     {
         static int Writer(lua_State* L, void* p, nuint sz, void* ud)
         {
@@ -303,7 +289,7 @@ public sealed unsafe partial class {{ name }}State : ILuaState<{{ name }}State>
         fixed (byte* bufferPtr = buffer)
         {
 {{~ if version >= 503 ~}}
-            var result = NativeMethods.lua_dump(ptr, Writer, bufferPtr, 0);
+            var result = NativeMethods.lua_dump(ptr, Writer, bufferPtr, strip ? 1 : 0);
 {{~ else ~}}
             var result = NativeMethods.lua_dump(ptr, Writer, bufferPtr);
 {{~ end ~}}

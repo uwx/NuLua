@@ -5,7 +5,6 @@ namespace NuLua;
 public interface ILuaState : ILuaObject
 {
     ILuaState? From { get; }
-    bool IsYieldable { get; }
     LuaThreadStatus Status { get; }
     int RegistryIndex { get; }
 
@@ -76,7 +75,7 @@ public interface ILuaState : ILuaObject
 
     void LoadString(ReadOnlySpan<char> chunk, ReadOnlySpan<char> chunkName = default);
     void LoadString(ReadOnlySpan<byte> utf8Chunk, ReadOnlySpan<byte> utf8ChunkName = default);
-    bool TryDump(int index, Span<byte> buffer, out int bytesWritten);
+    bool TryDump(int index, bool strip, Span<byte> buffer, out int bytesWritten);
 }
 
 public interface ILuaState<T> : ILuaState
