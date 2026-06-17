@@ -1,7 +1,7 @@
 using NuLua;
-using NuLua.Lua55;
+using NuLua.LuaJit;
 
-using var state = Lua55State.Create();
+using var state = LuaJitState.Create();
 state.OpenBaseLibrary();
 
 state["wait"] = state.CreateFunction(
@@ -13,14 +13,22 @@ state["wait"] = state.CreateFunction(
     }
 );
 
-var t1 = state.DoStringAsync("""
+var t1 = state
+    .DoStringAsync(
+        """
     print("A: Waiting for 2 seconds...")
     wait(2)
     print("A: Done!")
-""").AsTask();
-var t2 = state.DoStringAsync("""
+"""
+    )
+    .AsTask();
+var t2 = state
+    .DoStringAsync(
+        """
     print("B: Waiting for 2 seconds...")
     wait(2)
     print("B: Done!")
-""").AsTask();
+"""
+    )
+    .AsTask();
 await Task.WhenAll(t1, t2);

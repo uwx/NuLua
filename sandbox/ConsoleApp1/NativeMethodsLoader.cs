@@ -17,6 +17,10 @@ internal static class NativeMethodsLoader
             typeof(NuLua.Interop.Lua55.NativeMethods).Assembly,
             DllImportResolver
         );
+        NativeLibrary.SetDllImportResolver(
+            typeof(NuLua.Interop.LuaJit.NativeMethods).Assembly,
+            DllImportResolver
+        );
     }
 
     static IntPtr DllImportResolver(
@@ -25,7 +29,7 @@ internal static class NativeMethodsLoader
         DllImportSearchPath? searchPath
     )
     {
-        if (libraryName is "lua55")
+        if (libraryName is "lua55" or "luajit")
         {
             var name = libraryName;
             string? ext;
