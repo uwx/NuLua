@@ -1,11 +1,3 @@
-#![allow(
-    non_upper_case_globals,
-    non_camel_case_types,
-    non_snake_case,
-    dead_code
-)]
-
-mod luau;
-mod luau_ffi;
-
-pub use luau_ffi::*;
+// This crate exists only as a host for build.rs (bindgen + csbindgen).
+// The Luau shared library is produced by `make -C native luau`,
+// and C# calls Luau's C API directly via P/Invoke.

@@ -1,11 +1,4 @@
-#![allow(
-    non_upper_case_globals,
-    non_camel_case_types,
-    non_snake_case,
-    dead_code
-)]
-
-mod luajit;
-mod luajit_ffi;
-
-pub use luajit_ffi::*;
+// This crate exists only as a host for build.rs (bindgen + csbindgen).
+// The LuaJIT shared library is produced by `make -C native luajit`
+// (which delegates to submodules/luajit/src/Makefile), and C# calls
+// LuaJIT's C API directly via P/Invoke.
