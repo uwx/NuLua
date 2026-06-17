@@ -4,7 +4,11 @@ namespace NuLua;
 
 internal static class CancellationTokenExtensions
 {
-    public static CancellationTokenRegistration UnsafeRegister(this CancellationToken cancellationToken, Action<object?> callback, object? state)
+    public static CancellationTokenRegistration UnsafeRegister(
+        this CancellationToken cancellationToken,
+        Action<object?> callback,
+        object? state
+    )
     {
         var restoreFlow = false;
         if (!ExecutionContext.IsFlowSuppressed())

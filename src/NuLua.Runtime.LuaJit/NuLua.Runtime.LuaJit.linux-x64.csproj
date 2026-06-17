@@ -1,5 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <Nullable>enable</Nullable>
@@ -15,9 +14,13 @@
 
   <ItemGroup>
     <None Remove="runtimes\**" />
-    <None Include="runtimes\linux-x64\native\libluajit.so" PackagePath="runtimes\linux-x64\native\" Pack="true" Condition="Exists('runtimes\linux-x64\native\libluajit.so')">
+    <None
+      Include="runtimes\linux-x64\native\libluajit.so"
+      PackagePath="runtimes\linux-x64\native\"
+      Pack="true"
+      Condition="Exists('runtimes\linux-x64\native\libluajit.so')"
+    >
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-
 </Project>

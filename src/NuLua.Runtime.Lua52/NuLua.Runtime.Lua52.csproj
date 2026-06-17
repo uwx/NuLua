@@ -1,5 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <Nullable>enable</Nullable>
@@ -25,5 +24,4 @@
     <ProjectReference Include="NuLua.Runtime.Lua52.osx-x64.csproj" />
     <ProjectReference Include="NuLua.Runtime.Lua52.osx-arm64.csproj" />
   </ItemGroup>
-
 </Project>

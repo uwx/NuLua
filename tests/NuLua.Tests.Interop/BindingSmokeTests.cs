@@ -100,7 +100,12 @@ public class BindingSmokeTests
         try
         {
             Lua51::NuLua.Interop.Lua51.NativeMethods.lua_pushinteger(state, 42);
-            return new BindingResult(true, 1, Lua51::NuLua.Interop.Lua51.NativeMethods.lua_tointeger(state, -1), Lua51::NuLua.Interop.Lua51.NativeMethods.lua_gettop(state));
+            return new BindingResult(
+                true,
+                1,
+                Lua51::NuLua.Interop.Lua51.NativeMethods.lua_tointeger(state, -1),
+                Lua51::NuLua.Interop.Lua51.NativeMethods.lua_gettop(state)
+            );
         }
         finally
         {
@@ -120,8 +125,17 @@ public class BindingSmokeTests
         {
             Lua52::NuLua.Interop.Lua52.NativeMethods.lua_pushinteger(state, 42);
             var isNumber = 0;
-            var value = Lua52::NuLua.Interop.Lua52.NativeMethods.lua_tointegerx(state, -1, &isNumber);
-            return new BindingResult(true, isNumber, value, Lua52::NuLua.Interop.Lua52.NativeMethods.lua_gettop(state));
+            var value = Lua52::NuLua.Interop.Lua52.NativeMethods.lua_tointegerx(
+                state,
+                -1,
+                &isNumber
+            );
+            return new BindingResult(
+                true,
+                isNumber,
+                value,
+                Lua52::NuLua.Interop.Lua52.NativeMethods.lua_gettop(state)
+            );
         }
         finally
         {
@@ -141,8 +155,17 @@ public class BindingSmokeTests
         {
             Lua53::NuLua.Interop.Lua53.NativeMethods.lua_pushinteger(state, 42);
             var isNumber = 0;
-            var value = Lua53::NuLua.Interop.Lua53.NativeMethods.lua_tointegerx(state, -1, &isNumber);
-            return new BindingResult(true, isNumber, value, Lua53::NuLua.Interop.Lua53.NativeMethods.lua_gettop(state));
+            var value = Lua53::NuLua.Interop.Lua53.NativeMethods.lua_tointegerx(
+                state,
+                -1,
+                &isNumber
+            );
+            return new BindingResult(
+                true,
+                isNumber,
+                value,
+                Lua53::NuLua.Interop.Lua53.NativeMethods.lua_gettop(state)
+            );
         }
         finally
         {
@@ -162,8 +185,17 @@ public class BindingSmokeTests
         {
             Lua54::NuLua.Interop.Lua54.NativeMethods.lua_pushinteger(state, 42);
             var isNumber = 0;
-            var value = Lua54::NuLua.Interop.Lua54.NativeMethods.lua_tointegerx(state, -1, &isNumber);
-            return new BindingResult(true, isNumber, value, Lua54::NuLua.Interop.Lua54.NativeMethods.lua_gettop(state));
+            var value = Lua54::NuLua.Interop.Lua54.NativeMethods.lua_tointegerx(
+                state,
+                -1,
+                &isNumber
+            );
+            return new BindingResult(
+                true,
+                isNumber,
+                value,
+                Lua54::NuLua.Interop.Lua54.NativeMethods.lua_gettop(state)
+            );
         }
         finally
         {
@@ -183,8 +215,17 @@ public class BindingSmokeTests
         {
             Lua55::NuLua.Interop.Lua55.NativeMethods.lua_pushinteger(state, 42);
             var isNumber = 0;
-            var value = Lua55::NuLua.Interop.Lua55.NativeMethods.lua_tointegerx(state, -1, &isNumber);
-            return new BindingResult(true, isNumber, value, Lua55::NuLua.Interop.Lua55.NativeMethods.lua_gettop(state));
+            var value = Lua55::NuLua.Interop.Lua55.NativeMethods.lua_tointegerx(
+                state,
+                -1,
+                &isNumber
+            );
+            return new BindingResult(
+                true,
+                isNumber,
+                value,
+                Lua55::NuLua.Interop.Lua55.NativeMethods.lua_gettop(state)
+            );
         }
         finally
         {
@@ -203,7 +244,12 @@ public class BindingSmokeTests
         try
         {
             LuaJit::NuLua.Interop.LuaJit.NativeMethods.lua_pushinteger(state, 42);
-            return new BindingResult(true, 1, LuaJit::NuLua.Interop.LuaJit.NativeMethods.lua_tointeger(state, -1), LuaJit::NuLua.Interop.LuaJit.NativeMethods.lua_gettop(state));
+            return new BindingResult(
+                true,
+                1,
+                LuaJit::NuLua.Interop.LuaJit.NativeMethods.lua_tointeger(state, -1),
+                LuaJit::NuLua.Interop.LuaJit.NativeMethods.lua_gettop(state)
+            );
         }
         finally
         {
@@ -224,7 +270,12 @@ public class BindingSmokeTests
             Luau::NuLua.Interop.Luau.NativeMethods.lua_pushinteger(state, 42);
             var isNumber = 0;
             var value = Luau::NuLua.Interop.Luau.NativeMethods.lua_tointegerx(state, -1, &isNumber);
-            return new BindingResult(true, isNumber, value, Luau::NuLua.Interop.Luau.NativeMethods.lua_gettop(state));
+            return new BindingResult(
+                true,
+                isNumber,
+                value,
+                Luau::NuLua.Interop.Luau.NativeMethods.lua_gettop(state)
+            );
         }
         finally
         {
@@ -232,7 +283,12 @@ public class BindingSmokeTests
         }
     }
 
-    private readonly record struct BindingResult(bool StateCreated, int IsNumber, long Value, int StackTop)
+    private readonly record struct BindingResult(
+        bool StateCreated,
+        int IsNumber,
+        long Value,
+        int StackTop
+    )
     {
         public static BindingResult NotCreated { get; } = new(false, 0, 0, 0);
     }

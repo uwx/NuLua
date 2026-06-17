@@ -58,16 +58,19 @@ public static class LuaAsyncStateExtensions
             int actual = co.GetTop();
             if (resultCount < 0)
             {
-                if (actual > 0) co.XMove(state, actual);
+                if (actual > 0)
+                    co.XMove(state, actual);
             }
             else if (actual >= resultCount)
             {
                 co.SetTop(resultCount);
-                if (resultCount > 0) co.XMove(state, resultCount);
+                if (resultCount > 0)
+                    co.XMove(state, resultCount);
             }
             else
             {
-                if (actual > 0) co.XMove(state, actual);
+                if (actual > 0)
+                    co.XMove(state, actual);
                 for (int i = 0; i < resultCount - actual; i++)
                 {
                     state.PushNil();

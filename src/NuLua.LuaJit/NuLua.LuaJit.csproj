@@ -25,21 +25,23 @@
     <CodeGenTemplate Include="$(CodeGenTemplateDir)\*.scriban-cs" />
   </ItemGroup>
   <Target Name="BuildCodeGen" BeforeTargets="RunCodeGen">
-    <MSBuild Projects="$(CodeGenProject)"
-             Targets="Build"
-             Properties="Configuration=$(Configuration);TargetFramework=net10.0"
-             RemoveProperties="TargetFramework" />
+    <MSBuild
+      Projects="$(CodeGenProject)"
+      Targets="Build"
+      Properties="Configuration=$(Configuration);TargetFramework=net10.0"
+      RemoveProperties="TargetFramework"
+    />
   </Target>
-  <Target Name="RunCodeGen"
-          BeforeTargets="CoreCompile"
-          Inputs="@(CodeGenTemplate)"
-          Outputs="$(CodeGenOutputDir)\$(CodeGenName)State.g.cs">
+  <Target
+    Name="RunCodeGen"
+    BeforeTargets="CoreCompile"
+    Inputs="@(CodeGenTemplate)"
+    Outputs="$(CodeGenOutputDir)\$(CodeGenName)State.g.cs"
+  >
     <MakeDir Directories="$(CodeGenOutputDir)" />
     <Exec Command="dotnet run --project &quot;$(CodeGenProject)&quot; --no-build -- --name $(CodeGenName) --version $(CodeGenVersion) --template-dir &quot;$(CodeGenTemplateDir)&quot; --output-dir &quot;$(CodeGenOutputDir)&quot; --is-jit" />
   </Target>
-  <Target Name="IncludeCodeGenOutput"
-          BeforeTargets="CoreCompile"
-          DependsOnTargets="RunCodeGen">
+  <Target Name="IncludeCodeGenOutput" BeforeTargets="CoreCompile" DependsOnTargets="RunCodeGen">
     <ItemGroup>
       <Compile Include="$(CodeGenOutputDir)\*.g.cs" Exclude="@(Compile)" />
     </ItemGroup>

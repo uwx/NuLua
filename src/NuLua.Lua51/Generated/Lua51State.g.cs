@@ -187,13 +187,6 @@ public sealed unsafe partial class Lua51State : ILuaState<Lua51State>
         OpenSingleLibrary(NativeMethods.luaopen_math, "math\0"u8);
     }
 
-    public void OpenCoroutineLibrary()
-    {
-        CheckDisposed();
-        // Lua 5.1 / LuaJIT bundle the coroutine library with the base library.
-        OpenSingleLibrary(NativeMethods.luaopen_base, "_G\0"u8);
-    }
-
     public void OpenIoLibrary()
     {
         CheckDisposed();
