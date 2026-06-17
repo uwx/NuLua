@@ -118,9 +118,9 @@ luau: $(BUILD)/luau/$(RID)/$(call dylib_name,luau)
 LUAJIT_SRC := $(SUBMOD)/luajit/src
 LUAJIT_OUT := $(BUILD)/luajit/$(RID)
 
-LUAJIT_TARGET_SYS := $(if $(filter macos,$(TARGET_OS)),Darwin,\
+LUAJIT_TARGET_SYS := $(strip $(if $(filter macos,$(TARGET_OS)),Darwin,\
                     $(if $(filter linux,$(TARGET_OS)),Linux,\
-                    $(if $(filter windows,$(TARGET_OS)),Windows,Other)))
+                    $(if $(filter windows,$(TARGET_OS)),Windows,Other))))
 
 # LuaJIT prepends CROSS to CC. We pass a bare compiler name so the result is
 # `<prefix>gcc` (Linux/Windows cross-toolchain layout). On macOS use clang
