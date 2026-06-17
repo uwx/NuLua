@@ -14,62 +14,24 @@ fn main() {
         .unwrap()
         .to_path_buf();
     let lua_src = workspace_root.join("submodules").join(FLAVOR);
+    let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
 
-    compile_lua(&lua_src);
-    let bindings_rs = "src/lua55.rs";
-    generate_rust_bindings(&lua_src, bindings_rs);
+    let bindings_rs = out_dir.join(format!("{FLAVOR}.rs"));
+    generate_rust_bindings(&lua_src, &bindings_rs);
+
     let cs_out = workspace_root
         .join("src")
         .join(CSHARP_PROJECT)
         .join("Generated")
         .join(format!("{CSHARP_CLASS}.g.cs"));
-    generate_csharp_bindings(bindings_rs, &cs_out);
+    let ffi_rs = out_dir.join(format!("{FLAVOR}_ffi.rs"));
+    generate_csharp_bindings(&bindings_rs, &ffi_rs, &cs_out);
 
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-changed={}", lua_src.display());
 }
 
-fn compile_lua(lua_src: &Path) {
-    let mut build = cc::Build::new();
-    build.include(lua_src);
-    apply_platform_defines(&mut build);
-
-    for entry in std::fs::read_dir(lua_src).expect("read lua source dir") {
-        let path = entry.unwrap().path();
-        let ext = path.extension().and_then(|s| s.to_str());
-        if ext != Some("c") {
-            continue;
-        }
-        let name = path.file_name().unwrap().to_str().unwrap();
-        if matches!(name, "lua.c" | "luac.c" | "ltests.c" | "onelua.c") {
-            continue;
-        }
-        build.file(&path);
-    }
-
-    build.warnings(false);
-    build.compile(FLAVOR);
-}
-
-fn apply_platform_defines(build: &mut cc::Build) {
-    let target_os = std::env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
-    match target_os.as_str() {
-        "macos" => {
-            build.define("LUA_USE_MACOSX", None);
-        }
-        "linux" | "android" => {
-            build.define("LUA_USE_LINUX", None);
-        }
-        "windows" => {
-            build.define("LUA_BUILD_AS_DLL", None);
-        }
-        _ => {
-            build.define("LUA_USE_POSIX", None);
-        }
-    }
-}
-
-fn generate_rust_bindings<T: AsRef<Path>>(lua_src: &Path, out: T) {
+fn generate_rust_bindings(lua_src: &Path, out: &Path) {
     let bindings = bindgen::Builder::default()
         .header(lua_src.join("lua.h").to_string_lossy())
         .header(lua_src.join("lualib.h").to_string_lossy())
@@ -88,19 +50,19 @@ fn generate_rust_bindings<T: AsRef<Path>>(lua_src: &Path, out: T) {
     bindings.write_to_file(out).expect("write bindings.rs");
 }
 
-fn generate_csharp_bindings<T: AsRef<Path>>(bindings_rs: T, out_cs: &Path) {
+fn generate_csharp_bindings(bindings_rs: &Path, ffi_rs: &Path, out_cs: &Path) {
     std::fs::create_dir_all(out_cs.parent().unwrap()).expect("mkdir Generated/");
     csbindgen::Builder::default()
         .input_bindgen_file(bindings_rs)
-        .rust_file_header("use crate::lua55::*;")
+        .rust_file_header(format!("use crate::{FLAVOR}::*;"))
         .csharp_class_accessibility("public")
         .csharp_file_header("using NuLua.Polyfills;")
         .csharp_dll_name(FLAVOR)
         .csharp_namespace(CSHARP_NAMESPACE)
         .csharp_class_name(CSHARP_CLASS)
         .csharp_use_function_pointer(false)
-        .csharp_entry_point_prefix("csbindgen_")
+        .csharp_entry_point_prefix("")
         .csharp_generate_const_filter(|name| name.starts_with("LUA_"))
-        .generate_to_file("src/lua55_ffi.rs", out_cs.to_str().unwrap())
+        .generate_to_file(ffi_rs.to_str().unwrap(), out_cs.to_str().unwrap())
         .expect("csbindgen failed");
 }

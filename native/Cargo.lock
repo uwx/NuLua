@@ -136,7 +136,6 @@ name = "lua51"
 version = "0.1.0"
 dependencies = [
  "bindgen",
- "cc",
  "csbindgen",
 ]
 
@@ -145,7 +144,6 @@ name = "lua52"
 version = "0.1.0"
 dependencies = [
  "bindgen",
- "cc",
  "csbindgen",
 ]
 
@@ -154,7 +152,6 @@ name = "lua53"
 version = "0.1.0"
 dependencies = [
  "bindgen",
- "cc",
  "csbindgen",
 ]
 
@@ -163,7 +160,6 @@ name = "lua54"
 version = "0.1.0"
 dependencies = [
  "bindgen",
- "cc",
  "csbindgen",
 ]
 
@@ -172,7 +168,6 @@ name = "lua55"
 version = "0.1.0"
 dependencies = [
  "bindgen",
- "cc",
  "csbindgen",
 ]
 

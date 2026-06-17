@@ -1,6 +1,6 @@
 name: Build-Native-Lua55
 
-# Cross-compiles the lua55 cdylib for the six desktop RIDs and opens a PR that
+# Cross-compiles the lua55 shared library for the six desktop RIDs and opens a PR that
 # places the artifacts under src/NuLua.Runtime.Lua55/runtimes/{rid}/native/.
 
 on:
@@ -17,27 +17,40 @@ jobs:
       matrix:
         include:
           - rid: win-x64
-            target: x86_64-pc-windows-msvc
+            arch: x86_64
           - rid: win-arm64
-            target: aarch64-pc-windows-msvc
+            arch: aarch64
     runs-on: windows-2025
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.target }}
-      - name: Cargo build
+      - name: Install llvm-mingw
+        shell: bash
+        run: |
+          set -euo pipefail
+          ver=20240917
+          curl -fL -o llvm-mingw.zip \
+            "https://github.com/mstorsjo/llvm-mingw/releases/download/${ver}/llvm-mingw-${ver}-ucrt-x86_64.zip"
+          unzip -q llvm-mingw.zip -d "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/llvm-mingw-${ver}-ucrt-x86_64/bin" >> "$GITHUB_PATH"
+      - name: Build via make
+        shell: bash
         working-directory: native
-        run: cargo build --release -p ${{ env.FLAVOR }} --target ${{ matrix.target }}
+        run: |
+          make ${{ env.FLAVOR }} \
+            RID=${{ matrix.rid }} \
+            TARGET_OS=windows \
+            CC=${{ matrix.arch }}-w64-mingw32-gcc \
+            AR=${{ matrix.arch }}-w64-mingw32-ar \
+            RANLIB=${{ matrix.arch }}-w64-mingw32-ranlib
       - name: Stage artifact
         shell: bash
         working-directory: native
         run: |
           mkdir -p ../artifacts/${{ matrix.rid }}
-          cp target/${{ matrix.target }}/release/${{ env.FLAVOR }}.dll ../artifacts/${{ matrix.rid }}/
+          cp build/${{ env.FLAVOR }}/${{ matrix.rid }}/${{ env.FLAVOR }}.dll ../artifacts/${{ matrix.rid }}/
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ env.FLAVOR }}-${{ matrix.rid }}
@@ -49,13 +62,11 @@ jobs:
       matrix:
         include:
           - rid: linux-x64
-            target: x86_64-unknown-linux-gnu
+            cc_prefix: ""
             packages: ""
-            cc: gcc
           - rid: linux-arm64
-            target: aarch64-unknown-linux-gnu
+            cc_prefix: "aarch64-linux-gnu-"
             packages: gcc-aarch64-linux-gnu
-            cc: aarch64-linux-gnu-gcc
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -67,20 +78,20 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y ${{ matrix.packages }}
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.target }}
-      - name: Cargo build
+      - name: Build via make
         working-directory: native
-        env:
-          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
-          CC_aarch64_unknown_linux_gnu: aarch64-linux-gnu-gcc
-        run: cargo build --release -p ${{ env.FLAVOR }} --target ${{ matrix.target }}
+        run: |
+          make ${{ env.FLAVOR }} \
+            RID=${{ matrix.rid }} \
+            TARGET_OS=linux \
+            CC=${{ matrix.cc_prefix }}gcc \
+            AR=${{ matrix.cc_prefix }}ar \
+            RANLIB=${{ matrix.cc_prefix }}ranlib
       - name: Stage artifact
         working-directory: native
         run: |
           mkdir -p ../artifacts/${{ matrix.rid }}
-          cp target/${{ matrix.target }}/release/lib${{ env.FLAVOR }}.so ../artifacts/${{ matrix.rid }}/
+          cp build/${{ env.FLAVOR }}/${{ matrix.rid }}/lib${{ env.FLAVOR }}.so ../artifacts/${{ matrix.rid }}/
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ env.FLAVOR }}-${{ matrix.rid }}
@@ -92,26 +103,30 @@ jobs:
       matrix:
         include:
           - rid: osx-x64
-            target: x86_64-apple-darwin
+            arch: x86_64
           - rid: osx-arm64
-            target: aarch64-apple-darwin
+            arch: arm64
     runs-on: macos-15
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.target }}
-      - name: Cargo build
+      - name: Build via make
         working-directory: native
-        run: cargo build --release -p ${{ env.FLAVOR }} --target ${{ matrix.target }}
+        run: |
+          make ${{ env.FLAVOR }} \
+            RID=${{ matrix.rid }} \
+            TARGET_OS=macos \
+            CC=clang \
+            AR=ar \
+            RANLIB=ranlib \
+            CFLAGS_EXTRA="-arch ${{ matrix.arch }}"
       - name: Stage artifact
         working-directory: native
         run: |
           mkdir -p ../artifacts/${{ matrix.rid }}
-          cp target/${{ matrix.target }}/release/lib${{ env.FLAVOR }}.dylib ../artifacts/${{ matrix.rid }}/
+          cp build/${{ env.FLAVOR }}/${{ matrix.rid }}/lib${{ env.FLAVOR }}.dylib ../artifacts/${{ matrix.rid }}/
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ env.FLAVOR }}-${{ matrix.rid }}
