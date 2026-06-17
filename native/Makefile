@@ -122,6 +122,16 @@ LUAJIT_TARGET_SYS := $(if $(filter macos,$(TARGET_OS)),Darwin,\
                     $(if $(filter linux,$(TARGET_OS)),Linux,\
                     $(if $(filter windows,$(TARGET_OS)),Windows,Other)))
 
+# LuaJIT prepends CROSS to CC. We pass a bare compiler name so the result is
+# `<prefix>gcc` (Linux/Windows cross-toolchain layout). On macOS use clang
+# explicitly: Apple's `gcc` is a clang shim but a local Homebrew GCC can
+# shadow it and silently ignore `-arch`.
+ifeq ($(TARGET_OS),macos)
+  LUAJIT_CC := clang
+else
+  LUAJIT_CC := gcc
+endif
+
 # Produced-artifact path inside submodules/luajit/src/ (varies per platform).
 ifeq ($(TARGET_OS),macos)
   LUAJIT_BUILT := $(LUAJIT_SRC)/libluajit.so
@@ -135,9 +145,9 @@ LUAJIT_FORWARD := \
   BUILDMODE=dynamic \
   HOST_CC="$(or $(HOST_CC),cc)" \
   CROSS="$(CROSS)" \
+  CC=$(LUAJIT_CC) \
   TARGET_SYS=$(LUAJIT_TARGET_SYS) \
-  TARGET_CFLAGS="$(CFLAGS_EXTRA)" \
-  TARGET_LDFLAGS="$(LDFLAGS_EXTRA)" \
+  TARGET_FLAGS="$(CFLAGS_EXTRA)" \
   TARGET_DLLNAME=luajit.dll
 
 # LuaJIT's Makefile aborts on macOS unless MACOSX_DEPLOYMENT_TARGET is exported.
@@ -148,7 +158,7 @@ endif
 
 luajit:
 	@mkdir -p $(LUAJIT_OUT)
-	$(MAKE) -C $(LUAJIT_SRC) clean
+	$(MAKE) -C $(LUAJIT_SRC) $(LUAJIT_FORWARD) clean
 	$(MAKE) -C $(LUAJIT_SRC) $(LUAJIT_FORWARD)
 	cp $(LUAJIT_BUILT) $(LUAJIT_OUT)/$(call dylib_name,luajit)
 ifeq ($(TARGET_OS),macos)
