@@ -5,9 +5,9 @@ using System.Text;
 
 namespace NuLua;
 
-public sealed class FileSystemLuaModuleLoader : LuaModuleLoader
+public sealed class FileSystemModuleLoader : LuaModuleLoader
 {
-    public static readonly FileSystemLuaModuleLoader Default = new();
+    public static readonly FileSystemModuleLoader Default = new();
 
     public string? WorkingDirectory { get; init; }
     public string Extension { get; init; } = ".lua";
