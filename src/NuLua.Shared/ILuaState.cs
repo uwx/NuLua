@@ -71,6 +71,7 @@ public interface ILuaState : ILuaObject
 
     bool TryGetMetatable(int index, [NotNullWhen(true)] out LuaTable? metatable);
     void SetMetatable(int index, LuaTable? metatable);
+    bool NewMetatable(ReadOnlySpan<byte> utf8Name);
 
     LuaReference Ref(int index);
     void Unref(LuaReference reference);

@@ -327,6 +327,15 @@ public sealed unsafe partial class Lua52State : ILuaState<Lua52State>
         }
     }
 
+    public bool NewMetatable(ReadOnlySpan<byte> utf8Name)
+    {
+        CheckDisposed();
+        fixed (byte* namePtr = utf8Name)
+        {
+            return NativeMethods.luaL_newmetatable(ptr, namePtr) != 0;
+        }
+    }
+
     ValueTask ILuaState.CompleteAsync(int initialArgCount, CancellationToken cancellationToken)
     {
         CheckDisposed();
