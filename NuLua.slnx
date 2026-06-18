@@ -85,6 +85,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/NuLua.Tests.Interop/NuLua.Tests.Interop.csproj" />
+    <Project Path="tests/NuLua.Tests/NuLua.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/">
     <Project Path="tools/CodeGen/CodeGen.csproj" />
