@@ -73,8 +73,10 @@ public interface ILuaState : ILuaObject
     LuaReference Ref(int index);
     void Unref(LuaReference reference);
 
-    void LoadString(ReadOnlySpan<char> chunk, ReadOnlySpan<char> chunkName = default);
-    void LoadString(ReadOnlySpan<byte> utf8Chunk, ReadOnlySpan<byte> utf8ChunkName = default);
+    void LoadString(ReadOnlySpan<char> chunk, ReadOnlySpan<char> chunkName);
+    void LoadString(ReadOnlySpan<byte> utf8Chunk, ReadOnlySpan<byte> utf8ChunkName);
+    void LoadBuffer(ReadOnlySpan<byte> buffer, ReadOnlySpan<byte> utf8ChunkName);
+    void LoadBuffer(ReadOnlySpan<byte> buffer, ReadOnlySpan<char> chunkName);
     bool TryDump(int index, bool strip, Span<byte> buffer, out int bytesWritten);
 }
 

@@ -35,7 +35,7 @@ public static class LuaAsyncStateExtensions
     {
         var co = state.CreateThread();
         state.Pop(1);
-        co.LoadString(code);
+        co.LoadString(code, "chunk");
         var span = args.Span;
         for (int i = 0; i < span.Length; i++)
         {

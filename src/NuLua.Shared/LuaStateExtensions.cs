@@ -352,7 +352,7 @@ public static class LuaStateExtensions
     {
         var baseTop = state.GetTop();
 
-        state.LoadString(code);
+        state.LoadString(code, "chunk");
         for (int i = 0; i < args.Length; i++)
         {
             state.Push(args[i]);
