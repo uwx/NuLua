@@ -7,7 +7,7 @@ public sealed class LuaUserData(ILuaState state, LuaReference reference) : ILuaO
 {
     readonly ILuaState state = state;
 
-    public readonly ref struct UserValues(LuaUserData userData)
+    public readonly struct UserValues(LuaUserData userData)
     {
         public LuaValue this[int index]
         {

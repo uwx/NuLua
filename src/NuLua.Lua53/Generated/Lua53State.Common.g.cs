@@ -317,15 +317,16 @@ public sealed unsafe partial class Lua53State : ILuaState<Lua53State>
     public void SetMetatable(int index, LuaTable? metatable)
     {
         CheckDisposed();
+        var absIndex = GetAbsIndex(index);
         if (metatable == null)
         {
             NativeMethods.lua_pushnil(ptr);
-            _ = NativeMethods.lua_setmetatable(ptr, index);
+            _ = NativeMethods.lua_setmetatable(ptr, absIndex);
         }
         else
         {
             PushValue(metatable.Reference);
-            _ = NativeMethods.lua_setmetatable(ptr, index);
+            _ = NativeMethods.lua_setmetatable(ptr, absIndex);
         }
     }
 

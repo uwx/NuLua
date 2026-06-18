@@ -151,12 +151,19 @@ public sealed unsafe partial class LuaJitState
     {
         static int Writer(lua_State* L, void* p, nuint sz, void* ud)
         {
-            var bufferPtr = (byte*)ud;
-            if (sz > int.MaxValue || (nuint)bufferPtr + sz < (nuint)bufferPtr)
+            var context = (DumpContext*)ud;
+            if (sz > int.MaxValue || sz > (nuint)(context->Capacity - context->BytesWritten))
             {
                 return 1;
             }
-            Buffer.MemoryCopy(p, bufferPtr, sz, sz);
+
+            Buffer.MemoryCopy(
+                p,
+                context->Buffer + context->BytesWritten,
+                context->Capacity - context->BytesWritten,
+                (long)sz
+            );
+            context->BytesWritten += (int)sz;
             return 0;
         }
 
@@ -165,18 +172,24 @@ public sealed unsafe partial class LuaJitState
         CheckDisposed();
         fixed (byte* bufferPtr = buffer)
         {
-            var result = NativeMethods.lua_dump(ptr, Writer, bufferPtr);
+            DumpContext context = new(bufferPtr, buffer.Length);
+            var result = NativeMethods.lua_dump(ptr, Writer, &context);
             if (result == 0)
             {
-                bytesWritten = 0;
-                return false;
-            }
-            else
-            {
-                bytesWritten = (int)(nuint)bufferPtr;
+                bytesWritten = context.BytesWritten;
                 return true;
             }
+
+            bytesWritten = context.BytesWritten;
+            return false;
         }
+    }
+
+    struct DumpContext(byte* buffer, int capacity)
+    {
+        public byte* Buffer = buffer;
+        public int Capacity = capacity;
+        public int BytesWritten = 0;
     }
 
     public int GetAbsIndex(int index)
@@ -299,7 +312,6 @@ public sealed unsafe partial class LuaJitState
         }
         NativeMethods.lua_getfenv(ptr, index);
         type = CodeToType((uint)NativeMethods.lua_type(ptr, -1));
-        this.Pop(1);
         return true;
     }
 

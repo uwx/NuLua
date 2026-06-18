@@ -352,7 +352,6 @@ public sealed unsafe partial class LuauState
         }
         NativeMethods.lua_getfenv(ptr, index);
         type = CodeToType((uint)NativeMethods.lua_type(ptr, -1));
-        this.Pop(1);
         return true;
     }
 

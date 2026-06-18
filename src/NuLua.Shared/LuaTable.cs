@@ -8,13 +8,22 @@ public sealed class LuaTable(ILuaState state, LuaReference reference) : ILuaObje
     {
         readonly LuaTable table = table;
         bool started = false;
+        bool finished = false;
+        int tableIndex = 0;
         KeyValuePair<LuaValue, LuaValue> current;
         public KeyValuePair<LuaValue, LuaValue> Current => current;
 
         public bool MoveNext()
         {
+            if (finished)
+            {
+                return false;
+            }
+
             if (!started)
             {
+                table.state.PushValue(table.Reference);
+                tableIndex = table.state.GetAbsIndex(-1);
                 table.state.PushNil();
                 started = true;
             }
@@ -23,10 +32,11 @@ public sealed class LuaTable(ILuaState state, LuaReference reference) : ILuaObje
                 table.state.Pop(1);
             }
 
-            table.state.PushValue(table.Reference);
-            table.state.Next(-2);
-            if (table.state.GetType(-2) == LuaValueType.Nil)
+            table.state.Next(tableIndex);
+            if (table.state.GetTop() == tableIndex)
             {
+                table.state.Pop(1);
+                finished = true;
                 return false;
             }
 
@@ -43,16 +53,20 @@ public sealed class LuaTable(ILuaState state, LuaReference reference) : ILuaObje
     {
         get
         {
+            state.PushValue(Reference);
             state.PushInteger(index);
-            state.GetTable(Reference.Id);
+            state.GetTable(-2);
             var value = state.Pop();
+            state.Pop(1);
             return value;
         }
         set
         {
+            state.PushValue(Reference);
             state.PushInteger(index);
             state.Push(value);
-            state.SetTable(Reference.Id);
+            state.SetTable(-3);
+            state.Pop(1);
         }
     }
 
@@ -60,16 +74,20 @@ public sealed class LuaTable(ILuaState state, LuaReference reference) : ILuaObje
     {
         get
         {
+            state.PushValue(Reference);
             state.PushString(key);
-            state.GetTable(Reference.Id);
+            state.GetTable(-2);
             var value = state.Pop();
+            state.Pop(1);
             return value;
         }
         set
         {
+            state.PushValue(Reference);
             state.PushString(key);
             state.Push(value);
-            state.SetTable(Reference.Id);
+            state.SetTable(-3);
+            state.Pop(1);
         }
     }
 
@@ -77,16 +95,20 @@ public sealed class LuaTable(ILuaState state, LuaReference reference) : ILuaObje
     {
         get
         {
+            state.PushValue(Reference);
             state.PushString(key);
-            state.GetTable(Reference.Id);
+            state.GetTable(-2);
             var value = state.Pop();
+            state.Pop(1);
             return value;
         }
         set
         {
+            state.PushValue(Reference);
             state.PushString(key);
             state.Push(value);
-            state.SetTable(Reference.Id);
+            state.SetTable(-3);
+            state.Pop(1);
         }
     }
 
@@ -94,16 +116,20 @@ public sealed class LuaTable(ILuaState state, LuaReference reference) : ILuaObje
     {
         get
         {
+            state.PushValue(Reference);
             state.Push(key);
-            state.GetTable(Reference.Id);
+            state.GetTable(-2);
             var value = state.Pop();
+            state.Pop(1);
             return value;
         }
         set
         {
+            state.PushValue(Reference);
             state.Push(key);
             state.Push(value);
-            state.SetTable(Reference.Id);
+            state.SetTable(-3);
+            state.Pop(1);
         }
     }
 
@@ -111,10 +137,11 @@ public sealed class LuaTable(ILuaState state, LuaReference reference) : ILuaObje
     {
         get
         {
-            state.PushValue(Reference.Id);
+            state.PushValue(Reference);
             state.Len(-1);
             var length = (int)state.ToNumber(-1);
             state.SetTop(state.GetTop() - 1);
+            state.Pop(1);
             return length;
         }
     }
