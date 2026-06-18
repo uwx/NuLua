@@ -419,8 +419,7 @@ public sealed unsafe partial class Lua51State
     {
         CheckDisposed();
         // Lua 5.1 / LuaJIT do not expose lua_arith; emulate by calling a
-        // per-operator Lua snippet so that metamethods participate. The
-        // compiled bytecode is dumped once and reused on subsequent calls.
+        // per-operator Lua snippet so that metamethods participate.
         ReadOnlySpan<byte> source;
         int argCount;
         switch (op)

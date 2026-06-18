@@ -350,6 +350,13 @@ public sealed unsafe partial class LuaJitState : ILuaState<LuaJitState>
         task = default;
         return false;
     }
+
+    internal void ResetAsyncState()
+    {
+        asyncCancellationToken = default;
+        hasPendingTask = false;
+        pendingAsyncTask = default;
+    }
 }
 
 internal static class LuaJitAsyncDriver
@@ -364,27 +371,32 @@ internal static class LuaJitAsyncDriver
     )
     {
         state.SetAsyncCancellationToken(cancellationToken);
-        int currentArgs = initialArgCount;
-        while (true)
+        try
         {
-            cancellationToken.ThrowIfCancellationRequested();
-            var status = state.RunResumeStep(currentArgs);
-            if (status == LUA_OK)
+            int currentArgs = initialArgCount;
+            while (true)
             {
-                state.SetAsyncCancellationToken(default);
-                return;
-            }
+                cancellationToken.ThrowIfCancellationRequested();
+                var status = state.RunResumeStep(currentArgs);
+                if (status == LUA_OK)
+                {
+                    return;
+                }
 
-            if (!state.TryTakePendingAsyncTask(out var task))
-            {
-                state.SetAsyncCancellationToken(default);
-                throw new LuaException(
-                    LUA_ERRRUN,
-                    "Coroutine yielded without a pending async task."
-                );
-            }
+                if (!state.TryTakePendingAsyncTask(out var task))
+                {
+                    throw new LuaException(
+                        LUA_ERRRUN,
+                        "Coroutine yielded without a pending async task."
+                    );
+                }
 
-            currentArgs = await task.ConfigureAwait(false);
+                currentArgs = await task.ConfigureAwait(false);
+            }
+        }
+        finally
+        {
+            state.ResetAsyncState();
         }
     }
 }
