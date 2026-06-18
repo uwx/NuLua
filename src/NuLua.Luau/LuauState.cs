@@ -221,9 +221,7 @@ public sealed unsafe partial class LuauState
 
     public bool TryDump(int index, bool strip, Span<byte> buffer, out int bytesWritten)
     {
-        // Luau has no lua_dump equivalent: the VM consumes bytecode, not source,
-        // and pre-compiled bytecode is produced by luau_compile, not by dumping
-        // a loaded function.
+        // Luau has no lua_dump equivalent
         _ = index;
         _ = strip;
         _ = buffer;
@@ -546,11 +544,8 @@ public sealed unsafe partial class LuauState
     public LuaReference Ref(int index)
     {
         CheckDisposed();
-        // Luau's lua_ref references the value at the given stack slot directly
-        // (no implicit pop, no table-argument) and always stores into the registry.
-        // To match the contract used elsewhere — `Ref()` references whatever is on
-        // top of the stack — we accept either the registry index or a regular stack
-        // index, ref the value, then pop if it was the top.
+        // Luau's `lua_ref` behaves differently than in standard Lua.
+        // ref: https://github.com/luau-lang/luau/issues/247
         var refId = NativeMethods.lua_ref(
             ptr,
             index == NativeMethods.LUA_REGISTRYINDEX ? -1 : index
