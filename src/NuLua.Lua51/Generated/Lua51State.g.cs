@@ -413,11 +413,86 @@ public sealed unsafe partial class Lua51State
         NativeMethods.lua_pushcclosure(ptr, AsyncCFn, 1);
     }
 
+    static readonly byte[]?[] arithBytecodeCache = new byte[(int)LuaArithmeticOperator.Unm + 1][];
+
     public void Arith(LuaArithmeticOperator op)
     {
         CheckDisposed();
-        // Lua 5.1 / LuaJIT do not expose lua_arith.
-        throw new NotSupportedException("Arith is not supported on Lua 5.1 / LuaJIT.");
+        // Lua 5.1 / LuaJIT do not expose lua_arith; emulate by calling a
+        // per-operator Lua snippet so that metamethods participate. The
+        // compiled bytecode is dumped once and reused on subsequent calls.
+        ReadOnlySpan<byte> source;
+        int argCount;
+        switch (op)
+        {
+            case LuaArithmeticOperator.Add:
+                source = "local a,b=...;return a+b"u8;
+                argCount = 2;
+                break;
+            case LuaArithmeticOperator.Sub:
+                source = "local a,b=...;return a-b"u8;
+                argCount = 2;
+                break;
+            case LuaArithmeticOperator.Mul:
+                source = "local a,b=...;return a*b"u8;
+                argCount = 2;
+                break;
+            case LuaArithmeticOperator.Div:
+                source = "local a,b=...;return a/b"u8;
+                argCount = 2;
+                break;
+            case LuaArithmeticOperator.Mod:
+                source = "local a,b=...;return a%b"u8;
+                argCount = 2;
+                break;
+            case LuaArithmeticOperator.Pow:
+                source = "local a,b=...;return a^b"u8;
+                argCount = 2;
+                break;
+            case LuaArithmeticOperator.Unm:
+                source = "local a=...;return -a"u8;
+                argCount = 1;
+                break;
+            default:
+                throw new NotSupportedException($"Arith operator '{op}' is not supported on Lua 5.1 / LuaJIT.");
+        }
+
+        var bytecode = arithBytecodeCache[(int)op];
+        if (bytecode == null)
+        {
+            fixed (byte* codePtr = source)
+            {
+                var compileResult = NativeMethods.luaL_loadbuffer(
+                    ptr,
+                    codePtr,
+                    (nuint)source.Length,
+                    (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("arith\0"u8))
+                );
+                CheckResult(compileResult);
+            }
+
+            bytecode = this.Dump(-1, strip: true);
+            NativeMethods.lua_settop(ptr, NativeMethods.lua_gettop(ptr) - 1);
+            arithBytecodeCache[(int)op] = bytecode;
+        }
+
+        fixed (byte* bcPtr = bytecode)
+        {
+            var loadResult = NativeMethods.luaL_loadbuffer(
+                ptr,
+                bcPtr,
+                (nuint)bytecode.Length,
+                (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("arith\0"u8))
+            );
+            CheckResult(loadResult);
+        }
+
+        // The chunk is on top; insert it below the operands so the call
+        // pattern becomes [..., func, a, (b)].
+        NativeMethods.lua_insert(ptr, -1 - argCount);
+
+        var callResult = NativeMethods.lua_pcall(ptr, argCount, 1, 0);
+        CheckResult(callResult);
     }
 
     public void Compare(LuaComparisonOperator op)

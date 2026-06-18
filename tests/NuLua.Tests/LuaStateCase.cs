@@ -32,7 +32,6 @@ public static class LuaStateCases
             Lua51State.Create,
             CreateAdderFunction<Lua51State>,
             UseModuleLoader<Lua51State>,
-            SupportsArithmetic: false,
             SupportsUserValuePayload: false
         );
         yield return new(
@@ -70,7 +69,6 @@ public static class LuaStateCases
             LuaJitState.Create,
             CreateAdderFunction<LuaJitState>,
             UseModuleLoader<LuaJitState>,
-            SupportsArithmetic: false,
             SupportsUserValuePayload: false
         );
         yield return new(
@@ -79,7 +77,6 @@ public static class LuaStateCases
             LuauState.Create,
             CreateAdderFunction<LuauState>,
             UseModuleLoader<LuauState>,
-            SupportsArithmetic: false,
             SupportsDump: false,
             SupportsUserValuePayload: false
         );
