@@ -1,5 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
-
 namespace NuLua.Tests;
 
 public class LuaModuleLoaderTests
@@ -24,7 +22,7 @@ public class LuaModuleLoaderTests
             using var state = lua.CreateState();
             state.OpenLibraries();
 
-            var requirer = new FileSystemLuaModuleLoader { WorkingDirectory = directory };
+            var requirer = new FileSystemModuleLoader { WorkingDirectory = directory };
             lua.UseModuleLoader(state, requirer);
 
             var results = state.DoString("return require('answer')");
@@ -54,7 +52,7 @@ public class LuaModuleLoaderTests
             using var state = lua.CreateState();
             state.OpenLibraries();
 
-            var requirer = new FileSystemLuaModuleLoader { WorkingDirectory = directory };
+            var requirer = new FileSystemModuleLoader { WorkingDirectory = directory };
             lua.UseModuleLoader(state, requirer);
 
             var results = state.DoString(
@@ -83,7 +81,7 @@ public class LuaModuleLoaderTests
             using var state = lua.CreateState();
             state.OpenLibraries();
 
-            var requirer = new FileSystemLuaModuleLoader
+            var requirer = new FileSystemModuleLoader
             {
                 WorkingDirectory = directory,
                 Aliases = new Dictionary<string, string> { ["lib"] = aliasDirectory },
@@ -100,41 +98,14 @@ public class LuaModuleLoaderTests
         }
     }
 
-    sealed class InMemoryRequirer(Dictionary<string, string> sources) : LuaModuleLoader
-    {
-        readonly Dictionary<string, string> sources = sources;
-
-        protected override bool TryLoadModule(
-            ILuaState state,
-            string fullPath,
-            string requireArgument
-        )
-        {
-            if (!sources.TryGetValue(fullPath, out var source))
-            {
-                return false;
-            }
-
-            state.LoadString(source, fullPath);
-            state.Call(0, 1);
-            return true;
-        }
-
-        protected override bool TryGetAliasPath(string alias, [NotNullWhen(true)] out string? path)
-        {
-            path = null;
-            return false;
-        }
-    }
-
     [Test]
     [MethodDataSource(typeof(LuaStateCases), nameof(LuaStateCases.All))]
-    public async Task CustomRequirerSubclassIsInvoked(LuaStateCase lua)
+    public async Task CustomModuleLoaderSubclassIsInvoked(LuaStateCase lua)
     {
         using var state = lua.CreateState();
         state.OpenLibraries();
 
-        var requirer = new InMemoryRequirer(
+        var requirer = new InMemoryModuleLoader(
             new Dictionary<string, string> { ["greeting"] = "return 'hi from memory'" }
         );
         lua.UseModuleLoader(state, requirer);
