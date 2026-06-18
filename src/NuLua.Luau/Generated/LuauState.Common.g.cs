@@ -16,6 +16,7 @@ public sealed unsafe partial class LuauState : ILuaState<LuauState>
 
     readonly List<LuaFunc<LuauState>> funcs = new(8);
     readonly List<AsyncLuaFunc<LuauState>> asyncFuncs = new(8);
+    readonly List<LuauState> childStates = new(4);
     readonly LuaReference reference;
     readonly LuauState? from;
     lua_State* ptr;
@@ -99,17 +100,26 @@ public sealed unsafe partial class LuauState : ILuaState<LuauState>
 
     public void Dispose()
     {
+        foreach (var childState in childStates)
+        {
+            childState.Dispose();
+        }
+
+        childStates.Clear();
+
         if (ptr != null)
         {
+            var disposePtr = ptr;
             if (from == null)
             {
-                NativeMethods.lua_close(ptr);
+                ptrToState.TryRemove((nint)disposePtr, out _);
+                NativeMethods.lua_close(disposePtr);
             }
             else
             {
                 from.Unref(reference);
+                ptrToState.TryRemove((nint)ptr, out _);
             }
-            ptrToState.TryRemove((nint)ptr, out _);
             ptr = null;
         }
     }
@@ -221,6 +231,7 @@ public sealed unsafe partial class LuauState : ILuaState<LuauState>
             NativeMethods.lua_pushvalue(ptr, index);
             var reference = this.Ref();
             threadState = new LuauState(threadPtr, this, reference);
+            childStates.Add(threadState);
             ptrToState[(nint)threadPtr] = threadState;
             return threadState;
         }

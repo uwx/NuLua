@@ -10,6 +10,7 @@ namespace NuLua.Tests;
 
 public sealed record LuaStateCase(
     string Name,
+    Type StateType,
     Func<ILuaState> CreateState,
     Func<ILuaState, LuaFunction> CreateAdderFunction,
     bool SupportsArithmetic = true,
@@ -26,6 +27,7 @@ public static class LuaStateCases
     {
         yield return new(
             "Lua 5.1",
+            typeof(Lua51State),
             Lua51State.Create,
             CreateAdderFunction<Lua51State>,
             SupportsArithmetic: false,
@@ -33,15 +35,32 @@ public static class LuaStateCases
         );
         yield return new(
             "Lua 5.2",
+            typeof(Lua52State),
             Lua52State.Create,
             CreateAdderFunction<Lua52State>,
             SupportsUserValuePayload: false
         );
-        yield return new("Lua 5.3", Lua53State.Create, CreateAdderFunction<Lua53State>);
-        yield return new("Lua 5.4", Lua54State.Create, CreateAdderFunction<Lua54State>);
-        yield return new("Lua 5.5", Lua55State.Create, CreateAdderFunction<Lua55State>);
+        yield return new(
+            "Lua 5.3",
+            typeof(Lua53State),
+            Lua53State.Create,
+            CreateAdderFunction<Lua53State>
+        );
+        yield return new(
+            "Lua 5.4",
+            typeof(Lua54State),
+            Lua54State.Create,
+            CreateAdderFunction<Lua54State>
+        );
+        yield return new(
+            "Lua 5.5",
+            typeof(Lua55State),
+            Lua55State.Create,
+            CreateAdderFunction<Lua55State>
+        );
         yield return new(
             "LuaJIT",
+            typeof(LuaJitState),
             LuaJitState.Create,
             CreateAdderFunction<LuaJitState>,
             SupportsArithmetic: false,
@@ -49,6 +68,7 @@ public static class LuaStateCases
         );
         yield return new(
             "Luau",
+            typeof(LuauState),
             LuauState.Create,
             CreateAdderFunction<LuauState>,
             SupportsArithmetic: false,

@@ -2,6 +2,15 @@ namespace NuLua.Tests;
 
 public class LuaStateTests
 {
+    static int CountCachedStates(LuaStateCase lua)
+    {
+        var cache = lua.StateType.GetField(
+            "ptrToState",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static
+        )!.GetValue(null)!;
+        return (int)cache.GetType().GetProperty("Count")!.GetValue(cache)!;
+    }
+
     [Test]
     [MethodDataSource(typeof(LuaStateCases), nameof(LuaStateCases.All))]
     public async Task NewStateStartsWithEmptyStack(LuaStateCase lua)
@@ -255,6 +264,46 @@ public class LuaStateTests
         await Assert.That(state.ToString(-1)).IsEqualTo("moved");
         await Assert.That(thread.GetTop()).IsEqualTo(0);
         await Assert.That(state.PushThread()).IsTrue();
+    }
+
+    [Test]
+    [MethodDataSource(typeof(LuaStateCases), nameof(LuaStateCases.All))]
+    public async Task DisposedThreadStateIsRemovedFromCache(LuaStateCase lua)
+    {
+        using var state = lua.CreateState();
+        var thread = state.CreateThread();
+        var threadPointer = thread.AsPointer();
+
+        await Assert.That(threadPointer).IsNotEqualTo(0);
+
+        thread.Dispose();
+
+        await Assert.That(thread.AsPointer()).IsEqualTo(0);
+
+        var recreated = state.ToThread(-1);
+
+        await Assert.That(recreated.AsPointer()).IsEqualTo(threadPointer);
+        await Assert.That(recreated).IsNotSameReferenceAs(thread);
+
+        recreated.Dispose();
+    }
+
+    [Test]
+    [NotInParallel]
+    [MethodDataSource(typeof(LuaStateCases), nameof(LuaStateCases.All))]
+    public async Task DisposingMainStateRemovesThreadStatesFromCache(LuaStateCase lua)
+    {
+        var initialCount = CountCachedStates(lua);
+
+        var state = lua.CreateState();
+        var childState = state.CreateThread();
+        _ = childState.CreateThread();
+
+        await Assert.That(CountCachedStates(lua)).IsEqualTo(initialCount + 3);
+
+        state.Dispose();
+
+        await Assert.That(CountCachedStates(lua)).IsEqualTo(initialCount);
     }
 
     [Test]
