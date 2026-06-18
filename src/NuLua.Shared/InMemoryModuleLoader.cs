@@ -18,6 +18,7 @@ public sealed class InMemoryModuleLoader(
         }
 
         state.LoadString(source, requireArgument);
+        state.Call(0, 1);
         return true;
     }
 

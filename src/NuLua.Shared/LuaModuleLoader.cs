@@ -31,16 +31,20 @@ public abstract class LuaModuleLoader
             return true;
         }
 
+        var baseTop = state.GetTop();
         var thread = state.CreateThread();
 
         if (!TryLoadModule(thread, fullPath, argument))
         {
-            state.Pop(1);
+            state.SetTop(baseTop);
             return false;
         }
 
         thread.XMove(state, 1);
-        cacheTable[cacheKey] = state.ToLuaValue(-1);
+        var moduleValue = state.ToLuaValue(-1);
+        cacheTable[cacheKey] = moduleValue;
+        state.SetTop(baseTop);
+        state.Push(moduleValue);
 
         return true;
     }
