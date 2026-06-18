@@ -587,6 +587,9 @@ public sealed unsafe partial class {{ name }}State
             case LuaArithmeticOperator.Shr:
                 NativeMethods.lua_arith(ptr, (int)NativeMethods.LUA_OPSHR);
                 break;
+            case LuaArithmeticOperator.IDiv:
+                NativeMethods.lua_arith(ptr, (int)NativeMethods.LUA_OPIDIV);
+                break;
 {{~ end ~}}
             default:
                 throw new NotSupportedException($"Unsupported Lua arithmetic operator: {op}");

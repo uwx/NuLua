@@ -518,6 +518,10 @@ public sealed unsafe partial class LuauState
                 source = "local a,b=...;return a/b"u8;
                 argCount = 2;
                 break;
+            case LuaArithmeticOperator.IDiv:
+                source = "local a,b=...;return a//b"u8;
+                argCount = 2;
+                break;
             case LuaArithmeticOperator.Mod:
                 source = "local a,b=...;return a%b"u8;
                 argCount = 2;

@@ -258,12 +258,6 @@ public sealed unsafe partial class LuaJitState
         return (long)NativeMethods.lua_tointeger(ptr, index);
     }
 
-    public bool IsString(int index)
-    {
-        CheckDisposed();
-        return NativeMethods.lua_isstring(ptr, index) != 0;
-    }
-
     public string ToString(int index)
     {
         CheckDisposed();
@@ -470,6 +464,10 @@ public sealed unsafe partial class LuaJitState
                 break;
             case LuaArithmeticOperator.Div:
                 source = "local a,b=...;return a/b"u8;
+                argCount = 2;
+                break;
+            case LuaArithmeticOperator.IDiv:
+                source = "local a,b=...;return a//b"u8;
                 argCount = 2;
                 break;
             case LuaArithmeticOperator.Mod:

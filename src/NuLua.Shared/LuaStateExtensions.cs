@@ -193,6 +193,14 @@ public static class LuaStateExtensions
         return state.Pop();
     }
 
+    public static LuaValue IDiv(this ILuaState state, LuaValue a, LuaValue b)
+    {
+        state.Push(a);
+        state.Push(b);
+        state.Arith(LuaArithmeticOperator.IDiv);
+        return state.Pop();
+    }
+
     public static LuaValue Mod(this ILuaState state, LuaValue a, LuaValue b)
     {
         state.Push(a);

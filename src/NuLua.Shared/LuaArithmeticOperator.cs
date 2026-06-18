@@ -6,6 +6,7 @@ public enum LuaArithmeticOperator : byte
     Sub,
     Mul,
     Div,
+    IDiv,
     Mod,
     Pow,
     Unm,

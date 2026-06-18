@@ -259,12 +259,6 @@ public sealed unsafe partial class Lua52State
         return (long)NativeMethods.lua_tointegerx(ptr, index, null);
     }
 
-    public bool IsString(int index)
-    {
-        CheckDisposed();
-        return NativeMethods.lua_isstring(ptr, index) != 0;
-    }
-
     public string ToString(int index)
     {
         CheckDisposed();

@@ -246,18 +246,6 @@ public sealed unsafe partial class Lua53State
         return (long)NativeMethods.lua_tointegerx(ptr, index, null);
     }
 
-    public bool IsString(int index)
-    {
-        CheckDisposed();
-        return NativeMethods.lua_isstring(ptr, index) != 0;
-    }
-
-    public bool IsInteger(int index)
-    {
-        CheckDisposed();
-        return NativeMethods.lua_isinteger(ptr, index) != 0;
-    }
-
     public string ToString(int index)
     {
         CheckDisposed();
@@ -488,6 +476,9 @@ public sealed unsafe partial class Lua53State
                 break;
             case LuaArithmeticOperator.Shr:
                 NativeMethods.lua_arith(ptr, (int)NativeMethods.LUA_OPSHR);
+                break;
+            case LuaArithmeticOperator.IDiv:
+                NativeMethods.lua_arith(ptr, (int)NativeMethods.LUA_OPIDIV);
                 break;
             default:
                 throw new NotSupportedException($"Unsupported Lua arithmetic operator: {op}");
