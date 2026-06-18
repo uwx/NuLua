@@ -20,21 +20,4 @@ public static class LuaModuleExtensions
 
         state["require"] = function;
     }
-
-    public static void UseFileSystemModuleLoader<TState>(
-        this TState state,
-        string workingDirectory,
-        string extension = ".lua",
-        IReadOnlyDictionary<string, string>? aliases = null
-    )
-        where TState : ILuaState<TState>
-    {
-        var loader = new FileSystemLuaModuleLoader
-        {
-            WorkingDirectory = workingDirectory,
-            Extension = extension,
-            Aliases = aliases,
-        };
-        state.UseModuleLoader(loader);
-    }
 }
