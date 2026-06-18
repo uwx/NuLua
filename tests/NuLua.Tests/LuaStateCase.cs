@@ -13,6 +13,7 @@ public sealed record LuaStateCase(
     Type StateType,
     Func<ILuaState> CreateState,
     Func<ILuaState, LuaFunction> CreateAdderFunction,
+    Action<ILuaState, LuaModuleLoader> UseModuleLoader,
     bool SupportsArithmetic = true,
     bool SupportsDump = true,
     bool SupportsUserValuePayload = true
@@ -30,6 +31,7 @@ public static class LuaStateCases
             typeof(Lua51State),
             Lua51State.Create,
             CreateAdderFunction<Lua51State>,
+            UseModuleLoader<Lua51State>,
             SupportsArithmetic: false,
             SupportsUserValuePayload: false
         );
@@ -38,31 +40,36 @@ public static class LuaStateCases
             typeof(Lua52State),
             Lua52State.Create,
             CreateAdderFunction<Lua52State>,
+            UseModuleLoader<Lua52State>,
             SupportsUserValuePayload: false
         );
         yield return new(
             "Lua 5.3",
             typeof(Lua53State),
             Lua53State.Create,
-            CreateAdderFunction<Lua53State>
+            CreateAdderFunction<Lua53State>,
+            UseModuleLoader<Lua53State>
         );
         yield return new(
             "Lua 5.4",
             typeof(Lua54State),
             Lua54State.Create,
-            CreateAdderFunction<Lua54State>
+            CreateAdderFunction<Lua54State>,
+            UseModuleLoader<Lua54State>
         );
         yield return new(
             "Lua 5.5",
             typeof(Lua55State),
             Lua55State.Create,
-            CreateAdderFunction<Lua55State>
+            CreateAdderFunction<Lua55State>,
+            UseModuleLoader<Lua55State>
         );
         yield return new(
             "LuaJIT",
             typeof(LuaJitState),
             LuaJitState.Create,
             CreateAdderFunction<LuaJitState>,
+            UseModuleLoader<LuaJitState>,
             SupportsArithmetic: false,
             SupportsUserValuePayload: false
         );
@@ -71,6 +78,7 @@ public static class LuaStateCases
             typeof(LuauState),
             LuauState.Create,
             CreateAdderFunction<LuauState>,
+            UseModuleLoader<LuauState>,
             SupportsArithmetic: false,
             SupportsDump: false,
             SupportsUserValuePayload: false
@@ -87,5 +95,11 @@ public static class LuaStateCases
                 return 1;
             }
         );
+    }
+
+    static void UseModuleLoader<TState>(ILuaState state, LuaModuleLoader loader)
+        where TState : ILuaState<TState>
+    {
+        ((TState)state).UseModuleLoader(loader);
     }
 }
