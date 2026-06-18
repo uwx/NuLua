@@ -15,6 +15,8 @@ public sealed record LuaStateCase(
     Func<ILuaState, LuaFunction> CreateAdderFunction,
     Func<ILuaState, AsyncLuaFunc<ILuaState>, AsyncLuaFunction> CreateAsyncFunction,
     Action<ILuaState, LuaModuleLoader> UseModuleLoader,
+    Func<ILuaState, int, long, LuaValueType>? GetI = null,
+    Action<ILuaState, int, long>? SetI = null,
     bool SupportsArithmetic = true,
     bool SupportsDump = true,
     bool SupportsUserValuePayload = true
@@ -51,7 +53,9 @@ public static class LuaStateCases
             Lua53State.Create,
             CreateAdderFunction<Lua53State>,
             CreateAsyncFunction<Lua53State>,
-            UseModuleLoader<Lua53State>
+            UseModuleLoader<Lua53State>,
+            GetI: (s, i, n) => ((Lua53State)s).GetI(i, n),
+            SetI: (s, i, n) => ((Lua53State)s).SetI(i, n)
         );
         yield return new(
             "Lua 5.4",
@@ -59,7 +63,9 @@ public static class LuaStateCases
             Lua54State.Create,
             CreateAdderFunction<Lua54State>,
             CreateAsyncFunction<Lua54State>,
-            UseModuleLoader<Lua54State>
+            UseModuleLoader<Lua54State>,
+            GetI: (s, i, n) => ((Lua54State)s).GetI(i, n),
+            SetI: (s, i, n) => ((Lua54State)s).SetI(i, n)
         );
         yield return new(
             "Lua 5.5",
@@ -67,7 +73,9 @@ public static class LuaStateCases
             Lua55State.Create,
             CreateAdderFunction<Lua55State>,
             CreateAsyncFunction<Lua55State>,
-            UseModuleLoader<Lua55State>
+            UseModuleLoader<Lua55State>,
+            GetI: (s, i, n) => ((Lua55State)s).GetI(i, n),
+            SetI: (s, i, n) => ((Lua55State)s).SetI(i, n)
         );
         yield return new(
             "LuaJIT",

@@ -252,6 +252,18 @@ public sealed unsafe partial class LuaJitState
         return NativeMethods.lua_tonumberx(ptr, index, null);
     }
 
+    public long ToInteger(int index)
+    {
+        CheckDisposed();
+        return (long)NativeMethods.lua_tointeger(ptr, index);
+    }
+
+    public bool IsString(int index)
+    {
+        CheckDisposed();
+        return NativeMethods.lua_isstring(ptr, index) != 0;
+    }
+
     public string ToString(int index)
     {
         CheckDisposed();
@@ -290,6 +302,29 @@ public sealed unsafe partial class LuaJitState
     {
         CheckDisposed();
         NativeMethods.lua_gettable(ptr, index);
+    }
+
+    public LuaValueType GetField(int index, ReadOnlySpan<char> name)
+    {
+        CheckDisposed();
+        using var nameBytes = new NullTerminatedString(name);
+        NativeMethods.lua_getfield(
+            ptr,
+            index,
+            (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(nameBytes.AsSpan()))
+        );
+        return CodeToType((uint)NativeMethods.lua_type(ptr, -1));
+    }
+
+    public void SetField(int index, ReadOnlySpan<char> name)
+    {
+        CheckDisposed();
+        using var nameBytes = new NullTerminatedString(name);
+        NativeMethods.lua_setfield(
+            ptr,
+            index,
+            (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(nameBytes.AsSpan()))
+        );
     }
 
     public void NewUserData(int size, int userValueCount)

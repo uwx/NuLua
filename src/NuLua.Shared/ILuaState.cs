@@ -35,6 +35,7 @@ public interface ILuaState : ILuaObject
 
     bool ToBoolean(int index);
     double ToNumber(int index);
+    long ToInteger(int index);
     string ToString(int index);
     nint ToUserDataPointer(int index);
     ILuaState ToThread(int index);
@@ -45,6 +46,8 @@ public interface ILuaState : ILuaObject
     void NewTable(int initialArraySize = 0, int initialRecordsSize = 0);
     void GetTable(int index);
     void SetTable(int index);
+    LuaValueType GetField(int index, ReadOnlySpan<char> name);
+    void SetField(int index, ReadOnlySpan<char> name);
     void Next(int index);
 
     void NewUserData(int size, int userValueCount);
