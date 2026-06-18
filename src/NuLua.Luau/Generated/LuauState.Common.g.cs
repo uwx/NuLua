@@ -70,20 +70,6 @@ public sealed unsafe partial class LuauState : ILuaState<LuauState>
 
     public int RegistryIndex => NativeMethods.LUA_REGISTRYINDEX;
 
-    public LuaThreadStatus Status
-    {
-        get
-        {
-            CheckDisposed();
-            var status = NativeMethods.lua_status(ptr);
-            return status switch
-            {
-                LUA_OK => LuaThreadStatus.Suspended,
-                _ => LuaThreadStatus.Dead,
-            };
-        }
-    }
-
     public LuaValue this[ReadOnlySpan<char> name]
     {
         get

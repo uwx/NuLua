@@ -5,7 +5,6 @@ namespace NuLua;
 public interface ILuaState : ILuaObject
 {
     ILuaState? From { get; }
-    LuaThreadStatus Status { get; }
     int RegistryIndex { get; }
 
     LuaValue this[ReadOnlySpan<char> name] { get; set; }
