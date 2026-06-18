@@ -18,10 +18,16 @@ fn main() {
         .join("luau")
         .join("VM")
         .join("include");
+    let compiler_include = workspace_root
+        .join("submodules")
+        .join("luau")
+        .join("Compiler")
+        .join("include");
+    let shim_include = manifest_dir.join("shim");
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
 
     let bindings_rs = out_dir.join(format!("{FLAVOR}.rs"));
-    generate_rust_bindings(&vm_include, &bindings_rs);
+    generate_rust_bindings(&vm_include, &compiler_include, &shim_include, &bindings_rs);
 
     let cs_out = workspace_root
         .join("src")
@@ -33,13 +39,24 @@ fn main() {
 
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-changed={}", vm_include.display());
+    println!("cargo:rerun-if-changed={}", compiler_include.display());
+    println!("cargo:rerun-if-changed={}", shim_include.display());
 }
 
-fn generate_rust_bindings(vm_include: &Path, out: &Path) {
+fn generate_rust_bindings(
+    vm_include: &Path,
+    compiler_include: &Path,
+    shim_include: &Path,
+    out: &Path,
+) {
     let bindings = bindgen::Builder::default()
         .header(vm_include.join("lua.h").to_string_lossy())
         .header(vm_include.join("lualib.h").to_string_lossy())
+        .header(compiler_include.join("luacode.h").to_string_lossy())
+        .header(shim_include.join("luau_shim.h").to_string_lossy())
         .clang_arg(format!("-I{}", vm_include.display()))
+        .clang_arg(format!("-I{}", compiler_include.display()))
+        .clang_arg(format!("-I{}", shim_include.display()))
         // Luau headers use C++ extern "C" guards but compile cleanly as C.
         .clang_arg("-x")
         .clang_arg("c")

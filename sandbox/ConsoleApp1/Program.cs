@@ -1,7 +1,7 @@
 using NuLua;
-using NuLua.LuaJit;
+using NuLua.Luau;
 
-using var state = LuaJitState.Create();
+using var state = LuauState.Create();
 state.OpenBaseLibrary();
 
 state["wait"] = state.CreateFunction(

@@ -78,26 +78,81 @@ endef
 $(foreach f,$(C_FLAVORS),$(eval $(call flavor_rules,$f)))
 
 # -----------------------------------------------------------------------------
-# luau (C++ VM compiled directly from submodules/luau/VM/src/*.cpp)
+# luau (C++ VM + Compiler compiled directly from submodules/luau/*/src/*.cpp)
 #
-# LUA_API must match the SHARED build used by Luau's own CMakeLists so that
-# `lua_*` / `luau_*` symbols are exported from the produced dylib.
+# We co-locate the VM and Compiler (with its Ast/Bytecode/Common dependencies)
+# in a single shared library so that both `lua_*` / `luau_*` runtime symbols
+# and `luau_compile` are exported from the produced dylib. LUA_API / LUACODE_API
+# are configured for the SHARED build used by Luau's own CMakeLists.
 # -----------------------------------------------------------------------------
 
-LUAU_SRC_DIR := $(SUBMOD)/luau/VM/src
-LUAU_INCS    := -I$(SUBMOD)/luau/VM/include -I$(LUAU_SRC_DIR) -I$(SUBMOD)/luau/Common/include
-LUAU_SRCS    := $(wildcard $(LUAU_SRC_DIR)/*.cpp)
-LUAU_OBJS    := $(patsubst $(LUAU_SRC_DIR)/%.cpp,$(BUILD)/luau/$(RID)/%.o,$(LUAU_SRCS))
+LUAU_VM_SRC       := $(SUBMOD)/luau/VM/src
+LUAU_COMPILER_SRC := $(SUBMOD)/luau/Compiler/src
+LUAU_AST_SRC      := $(SUBMOD)/luau/Ast/src
+LUAU_BYTECODE_SRC := $(SUBMOD)/luau/Bytecode/src
+LUAU_COMMON_SRC   := $(SUBMOD)/luau/Common/src
+LUAU_SHIM_SRC     := luau/shim
+
+LUAU_INCS := \
+  -I$(SUBMOD)/luau/VM/include \
+  -I$(LUAU_VM_SRC) \
+  -I$(SUBMOD)/luau/Compiler/include \
+  -I$(LUAU_COMPILER_SRC) \
+  -I$(SUBMOD)/luau/Ast/include \
+  -I$(SUBMOD)/luau/Bytecode/include \
+  -I$(SUBMOD)/luau/Common/include \
+  -I$(LUAU_SHIM_SRC)
+
+LUAU_VM_SRCS       := $(wildcard $(LUAU_VM_SRC)/*.cpp)
+LUAU_COMPILER_SRCS := $(wildcard $(LUAU_COMPILER_SRC)/*.cpp)
+LUAU_AST_SRCS      := $(wildcard $(LUAU_AST_SRC)/*.cpp)
+LUAU_BYTECODE_SRCS := $(wildcard $(LUAU_BYTECODE_SRC)/*.cpp)
+LUAU_COMMON_SRCS   := $(wildcard $(LUAU_COMMON_SRC)/*.cpp)
+LUAU_SHIM_SRCS     := $(wildcard $(LUAU_SHIM_SRC)/*.cpp)
+
+LUAU_OBJS := \
+  $(patsubst $(LUAU_VM_SRC)/%.cpp,$(BUILD)/luau/$(RID)/vm/%.o,$(LUAU_VM_SRCS)) \
+  $(patsubst $(LUAU_COMPILER_SRC)/%.cpp,$(BUILD)/luau/$(RID)/compiler/%.o,$(LUAU_COMPILER_SRCS)) \
+  $(patsubst $(LUAU_AST_SRC)/%.cpp,$(BUILD)/luau/$(RID)/ast/%.o,$(LUAU_AST_SRCS)) \
+  $(patsubst $(LUAU_BYTECODE_SRC)/%.cpp,$(BUILD)/luau/$(RID)/bytecode/%.o,$(LUAU_BYTECODE_SRCS)) \
+  $(patsubst $(LUAU_COMMON_SRC)/%.cpp,$(BUILD)/luau/$(RID)/common/%.o,$(LUAU_COMMON_SRCS)) \
+  $(patsubst $(LUAU_SHIM_SRC)/%.cpp,$(BUILD)/luau/$(RID)/shim/%.o,$(LUAU_SHIM_SRCS))
 
 ifeq ($(TARGET_OS),windows)
-  LUAU_LUA_API := -DLUA_API='extern "C" __declspec(dllexport)'
+  LUAU_API_DEFS := \
+    -DLUA_API='extern "C" __declspec(dllexport)' \
+    -DLUACODE_API='extern "C" __declspec(dllexport)' \
+    -DLUAU_SHIM_API='extern "C" __declspec(dllexport)'
 else
-  LUAU_LUA_API := -DLUA_API='extern "C" __attribute__((visibility("default")))'
+  LUAU_API_DEFS := \
+    -DLUA_API='extern "C" __attribute__((visibility("default")))' \
+    -DLUACODE_API='extern "C" __attribute__((visibility("default")))' \
+    -DLUAU_SHIM_API='extern "C" __attribute__((visibility("default")))'
 endif
 
-CXXFLAGS_LUAU := -O2 -fPIC -w -std=c++11 $(LUAU_INCS) $(LUAU_LUA_API) $(CFLAGS_EXTRA) $(CXXFLAGS_EXTRA)
+CXXFLAGS_LUAU := -O2 -fPIC -w -std=c++17 $(LUAU_INCS) $(LUAU_API_DEFS) $(CFLAGS_EXTRA) $(CXXFLAGS_EXTRA)
 
-$(BUILD)/luau/$(RID)/%.o: $(LUAU_SRC_DIR)/%.cpp
+$(BUILD)/luau/$(RID)/vm/%.o: $(LUAU_VM_SRC)/%.cpp
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS_LUAU) -c $< -o $@
+
+$(BUILD)/luau/$(RID)/compiler/%.o: $(LUAU_COMPILER_SRC)/%.cpp
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS_LUAU) -c $< -o $@
+
+$(BUILD)/luau/$(RID)/ast/%.o: $(LUAU_AST_SRC)/%.cpp
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS_LUAU) -c $< -o $@
+
+$(BUILD)/luau/$(RID)/bytecode/%.o: $(LUAU_BYTECODE_SRC)/%.cpp
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS_LUAU) -c $< -o $@
+
+$(BUILD)/luau/$(RID)/common/%.o: $(LUAU_COMMON_SRC)/%.cpp
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS_LUAU) -c $< -o $@
+
+$(BUILD)/luau/$(RID)/shim/%.o: $(LUAU_SHIM_SRC)/%.cpp
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS_LUAU) -c $< -o $@
 

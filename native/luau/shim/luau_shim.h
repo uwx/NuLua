@@ -1,0 +1,27 @@
+#pragma once
+
+// can be used to reconfigure visibility/exports for public APIs
+#ifndef LUAU_SHIM_API
+#define LUAU_SHIM_API extern
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+// Frees a buffer returned by luau_compile using the same allocator the
+// dylib was built with. Required because the host runtime (e.g. .NET) may
+// not share a CRT with the dylib (notably on Windows).
+LUAU_SHIM_API void luau_free(void* p);
+
+// Pushes the given NUL-terminated message and raises a Lua error. Mirrors
+// the common `lua_pushstring(L, msg); lua_error(L);` idiom. We accept the
+// lua_State as an opaque void* to keep this header free of Lua includes.
+// The underlying VM routines never return — we declare the signature as
+// returning `int` so the binding generator can surface it and so call
+// sites can use it from a Lua C function as a tail expression.
+LUAU_SHIM_API int luau_error(void* L, const char* msg);
+
+#ifdef __cplusplus
+}
+#endif

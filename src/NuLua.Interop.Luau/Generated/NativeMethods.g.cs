@@ -690,6 +690,33 @@ namespace NuLua.Interop.Luau
         [DllImport(__DllName, EntryPoint = "luaL_sandboxthread", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void luaL_sandboxthread(lua_State* L);
 
+        [DllImport(__DllName, EntryPoint = "luau_compile", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern byte* luau_compile(byte* source, nuint size, lua_CompileOptions* options, nuint* outsize);
+
+        [DllImport(__DllName, EntryPoint = "luau_set_compile_constant_nil", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void luau_set_compile_constant_nil(void** constant);
+
+        [DllImport(__DllName, EntryPoint = "luau_set_compile_constant_boolean", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void luau_set_compile_constant_boolean(void** constant, int b);
+
+        [DllImport(__DllName, EntryPoint = "luau_set_compile_constant_number", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void luau_set_compile_constant_number(void** constant, double n);
+
+        [DllImport(__DllName, EntryPoint = "luau_set_compile_constant_integer64", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void luau_set_compile_constant_integer64(void** constant, long l);
+
+        [DllImport(__DllName, EntryPoint = "luau_set_compile_constant_vector", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void luau_set_compile_constant_vector(void** constant, float x, float y, float z, float w);
+
+        [DllImport(__DllName, EntryPoint = "luau_set_compile_constant_string", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void luau_set_compile_constant_string(void** constant, byte* s, nuint l);
+
+        [DllImport(__DllName, EntryPoint = "luau_free", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void luau_free(void* p);
+
+        [DllImport(__DllName, EntryPoint = "luau_error", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern int luau_error(void* L, byte* msg);
+
 
     }
 
@@ -745,6 +772,24 @@ namespace NuLua.Interop.Luau
         public lua_State* L;
         public TString* storage;
         public fixed byte buffer[512];
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public unsafe partial struct lua_CompileOptions
+    {
+        public int optimizationLevel;
+        public int debugLevel;
+        public int typeInfoLevel;
+        public int coverageLevel;
+        public byte* vectorLib;
+        public byte* vectorCtor;
+        public byte* vectorType;
+        public byte** mutableGlobals;
+        public byte** userdataTypes;
+        public byte** librariesWithKnownMembers;
+        public void* libraryMemberTypeCb;
+        public void* libraryMemberConstantCb;
+        public byte** disabledBuiltins;
     }
 
     [StructLayout(LayoutKind.Sequential)]

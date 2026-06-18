@@ -2,6 +2,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\NuLua.Lua55\NuLua.Lua55.csproj" />
     <ProjectReference Include="..\..\src\NuLua.LuaJit\NuLua.LuaJit.csproj" />
+    <ProjectReference Include="..\..\src\NuLua.Luau\NuLua.Luau.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
