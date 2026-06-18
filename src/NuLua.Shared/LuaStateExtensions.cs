@@ -1,5 +1,4 @@
 using System.Buffers;
-using System.Text;
 using NuLua.Internal;
 
 namespace NuLua;
@@ -38,16 +37,8 @@ public static class LuaStateExtensions
 
     public static void PushString(this ILuaState state, ReadOnlySpan<char> str)
     {
-        var buffer = ArrayPool<byte>.Shared.Rent(str.Length * 3);
-        try
-        {
-            var len = Encoding.UTF8.GetBytes(str, buffer);
-            state.PushString(new ReadOnlySpan<byte>(buffer, 0, len));
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(buffer);
-        }
+        using var strBytes = new CString(str);
+        state.PushString(strBytes.AsSpan());
     }
 
     public static LuaValue Pop(this ILuaState state)

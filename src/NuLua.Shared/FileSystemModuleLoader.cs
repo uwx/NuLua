@@ -1,7 +1,7 @@
 using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using System.Text;
+using NuLua.Internal;
 
 namespace NuLua;
 
@@ -58,20 +58,8 @@ public sealed class FileSystemModuleLoader : LuaModuleLoader
             length = read;
 
             var chunkName = Path.GetFileNameWithoutExtension(targetPath);
-            var chunkNameByteCount = Encoding.UTF8.GetByteCount(chunkName);
-            var chunkNameBuffer = ArrayPool<byte>.Shared.Rent(chunkNameByteCount);
-            try
-            {
-                Encoding.UTF8.GetBytes(chunkName, 0, chunkName.Length, chunkNameBuffer, 0);
-                state.LoadString(
-                    new ReadOnlySpan<byte>(rented, 0, length),
-                    new ReadOnlySpan<byte>(chunkNameBuffer, 0, chunkNameByteCount)
-                );
-            }
-            finally
-            {
-                ArrayPool<byte>.Shared.Return(chunkNameBuffer);
-            }
+            using var chunkNameBytes = new CString(chunkName);
+            state.LoadString(new ReadOnlySpan<byte>(rented, 0, length), chunkNameBytes.AsSpan());
         }
         finally
         {

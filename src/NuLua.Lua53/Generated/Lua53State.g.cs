@@ -3,6 +3,8 @@
 #nullable enable
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Buffers;
+using System.Text;
 using NuLua.Internal;
 using NuLua.Interop.Lua53;
 
@@ -41,118 +43,160 @@ public sealed unsafe partial class Lua53State
     public void OpenBaseLibrary()
     {
         CheckDisposed();
-        byte* modname = (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("_G"u8));
-        NativeMethods.luaL_requiref(ptr, modname, NativeMethods.luaopen_base, 1);
-        NativeMethods.lua_settop(ptr, -2);
+        fixed (byte* modname = "_G\0"u8)
+        {
+            NativeMethods.luaL_requiref(ptr, modname, NativeMethods.luaopen_base, 1);
+            NativeMethods.lua_settop(ptr, -2);
+        }
     }
 
     public void OpenTableLibrary()
     {
         CheckDisposed();
-        byte* modname = (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("table"u8));
-        NativeMethods.luaL_requiref(ptr, modname, NativeMethods.luaopen_table, 1);
-        NativeMethods.lua_settop(ptr, -2);
+        fixed (byte* modname = "table\0"u8)
+        {
+            NativeMethods.luaL_requiref(ptr, modname, NativeMethods.luaopen_table, 1);
+            NativeMethods.lua_settop(ptr, -2);
+        }
     }
 
     public void OpenStringLibrary()
     {
         CheckDisposed();
-        byte* modname = (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("string"u8));
-        NativeMethods.luaL_requiref(ptr, modname, NativeMethods.luaopen_string, 1);
-        NativeMethods.lua_settop(ptr, -2);
+        fixed (byte* modname = "string\0"u8)
+        {
+            NativeMethods.luaL_requiref(ptr, modname, NativeMethods.luaopen_string, 1);
+            NativeMethods.lua_settop(ptr, -2);
+        }
     }
 
     public void OpenMathLibrary()
     {
         CheckDisposed();
-        byte* modname = (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("math"u8));
-        NativeMethods.luaL_requiref(ptr, modname, NativeMethods.luaopen_math, 1);
-        NativeMethods.lua_settop(ptr, -2);
+        fixed (byte* modname = "math\0"u8)
+        {
+            NativeMethods.luaL_requiref(ptr, modname, NativeMethods.luaopen_math, 1);
+            NativeMethods.lua_settop(ptr, -2);
+        }
     }
 
     public void OpenCoroutineLibrary()
     {
         CheckDisposed();
-        byte* modname = (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("coroutine"u8));
-        NativeMethods.luaL_requiref(ptr, modname, NativeMethods.luaopen_coroutine, 1);
-        NativeMethods.lua_settop(ptr, -2);
+        fixed (byte* modname = "coroutine\0"u8)
+        {
+            NativeMethods.luaL_requiref(ptr, modname, NativeMethods.luaopen_coroutine, 1);
+            NativeMethods.lua_settop(ptr, -2);
+        }
     }
 
     public void OpenIoLibrary()
     {
         CheckDisposed();
-        byte* modname = (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("io"u8));
-        NativeMethods.luaL_requiref(ptr, modname, NativeMethods.luaopen_io, 1);
-        NativeMethods.lua_settop(ptr, -2);
+        fixed (byte* modname = "io\0"u8)
+        {
+            NativeMethods.luaL_requiref(ptr, modname, NativeMethods.luaopen_io, 1);
+            NativeMethods.lua_settop(ptr, -2);
+        }
     }
 
     public void OpenOsLibrary()
     {
         CheckDisposed();
-        byte* modname = (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("os"u8));
-        NativeMethods.luaL_requiref(ptr, modname, NativeMethods.luaopen_os, 1);
-        NativeMethods.lua_settop(ptr, -2);
+        fixed (byte* modname = "os\0"u8)
+        {
+            NativeMethods.luaL_requiref(ptr, modname, NativeMethods.luaopen_os, 1);
+            NativeMethods.lua_settop(ptr, -2);
+        }
     }
 
     public void OpenPackageLibrary()
     {
         CheckDisposed();
-        byte* modname = (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("package"u8));
-        NativeMethods.luaL_requiref(ptr, modname, NativeMethods.luaopen_package, 1);
-        NativeMethods.lua_settop(ptr, -2);
+        fixed (byte* modname = "package\0"u8)
+        {
+            NativeMethods.luaL_requiref(ptr, modname, NativeMethods.luaopen_package, 1);
+            NativeMethods.lua_settop(ptr, -2);
+        }   
     }
 
     public void OpenDebugLibrary()
     {
         CheckDisposed();
-        byte* modname = (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("debug"u8));
-        NativeMethods.luaL_requiref(ptr, modname, NativeMethods.luaopen_debug, 1);
-        NativeMethods.lua_settop(ptr, -2);
+        fixed (byte* modname = "debug\0"u8)
+        {
+            NativeMethods.luaL_requiref(ptr, modname, NativeMethods.luaopen_debug, 1);
+            NativeMethods.lua_settop(ptr, -2);
+        }
     }
 
     public void LoadString(ReadOnlySpan<byte> utf8Code, ReadOnlySpan<byte> utf8ChunkName)
     {
         CheckDisposed();
+        using var chunkName = new CString(utf8ChunkName);
+        LoadStringCore(utf8Code, chunkName);
+    }
+
+    public void LoadString(ReadOnlySpan<char> code, ReadOnlySpan<char> chunkName)
+    {
+        CheckDisposed();
+
+        var codeBuffer = ArrayPool<byte>.Shared.Rent(code.Length * 3);
+        try
+        {
+            var codeBytes = Encoding.UTF8.GetBytes(code, codeBuffer);
+            LoadStringCore(codeBuffer.AsSpan(0, codeBytes), new CString(chunkName));
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(codeBuffer);
+        }
+    }
+
+    void LoadStringCore(ReadOnlySpan<byte> utf8Code, CString chunkName)
+    {
+        fixed (byte* mode = "t\0"u8)
         fixed (byte* codePtr = utf8Code)
         {
             var result = NativeMethods.luaL_loadbufferx(
                 ptr,
                 codePtr,
                 (nuint)utf8Code.Length,
-                (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(utf8ChunkName)),
-                (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("t"u8))
+                chunkName.Pointer,
+                mode
             );
             CheckResult(result);
         }
     }
 
-    public void LoadString(ReadOnlySpan<char> code, ReadOnlySpan<char> chunkName)
-    {
-        using var codeBytes = new NullTerminatedString(code);
-        using var chunkNameBytes = new NullTerminatedString(chunkName);
-        LoadString(codeBytes.AsSpan(), chunkNameBytes.AsSpan());
-    }
-
     public void LoadBuffer(ReadOnlySpan<byte> buffer, ReadOnlySpan<byte> utf8ChunkName)
     {
         CheckDisposed();
+        using var chunkName = new CString(utf8ChunkName);
+        LoadBufferCore(buffer, chunkName);
+    }
+
+    public void LoadBuffer(ReadOnlySpan<byte> buffer, ReadOnlySpan<char> chunkName)
+    {
+        CheckDisposed();
+        using var chunkNameBytes = new CString(chunkName);
+        LoadBufferCore(buffer, chunkNameBytes);
+    }
+
+    void LoadBufferCore(ReadOnlySpan<byte> buffer, CString chunkName)
+    {
+        fixed (byte* mode = "t\0"u8)
         fixed (byte* bufferPtr = buffer)
         {
             var result = NativeMethods.luaL_loadbufferx(
                 ptr,
                 bufferPtr,
                 (nuint)buffer.Length,
-                (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(utf8ChunkName)),
-                (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("b"u8))
+                chunkName.Pointer,
+                mode
             );
             CheckResult(result);
         }
-    }
-
-    public void LoadBuffer(ReadOnlySpan<byte> buffer, ReadOnlySpan<char> chunkName)
-    {
-        using var chunkNameBytes = new NullTerminatedString(chunkName);
-        LoadBuffer(buffer, chunkNameBytes.AsSpan());
     }
 
     public bool TryDump(int index, bool strip, Span<byte> buffer, out int bytesWritten)
@@ -257,20 +301,20 @@ public sealed unsafe partial class Lua53State
     public void GetGlobal(ReadOnlySpan<char> name)
     {
         CheckDisposed();
-        using var nameBytes = new NullTerminatedString(name);
+        using var nameBytes = new CString(name);
         _ = NativeMethods.lua_getglobal(
             ptr,
-            (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(nameBytes.AsSpan()))
+            nameBytes.Pointer
         );
     }
 
     public void SetGlobal(ReadOnlySpan<char> name)
     {
         CheckDisposed();
-        using var nameBytes = new NullTerminatedString(name);
+        using var nameBytes = new CString(name);
         NativeMethods.lua_setglobal(
             ptr,
-            (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(nameBytes.AsSpan()))
+            nameBytes.Pointer
         );
     }
 
@@ -283,11 +327,11 @@ public sealed unsafe partial class Lua53State
     public LuaValueType GetField(int index, ReadOnlySpan<char> name)
     {
         CheckDisposed();
-        using var nameBytes = new NullTerminatedString(name);
+        using var nameBytes = new CString(name);
         var t = (uint)NativeMethods.lua_getfield(
             ptr,
             index,
-            (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(nameBytes.AsSpan()))
+            nameBytes.Pointer
         );
         return CodeToType(t);
     }
@@ -295,11 +339,11 @@ public sealed unsafe partial class Lua53State
     public void SetField(int index, ReadOnlySpan<char> name)
     {
         CheckDisposed();
-        using var nameBytes = new NullTerminatedString(name);
+        using var nameBytes = new CString(name);
         NativeMethods.lua_setfield(
             ptr,
             index,
-            (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(nameBytes.AsSpan()))
+            nameBytes.Pointer
         );
     }
 
@@ -386,11 +430,12 @@ public sealed unsafe partial class Lua53State
 
             if (NativeMethods.lua_isyieldable(L) == 0)
             {
-                ReadOnlySpan<byte> errMsg =
-                    "attempt to call async function from a non-yieldable context"u8;
+                using var errMsg = new CString(
+                    "attempt to call async function from a non-yieldable context"u8
+                );
                 return NativeMethods.luaL_error(
                     L,
-                    (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(errMsg))
+                    errMsg.Pointer
                 );
             }
 

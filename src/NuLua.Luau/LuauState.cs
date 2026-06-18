@@ -1,5 +1,7 @@
+using System.Buffers;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
 using NuLua.Internal;
 using NuLua.Interop.Luau;
 
@@ -175,13 +177,8 @@ public sealed unsafe partial class LuauState
         }
         try
         {
-            var result = NativeMethods.luau_load(
-                ptr,
-                (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(utf8ChunkName)),
-                bytecode,
-                bytecodeSize,
-                0
-            );
+            using var chunkName = new CString(utf8ChunkName);
+            var result = NativeMethods.luau_load(ptr, chunkName.Pointer, bytecode, bytecodeSize, 0);
             CheckResult(result);
         }
         finally
@@ -192,31 +189,74 @@ public sealed unsafe partial class LuauState
 
     public void LoadString(ReadOnlySpan<char> code, ReadOnlySpan<char> chunkName)
     {
-        using var codeBytes = new NullTerminatedString(code);
-        using var chunkNameBytes = new NullTerminatedString(chunkName);
-        LoadString(codeBytes.AsSpan(), chunkNameBytes.AsNullTerminatedSpan());
+        var codeBuffer = ArrayPool<byte>.Shared.Rent(code.Length * 3);
+        try
+        {
+            var codeBytes = Encoding.UTF8.GetBytes(code, codeBuffer);
+            using var chunkNameBytes = new CString(chunkName);
+            LoadString(codeBuffer.AsSpan(0, codeBytes), chunkNameBytes.AsSpan());
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(codeBuffer);
+        }
+    }
+
+    void LoadStringCore(ReadOnlySpan<byte> utf8Code, CString chunkName)
+    {
+        CheckDisposed();
+        nuint bytecodeSize;
+        byte* bytecode;
+        fixed (byte* codePtr = utf8Code)
+        {
+            bytecode = NativeMethods.luau_compile(
+                codePtr,
+                (nuint)utf8Code.Length,
+                null,
+                &bytecodeSize
+            );
+        }
+        if (bytecode == null)
+        {
+            throw new LuaException(LUA_ERRMEM, "luau_compile returned null.");
+        }
+        try
+        {
+            var result = NativeMethods.luau_load(ptr, chunkName.Pointer, bytecode, bytecodeSize, 0);
+            CheckResult(result);
+        }
+        finally
+        {
+            NativeMethods.luau_free(bytecode);
+        }
     }
 
     public void LoadBuffer(ReadOnlySpan<byte> buffer, ReadOnlySpan<byte> utf8ChunkName)
+    {
+        using var chunkName = new CString(utf8ChunkName);
+        LoadBufferCore(buffer, chunkName);
+    }
+
+    public void LoadBuffer(ReadOnlySpan<byte> buffer, ReadOnlySpan<char> chunkName)
+    {
+        using var chunkNameBytes = new CString(chunkName);
+        LoadBuffer(buffer, chunkNameBytes.AsSpan());
+    }
+
+    void LoadBufferCore(ReadOnlySpan<byte> buffer, CString chunkName)
     {
         CheckDisposed();
         fixed (byte* bufferPtr = buffer)
         {
             var result = NativeMethods.luau_load(
                 ptr,
-                (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(utf8ChunkName)),
+                chunkName.Pointer,
                 bufferPtr,
                 (nuint)buffer.Length,
                 0
             );
             CheckResult(result);
         }
-    }
-
-    public void LoadBuffer(ReadOnlySpan<byte> buffer, ReadOnlySpan<char> chunkName)
-    {
-        using var chunkNameBytes = new NullTerminatedString(chunkName);
-        LoadBuffer(buffer, chunkNameBytes.AsNullTerminatedSpan());
     }
 
     public bool TryDump(int index, bool strip, Span<byte> buffer, out int bytesWritten)
@@ -308,26 +348,16 @@ public sealed unsafe partial class LuauState
     public void GetGlobal(ReadOnlySpan<char> name)
     {
         CheckDisposed();
-        using var nameBytes = new NullTerminatedString(name);
+        using var nameBytes = new CString(name);
         // Luau does not expose lua_getglobal — it's a macro over lua_getfield+LUA_GLOBALSINDEX.
-        NativeMethods.lua_getfield(
-            ptr,
-            NativeMethods.LUA_GLOBALSINDEX,
-            (byte*)
-                Unsafe.AsPointer(ref MemoryMarshal.GetReference(nameBytes.AsNullTerminatedSpan()))
-        );
+        NativeMethods.lua_getfield(ptr, NativeMethods.LUA_GLOBALSINDEX, nameBytes.Pointer);
     }
 
     public void SetGlobal(ReadOnlySpan<char> name)
     {
         CheckDisposed();
-        using var nameBytes = new NullTerminatedString(name);
-        NativeMethods.lua_setfield(
-            ptr,
-            NativeMethods.LUA_GLOBALSINDEX,
-            (byte*)
-                Unsafe.AsPointer(ref MemoryMarshal.GetReference(nameBytes.AsNullTerminatedSpan()))
-        );
+        using var nameBytes = new CString(name);
+        NativeMethods.lua_setfield(ptr, NativeMethods.LUA_GLOBALSINDEX, nameBytes.Pointer);
     }
 
     public void GetTable(int index)
@@ -339,29 +369,16 @@ public sealed unsafe partial class LuauState
     public LuaValueType GetField(int index, ReadOnlySpan<char> name)
     {
         CheckDisposed();
-        using var nameBytes = new NullTerminatedString(name);
-        var t = (uint)
-            NativeMethods.lua_getfield(
-                ptr,
-                index,
-                (byte*)
-                    Unsafe.AsPointer(
-                        ref MemoryMarshal.GetReference(nameBytes.AsNullTerminatedSpan())
-                    )
-            );
+        using var nameBytes = new CString(name);
+        var t = (uint)NativeMethods.lua_getfield(ptr, index, nameBytes.Pointer);
         return CodeToType(t);
     }
 
     public void SetField(int index, ReadOnlySpan<char> name)
     {
         CheckDisposed();
-        using var nameBytes = new NullTerminatedString(name);
-        NativeMethods.lua_setfield(
-            ptr,
-            index,
-            (byte*)
-                Unsafe.AsPointer(ref MemoryMarshal.GetReference(nameBytes.AsNullTerminatedSpan()))
-        );
+        using var nameBytes = new CString(name);
+        NativeMethods.lua_setfield(ptr, index, nameBytes.Pointer);
     }
 
     public void NewUserData(int size, int userValueCount)
@@ -545,7 +562,12 @@ public sealed unsafe partial class LuauState
             byte* bytecodePtr;
             fixed (byte* codePtr = source)
             {
-                bytecodePtr = NativeMethods.luau_compile(codePtr, (nuint)source.Length, null, &bytecodeSize);
+                bytecodePtr = NativeMethods.luau_compile(
+                    codePtr,
+                    (nuint)source.Length,
+                    null,
+                    &bytecodeSize
+                );
             }
             if (bytecodePtr == null)
             {
@@ -562,11 +584,12 @@ public sealed unsafe partial class LuauState
             arithBytecodeCache[(int)op] = bytecode;
         }
 
+        using var chunkName = new CString("arith"u8);
         fixed (byte* bcPtr = bytecode)
         {
             var loadResult = NativeMethods.luau_load(
                 ptr,
-                (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference("arith\0"u8)),
+                chunkName.Pointer,
                 bcPtr,
                 (nuint)bytecode.Length,
                 0
