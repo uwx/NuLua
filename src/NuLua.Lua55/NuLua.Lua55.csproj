@@ -40,7 +40,7 @@
     Outputs="$(CodeGenOutputDir)\$(CodeGenName)State.g.cs;$(CodeGenOutputDir)\$(CodeGenName)State.Common.g.cs"
   >
     <MakeDir Directories="$(CodeGenOutputDir)" />
-    <Exec Command="dotnet run --project &quot;$(CodeGenProject)&quot; --no-build -- --name $(CodeGenName) --version $(CodeGenVersion) --template-dir &quot;$(CodeGenTemplateDir)&quot; --template-dir &quot;$(CodeGenCommonTemplateDir)&quot; --output-dir &quot;$(CodeGenOutputDir)&quot;" />
+    <Exec Command="dotnet run --project &quot;$(CodeGenProject)&quot; --no-build -- --name $(CodeGenName) --version $(CodeGenVersion) --common-template-dir &quot;$(CodeGenCommonTemplateDir)&quot; --dialect-template-dir &quot;$(CodeGenTemplateDir)&quot; --output-dir &quot;$(CodeGenOutputDir)&quot;" />
   </Target>
   <Target Name="IncludeCodeGenOutput" BeforeTargets="CoreCompile" DependsOnTargets="RunCodeGen">
     <ItemGroup>
