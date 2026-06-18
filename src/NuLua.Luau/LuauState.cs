@@ -1,5 +1,3 @@
-using System.Collections.Concurrent;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using NuLua.Internal;
@@ -7,7 +5,7 @@ using NuLua.Interop.Luau;
 
 namespace NuLua.Luau;
 
-public sealed unsafe partial class LuauState : ILuaState<LuauState>
+public sealed unsafe partial class LuauState
 {
     // Luau does not export LUA_OK / LUA_YIELD / LUA_ERR* / LUA_T* through bindgen,
     // so we mirror the values declared in submodules/luau/VM/include/lua.h here.
@@ -33,55 +31,6 @@ public sealed unsafe partial class LuauState : ILuaState<LuauState>
     const uint LUA_TCLASS = 12;
     const uint LUA_TOBJECT = 13;
 
-    static readonly ConcurrentDictionary<nint, LuauState> ptrToState = new();
-
-    readonly List<LuaFunc<LuauState>> funcs = new(8);
-    readonly List<AsyncLuaFunc<LuauState>> asyncFuncs = new(8);
-    readonly LuaReference reference;
-    readonly LuauState? from;
-    lua_State* ptr;
-
-    ValueTask<int> pendingAsyncTask;
-    bool hasPendingTask;
-    CancellationToken asyncCancellationToken;
-
-    LuauState? ILuaState<LuauState>.From => from;
-    ILuaState? ILuaState.From => from;
-
-    LuauState(lua_State* ptr, LuauState? from, LuaReference reference)
-    {
-        this.ptr = ptr;
-        this.from = from;
-        this.reference = reference;
-    }
-
-    public static LuauState Create()
-    {
-        var ptr = NativeMethods.luaL_newstate();
-        if (ptr == null)
-        {
-            throw new LuaException(LUA_ERRMEM, "Failed to create Lua state.");
-        }
-
-        var state = new LuauState(ptr, null, default);
-        ptrToState[(nint)ptr] = state;
-        return state;
-    }
-
-    static LuauState GetOrCreate(lua_State* ptr, LuaReference reference)
-    {
-        if (ptrToState.TryGetValue((nint)ptr, out var state))
-        {
-            return state;
-        }
-        else
-        {
-            state = new LuauState(ptr, null, reference);
-            ptrToState[(nint)ptr] = state;
-            return state;
-        }
-    }
-
     static LuauState GetMainState(lua_State* L)
     {
         var state = ptrToState[(nint)L];
@@ -92,76 +41,14 @@ public sealed unsafe partial class LuauState : ILuaState<LuauState>
         return state;
     }
 
-    public lua_State* AsPointer() => ptr;
-
-    nint ILuaState.AsPointer() => (nint)ptr;
-
-    public LuaReference Reference => reference;
-
-    public int RegistryIndex => NativeMethods.LUA_REGISTRYINDEX;
-
-    public LuaThreadStatus Status
-    {
-        get
-        {
-            CheckDisposed();
-            var status = NativeMethods.lua_status(ptr);
-            return status switch
-            {
-                LUA_OK => LuaThreadStatus.Suspended,
-                _ => LuaThreadStatus.Dead,
-            };
-        }
-    }
-
-    public LuaValue this[ReadOnlySpan<char> name]
-    {
-        get
-        {
-            GetGlobal(name);
-            return this.Pop();
-        }
-        set
-        {
-            this.Push(value);
-            SetGlobal(name);
-        }
-    }
-
-    public void Dispose()
-    {
-        if (ptr != null)
-        {
-            if (from == null)
-            {
-                NativeMethods.lua_close(ptr);
-            }
-            else
-            {
-                from.Unref(reference);
-            }
-            ptrToState.TryRemove((nint)ptr, out _);
-            ptr = null;
-        }
-    }
-
-    void CheckDisposed()
-    {
-        if (ptr == null)
-        {
-            throw new ObjectDisposedException(nameof(LuauState));
-        }
-    }
-
     void CheckResult(int code)
     {
         if (code is not LUA_OK and not LUA_YIELD)
         {
             nuint len;
             var message = NativeMethods.lua_tolstring(ptr, -1, &len);
-            var messageStr = message == null
-                ? string.Empty
-                : new string((sbyte*)message, 0, (int)len);
+            var messageStr =
+                message == null ? string.Empty : new string((sbyte*)message, 0, (int)len);
             throw new LuaException((uint)code, messageStr);
         }
     }
@@ -344,35 +231,10 @@ public sealed unsafe partial class LuauState : ILuaState<LuauState>
         throw new NotSupportedException("Dumping functions is not supported on Luau.");
     }
 
-    public LuaValueType GetType(int index)
-    {
-        CheckDisposed();
-        var t = (uint)NativeMethods.lua_type(ptr, index);
-        return CodeToType(t);
-    }
-
-    public int GetTop()
-    {
-        CheckDisposed();
-        return NativeMethods.lua_gettop(ptr);
-    }
-
-    public void SetTop(int index)
-    {
-        CheckDisposed();
-        NativeMethods.lua_settop(ptr, index);
-    }
-
     public int GetAbsIndex(int index)
     {
         CheckDisposed();
         return NativeMethods.lua_absindex(ptr, index);
-    }
-
-    public bool CheckStack(int n)
-    {
-        CheckDisposed();
-        return NativeMethods.lua_checkstack(ptr, n) != 0;
     }
 
     public void Copy(int fromIndex, int toIndex)
@@ -403,37 +265,10 @@ public sealed unsafe partial class LuauState : ILuaState<LuauState>
         }
     }
 
-    public void PushNil()
-    {
-        CheckDisposed();
-        NativeMethods.lua_pushnil(ptr);
-    }
-
-    public void PushBoolean(bool value)
-    {
-        CheckDisposed();
-        NativeMethods.lua_pushboolean(ptr, value ? 1 : 0);
-    }
-
     public void PushInteger(long value)
     {
         CheckDisposed();
         NativeMethods.lua_pushinteger(ptr, (int)value);
-    }
-
-    public void PushNumber(double value)
-    {
-        CheckDisposed();
-        NativeMethods.lua_pushnumber(ptr, value);
-    }
-
-    public void PushString(ReadOnlySpan<byte> utf8Str)
-    {
-        CheckDisposed();
-        fixed (byte* strPtr = utf8Str)
-        {
-            NativeMethods.lua_pushlstring(ptr, strPtr, (nuint)utf8Str.Length);
-        }
     }
 
     public void PushLightUserData(nint data)
@@ -442,28 +277,10 @@ public sealed unsafe partial class LuauState : ILuaState<LuauState>
         NativeMethods.lua_pushlightuserdatatagged(ptr, (void*)data, 0);
     }
 
-    public bool PushThread()
-    {
-        CheckDisposed();
-        return NativeMethods.lua_pushthread(ptr) != 0;
-    }
-
-    public void PushValue(int index)
-    {
-        CheckDisposed();
-        NativeMethods.lua_pushvalue(ptr, index);
-    }
-
     public void PushValue(LuaReference reference)
     {
         CheckDisposed();
         NativeMethods.lua_rawgeti(ptr, reference.TableIndex, reference.Id);
-    }
-
-    public bool ToBoolean(int index)
-    {
-        CheckDisposed();
-        return NativeMethods.lua_toboolean(ptr, index) != 0;
     }
 
     public double ToNumber(int index)
@@ -484,79 +301,6 @@ public sealed unsafe partial class LuauState : ILuaState<LuauState>
         return new string((sbyte*)strPtr, 0, (int)len);
     }
 
-    public nint ToUserDataPointer(int index)
-    {
-        CheckDisposed();
-        var userData = NativeMethods.lua_touserdata(ptr, index);
-        if (userData == null)
-        {
-            throw new InvalidOperationException("Value at the specified index is not user data.");
-        }
-        return (nint)userData;
-    }
-
-    public LuauState ToThread(int index)
-    {
-        CheckDisposed();
-        var threadPtr = NativeMethods.lua_tothread(ptr, index);
-        if (threadPtr == null)
-        {
-            throw new InvalidOperationException("Value at the specified index is not a thread.");
-        }
-
-        if (ptrToState.TryGetValue((nint)threadPtr, out var threadState))
-        {
-            return threadState;
-        }
-        else
-        {
-            NativeMethods.lua_pushvalue(ptr, index);
-            var reference = this.Ref();
-            threadState = new LuauState(threadPtr, this, reference);
-            ptrToState[(nint)threadPtr] = threadState;
-            return threadState;
-        }
-    }
-
-    ILuaState ILuaState.ToThread(int index) => ToThread(index);
-
-    public void* ToPointer(int index)
-    {
-        if (GetType(index) != LuaValueType.LightUserData)
-        {
-            throw new InvalidOperationException(
-                "Value at the specified index is not light user data."
-            );
-        }
-        return NativeMethods.lua_topointer(ptr, index);
-    }
-
-    public LuaFunction ToFunction(int index)
-    {
-        if (GetType(index) != LuaValueType.Function)
-        {
-            throw new InvalidOperationException("Value at the specified index is not a function.");
-        }
-        return new LuaFunction(this, this.Ref());
-    }
-
-    public void XMove(LuauState target, int count)
-    {
-        CheckDisposed();
-        NativeMethods.lua_xmove(ptr, target.ptr, count);
-    }
-
-    void ILuaState.XMove(ILuaState target, int count)
-    {
-        XMove((LuauState)target, count);
-    }
-
-    public void NewTable(int initialArraySize = 0, int initialRecordsSize = 0)
-    {
-        CheckDisposed();
-        NativeMethods.lua_createtable(ptr, initialArraySize, initialRecordsSize);
-    }
-
     public void GetGlobal(ReadOnlySpan<char> name)
     {
         CheckDisposed();
@@ -565,7 +309,8 @@ public sealed unsafe partial class LuauState : ILuaState<LuauState>
         NativeMethods.lua_getfield(
             ptr,
             NativeMethods.LUA_GLOBALSINDEX,
-            (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(nameBytes.AsNullTerminatedSpan()))
+            (byte*)
+                Unsafe.AsPointer(ref MemoryMarshal.GetReference(nameBytes.AsNullTerminatedSpan()))
         );
     }
 
@@ -576,7 +321,8 @@ public sealed unsafe partial class LuauState : ILuaState<LuauState>
         NativeMethods.lua_setfield(
             ptr,
             NativeMethods.LUA_GLOBALSINDEX,
-            (byte*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(nameBytes.AsNullTerminatedSpan()))
+            (byte*)
+                Unsafe.AsPointer(ref MemoryMarshal.GetReference(nameBytes.AsNullTerminatedSpan()))
         );
     }
 
@@ -584,12 +330,6 @@ public sealed unsafe partial class LuauState : ILuaState<LuauState>
     {
         CheckDisposed();
         NativeMethods.lua_gettable(ptr, index);
-    }
-
-    public void SetTable(int index)
-    {
-        CheckDisposed();
-        NativeMethods.lua_settable(ptr, index);
     }
 
     public void NewUserData(int size, int userValueCount)
@@ -719,16 +459,6 @@ public sealed unsafe partial class LuauState : ILuaState<LuauState>
         NativeMethods.lua_pushcclosurek(ptr, AsyncCFn, null, 1, null!);
     }
 
-    public void NewThread()
-    {
-        CheckDisposed();
-        var threadPtr = NativeMethods.lua_newthread(ptr);
-        if (threadPtr == null)
-        {
-            throw new LuaException(LUA_ERRMEM, "Failed to create new thread.");
-        }
-    }
-
     public void Arith(LuaArithmeticOperator op)
     {
         CheckDisposed();
@@ -744,20 +474,15 @@ public sealed unsafe partial class LuauState : ILuaState<LuauState>
             LuaComparisonOperator.Equal => NativeMethods.lua_equal(ptr, -2, -1),
             LuaComparisonOperator.Less => NativeMethods.lua_lessthan(ptr, -2, -1),
             // Luau lacks lua_compare; emulate <= via !(b < a).
-            LuaComparisonOperator.LessOrEqual =>
-                NativeMethods.lua_lessthan(ptr, -1, -2) == 0 ? 1 : 0,
+            LuaComparisonOperator.LessOrEqual => NativeMethods.lua_lessthan(ptr, -1, -2) == 0
+                ? 1
+                : 0,
             _ => throw new NotSupportedException($"Unsupported Lua comparison operator: {op}"),
         };
 
         // Pop the operands and push the result for symmetry with newer versions.
         NativeMethods.lua_settop(ptr, NativeMethods.lua_gettop(ptr) - 2);
         NativeMethods.lua_pushboolean(ptr, result);
-    }
-
-    public void Concat(int count)
-    {
-        CheckDisposed();
-        NativeMethods.lua_concat(ptr, count);
     }
 
     public void Len(int index)
@@ -784,12 +509,6 @@ public sealed unsafe partial class LuauState : ILuaState<LuauState>
         _ = result;
     }
 
-    public bool RawEqual(int index1, int index2)
-    {
-        CheckDisposed();
-        return NativeMethods.lua_rawequal(ptr, index1, index2) != 0;
-    }
-
     public LuaValueType RawGet(int index)
     {
         CheckDisposed();
@@ -804,71 +523,11 @@ public sealed unsafe partial class LuauState : ILuaState<LuauState>
         return NativeMethods.lua_objlen(ptr, index);
     }
 
-    public void RawSet(int index)
-    {
-        CheckDisposed();
-        NativeMethods.lua_rawset(ptr, index);
-    }
-
-    public bool TryGetMetatable(int index, [NotNullWhen(true)] out LuaTable? metatable)
-    {
-        CheckDisposed();
-        if (NativeMethods.lua_getmetatable(ptr, index) == 0)
-        {
-            metatable = default;
-            return false;
-        }
-        else
-        {
-            metatable = new LuaTable(this, this.Ref());
-            return true;
-        }
-    }
-
-    public void SetMetatable(int index, LuaTable? metatable)
-    {
-        CheckDisposed();
-        if (metatable == null)
-        {
-            NativeMethods.lua_pushnil(ptr);
-            _ = NativeMethods.lua_setmetatable(ptr, index);
-        }
-        else
-        {
-            PushValue(metatable.Reference);
-            _ = NativeMethods.lua_setmetatable(ptr, index);
-        }
-    }
-
     public void Resume(int argCount)
     {
         CheckDisposed();
         var result = NativeMethods.lua_resume(ptr, from == null ? null : from.ptr, argCount);
         CheckResult(result);
-    }
-
-    ValueTask ILuaState.CompleteAsync(int initialArgCount, CancellationToken cancellationToken)
-    {
-        CheckDisposed();
-        return LuauAsyncDriver.RunAsync(this, initialArgCount, cancellationToken);
-    }
-
-    internal void SetAsyncCancellationToken(CancellationToken cancellationToken)
-    {
-        asyncCancellationToken = cancellationToken;
-    }
-
-    internal bool TryTakePendingAsyncTask(out ValueTask<int> task)
-    {
-        if (hasPendingTask)
-        {
-            task = pendingAsyncTask;
-            hasPendingTask = false;
-            pendingAsyncTask = default;
-            return true;
-        }
-        task = default;
-        return false;
     }
 
     internal int RunResumeStep(int argCount)
@@ -878,9 +537,8 @@ public sealed unsafe partial class LuauState : ILuaState<LuauState>
         {
             nuint len;
             var message = NativeMethods.lua_tolstring(ptr, -1, &len);
-            var messageStr = message == null
-                ? string.Empty
-                : new string((sbyte*)message, 0, (int)len);
+            var messageStr =
+                message == null ? string.Empty : new string((sbyte*)message, 0, (int)len);
             throw new LuaException((uint)status, messageStr);
         }
         return status;
@@ -894,7 +552,10 @@ public sealed unsafe partial class LuauState : ILuaState<LuauState>
         // To match the contract used elsewhere — `Ref()` references whatever is on
         // top of the stack — we accept either the registry index or a regular stack
         // index, ref the value, then pop if it was the top.
-        var refId = NativeMethods.lua_ref(ptr, index == NativeMethods.LUA_REGISTRYINDEX ? -1 : index);
+        var refId = NativeMethods.lua_ref(
+            ptr,
+            index == NativeMethods.LUA_REGISTRYINDEX ? -1 : index
+        );
         if (refId == NativeMethods.LUA_NOREF)
         {
             throw new LuaException(LUA_ERRMEM, "Failed to create reference.");
@@ -934,41 +595,5 @@ public sealed unsafe partial class LuauState : ILuaState<LuauState>
             LUA_TOBJECT => LuaValueType.UserData,
             _ => throw new NotSupportedException($"Unsupported Lua type code: {code}"),
         };
-    }
-}
-
-internal static partial class LuauAsyncDriver
-{
-    public static async ValueTask RunAsync(
-        LuauState state,
-        int initialArgCount,
-        CancellationToken cancellationToken
-    )
-    {
-        const int LUA_OK = 0;
-
-        state.SetAsyncCancellationToken(cancellationToken);
-        int currentArgs = initialArgCount;
-        while (true)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            var status = state.RunResumeStep(currentArgs);
-            if (status == LUA_OK)
-            {
-                state.SetAsyncCancellationToken(default);
-                return;
-            }
-
-            if (!state.TryTakePendingAsyncTask(out var task))
-            {
-                state.SetAsyncCancellationToken(default);
-                throw new LuaException(
-                    2 /* LUA_ERRRUN */,
-                    "Coroutine yielded without a pending async task."
-                );
-            }
-
-            currentArgs = await task.ConfigureAwait(false);
-        }
     }
 }

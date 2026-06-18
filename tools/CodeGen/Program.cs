@@ -4,7 +4,7 @@ using Scriban.Runtime;
 
 string? name = null;
 int? version = null;
-string? templateDir = null;
+var templateDirs = new List<string>();
 string? outputDir = null;
 bool isJit = false;
 
@@ -19,7 +19,7 @@ for (int i = 0; i < args.Length; i++)
             version = int.Parse(args[++i]);
             break;
         case "--template-dir":
-            templateDir = args[++i];
+            templateDirs.Add(args[++i]);
             break;
         case "--output-dir":
             outputDir = args[++i];
@@ -33,10 +33,10 @@ for (int i = 0; i < args.Length; i++)
     }
 }
 
-if (name is null || version is null || templateDir is null || outputDir is null)
+if (name is null || version is null || templateDirs.Count == 0 || outputDir is null)
 {
     Console.Error.WriteLine(
-        "Usage: CodeGen --name <Name> --version <NNN> --template-dir <dir> --output-dir <dir> [--is-jit]"
+        "Usage: CodeGen --name <Name> --version <NNN> --template-dir <dir> [--template-dir <dir>...] --output-dir <dir> [--is-jit]"
     );
     return 1;
 }
@@ -48,10 +48,14 @@ model["name"] = name;
 model["version"] = version.Value;
 model["is_jit"] = isJit;
 
-var templates = Directory.GetFiles(templateDir, "*.scriban-cs", SearchOption.TopDirectoryOnly);
+var templates = templateDirs
+    .SelectMany(dir => Directory.GetFiles(dir, "*.scriban-cs", SearchOption.TopDirectoryOnly))
+    .ToArray();
 if (templates.Length == 0)
 {
-    Console.Error.WriteLine($"No templates (*.scriban-cs) found in '{templateDir}'.");
+    Console.Error.WriteLine(
+        $"No templates (*.scriban-cs) found in: {string.Join(", ", templateDirs)}."
+    );
     return 1;
 }
 

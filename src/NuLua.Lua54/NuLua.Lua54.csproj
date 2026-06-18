@@ -9,7 +9,8 @@
     <CodeGenName>Lua54</CodeGenName>
     <CodeGenVersion>504</CodeGenVersion>
     <CodeGenProject>$(MSBuildThisFileDirectory)..\..\tools\CodeGen\CodeGen.csproj</CodeGenProject>
-    <CodeGenTemplateDir>$(MSBuildThisFileDirectory)..\..\tools\CodeGen\Templates</CodeGenTemplateDir>
+    <CodeGenTemplateDir>$(MSBuildThisFileDirectory)..\..\tools\CodeGen\Templates\Lua52Plus</CodeGenTemplateDir>
+    <CodeGenCommonTemplateDir>$(MSBuildThisFileDirectory)..\..\tools\CodeGen\Templates\Common</CodeGenCommonTemplateDir>
     <CodeGenOutputDir>$(MSBuildThisFileDirectory)Generated</CodeGenOutputDir>
   </PropertyGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
@@ -22,6 +23,7 @@
   </ItemGroup>
   <ItemGroup>
     <CodeGenTemplate Include="$(CodeGenTemplateDir)\*.scriban-cs" />
+    <CodeGenTemplate Include="$(CodeGenCommonTemplateDir)\*.scriban-cs" />
   </ItemGroup>
   <Target Name="BuildCodeGen" BeforeTargets="RunCodeGen">
     <MSBuild
@@ -35,10 +37,10 @@
     Name="RunCodeGen"
     BeforeTargets="CoreCompile"
     Inputs="@(CodeGenTemplate)"
-    Outputs="$(CodeGenOutputDir)\$(CodeGenName)State.g.cs"
+    Outputs="$(CodeGenOutputDir)\$(CodeGenName)State.g.cs;$(CodeGenOutputDir)\$(CodeGenName)State.Common.g.cs"
   >
     <MakeDir Directories="$(CodeGenOutputDir)" />
-    <Exec Command="dotnet run --project &quot;$(CodeGenProject)&quot; --no-build -- --name $(CodeGenName) --version $(CodeGenVersion) --template-dir &quot;$(CodeGenTemplateDir)&quot; --output-dir &quot;$(CodeGenOutputDir)&quot;" />
+    <Exec Command="dotnet run --project &quot;$(CodeGenProject)&quot; --no-build -- --name $(CodeGenName) --version $(CodeGenVersion) --template-dir &quot;$(CodeGenTemplateDir)&quot; --template-dir &quot;$(CodeGenCommonTemplateDir)&quot; --output-dir &quot;$(CodeGenOutputDir)&quot;" />
   </Target>
   <Target Name="IncludeCodeGenOutput" BeforeTargets="CoreCompile" DependsOnTargets="RunCodeGen">
     <ItemGroup>
