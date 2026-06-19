@@ -381,6 +381,40 @@ public sealed unsafe partial class LuauState
         return new Span<byte>((byte*)p, (int)len);
     }
 
+    public bool IsClass(int index)
+    {
+        CheckDisposed();
+        return NativeMethods.lua_type(ptr, index) == (int)LUA_TCLASS;
+    }
+
+    public LuauClass ToClass(int index)
+    {
+        CheckDisposed();
+        if (!IsClass(index))
+        {
+            throw new InvalidOperationException("Value at the specified index is not a class.");
+        }
+        NativeMethods.lua_pushvalue(ptr, index);
+        return new LuauClass(this, this.Ref());
+    }
+
+    public bool IsObject(int index)
+    {
+        CheckDisposed();
+        return NativeMethods.lua_type(ptr, index) == (int)LUA_TOBJECT;
+    }
+
+    public LuauObject ToObject(int index)
+    {
+        CheckDisposed();
+        if (!IsObject(index))
+        {
+            throw new InvalidOperationException("Value at the specified index is not an object.");
+        }
+        NativeMethods.lua_pushvalue(ptr, index);
+        return new LuauObject(this, this.Ref());
+    }
+
     public LuaValue ToLuaValue(int index)
     {
         CheckDisposed();
@@ -392,8 +426,16 @@ public sealed unsafe partial class LuauState
         {
             return LuaValue.FromBuffer(ToBuffer(index));
         }
-        // Default interface methods are inaccessible once shadowed by this class's
-        // own implementation, so we duplicate ILuaState.ToLuaValue's switch here.
+        if (IsClass(index))
+        {
+            return LuaValue.FromClass(ToClass(index));
+        }
+        if (IsObject(index))
+        {
+            return LuaValue.FromObject(ToObject(index));
+        }
+        // ILuaState.ToLuaValue is a regular member (not a default impl), so we
+        // duplicate its switch here rather than chain through the interface.
         var type = GetType(index);
         switch (type)
         {
@@ -448,6 +490,8 @@ public sealed unsafe partial class LuauState
                 PushVector(value.UnsafeRead<Vector3>());
                 return;
             case LuaValueType.Buffer:
+            case LuaValueType.Class:
+            case LuaValueType.Object:
                 PushValue(value.UnsafeRead<ILuaObject>().Reference);
                 return;
             default:
@@ -947,10 +991,8 @@ public sealed unsafe partial class LuauState
             LUA_TTHREAD => LuaValueType.Thread,
             LUA_TVECTOR => LuaValueType.Vector,
             LUA_TBUFFER => LuaValueType.Buffer,
-            // Class / Object are Luau-specific value types without a direct
-            // ILuaState equivalent — surface them as UserData.
-            LUA_TCLASS => LuaValueType.UserData,
-            LUA_TOBJECT => LuaValueType.UserData,
+            LUA_TCLASS => LuaValueType.Class,
+            LUA_TOBJECT => LuaValueType.Object,
             _ => throw new NotSupportedException($"Unsupported Lua type code: {code}"),
         };
     }

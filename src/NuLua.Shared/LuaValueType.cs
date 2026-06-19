@@ -13,4 +13,6 @@ public enum LuaValueType : byte
     UserData,
     Thread,
     Buffer,
+    Class,
+    Object,
 }

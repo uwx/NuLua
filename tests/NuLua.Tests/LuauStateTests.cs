@@ -141,4 +141,52 @@ public class LuauStateTests
         await Assert.That(state.IsVector(-1)).IsTrue();
         await Assert.That(state.ToVector(-1)).IsEqualTo(input);
     }
+
+    [Test]
+    public async Task IsClassAndIsObjectReturnFalseForNonClassValues()
+    {
+        // Luau's class/object types are gated behind the FFlag::DebugLuauUserDefinedClasses
+        // compiler flag, which we cannot toggle from C#, so we only assert that the
+        // detection methods return false for ordinary values here.
+        using var state = LuauState.Create();
+
+        state.PushNumber(1.0);
+        await Assert.That(state.IsClass(-1)).IsFalse();
+        await Assert.That(state.IsObject(-1)).IsFalse();
+
+        state.PushString("hello");
+        await Assert.That(state.IsClass(-1)).IsFalse();
+        await Assert.That(state.IsObject(-1)).IsFalse();
+    }
+
+    [Test]
+    public async Task ToClassThrowsWhenValueIsNotAClass()
+    {
+        using var state = LuauState.Create();
+        state.PushNumber(1.0);
+        await Assert.That(() => state.ToClass(-1)).Throws<InvalidOperationException>();
+    }
+
+    [Test]
+    public async Task ToObjectThrowsWhenValueIsNotAnObject()
+    {
+        using var state = LuauState.Create();
+        state.PushNumber(1.0);
+        await Assert.That(() => state.ToObject(-1)).Throws<InvalidOperationException>();
+    }
+
+    [Test]
+    public async Task LuaValueFromClassAndFromObjectSetCorrectType()
+    {
+        var dummy = new DummyLuaObject();
+        await Assert.That(LuaValue.FromClass(dummy).Type).IsEqualTo(LuaValueType.Class);
+        await Assert.That(LuaValue.FromObject(dummy).Type).IsEqualTo(LuaValueType.Object);
+    }
+
+    sealed class DummyLuaObject : ILuaObject
+    {
+        public LuaReference Reference => default;
+
+        public void Dispose() { }
+    }
 }
