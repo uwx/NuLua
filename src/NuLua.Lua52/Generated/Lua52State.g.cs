@@ -483,6 +483,11 @@ public sealed unsafe partial class Lua52State
     public void Arith(LuaArithmeticOperator op)
     {
         CheckDisposed();
+        if (TryArithBit32(op))
+        {
+            return;
+        }
+
         switch (op)
         {
             case LuaArithmeticOperator.Add:
@@ -508,6 +513,64 @@ public sealed unsafe partial class Lua52State
                 break;
             default:
                 throw new NotSupportedException($"Unsupported Lua arithmetic operator: {op}");
+        }
+    }
+
+    bool TryArithBit32(LuaArithmeticOperator op)
+    {
+        static int NormalizeShiftCount(long value) => (int)(value & 31);
+
+        switch (op)
+        {
+            case LuaArithmeticOperator.BNot:
+            {
+                var a = (uint)ToInteger(-1);
+                NativeMethods.lua_settop(ptr, NativeMethods.lua_gettop(ptr) - 1);
+                PushInteger((long)(uint)~a);
+                return true;
+            }
+            case LuaArithmeticOperator.BAnd:
+            {
+                var b = (uint)ToInteger(-1);
+                var a = (uint)ToInteger(-2);
+                NativeMethods.lua_settop(ptr, NativeMethods.lua_gettop(ptr) - 2);
+                PushInteger((long)(a & b));
+                return true;
+            }
+            case LuaArithmeticOperator.BOr:
+            {
+                var b = (uint)ToInteger(-1);
+                var a = (uint)ToInteger(-2);
+                NativeMethods.lua_settop(ptr, NativeMethods.lua_gettop(ptr) - 2);
+                PushInteger((long)(a | b));
+                return true;
+            }
+            case LuaArithmeticOperator.BXor:
+            {
+                var b = (uint)ToInteger(-1);
+                var a = (uint)ToInteger(-2);
+                NativeMethods.lua_settop(ptr, NativeMethods.lua_gettop(ptr) - 2);
+                PushInteger((long)(a ^ b));
+                return true;
+            }
+            case LuaArithmeticOperator.Shl:
+            {
+                var b = NormalizeShiftCount(ToInteger(-1));
+                var a = (uint)ToInteger(-2);
+                NativeMethods.lua_settop(ptr, NativeMethods.lua_gettop(ptr) - 2);
+                PushInteger((long)(a << b));
+                return true;
+            }
+            case LuaArithmeticOperator.Shr:
+            {
+                var b = NormalizeShiftCount(ToInteger(-1));
+                var a = (uint)ToInteger(-2);
+                NativeMethods.lua_settop(ptr, NativeMethods.lua_gettop(ptr) - 2);
+                PushInteger((long)(a >> b));
+                return true;
+            }
+            default:
+                return false;
         }
     }
 

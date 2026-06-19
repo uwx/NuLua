@@ -454,11 +454,16 @@ public sealed unsafe partial class LuaJitState
         NativeMethods.lua_pushcclosure(ptr, AsyncCFn, 1);
     }
 
-    static readonly byte[]?[] arithBytecodeCache = new byte[(int)LuaArithmeticOperator.Unm + 1][];
+    static readonly byte[]?[] arithBytecodeCache = new byte[(int)LuaArithmeticOperator.Shr + 1][];
 
     public void Arith(LuaArithmeticOperator op)
     {
         CheckDisposed();
+        if (TryArithBit32(op))
+        {
+            return;
+        }
+
         // Lua 5.1 / LuaJIT do not expose lua_arith; emulate by calling a
         // per-operator Lua snippet so that metamethods participate.
         ReadOnlySpan<byte> source;
@@ -545,6 +550,64 @@ public sealed unsafe partial class LuaJitState
 
         var callResult = NativeMethods.lua_pcall(ptr, argCount, 1, 0);
         CheckResult(callResult);
+    }
+
+    bool TryArithBit32(LuaArithmeticOperator op)
+    {
+        static int NormalizeShiftCount(long value) => (int)(value & 31);
+
+        switch (op)
+        {
+            case LuaArithmeticOperator.BNot:
+            {
+                var a = (uint)ToInteger(-1);
+                NativeMethods.lua_settop(ptr, NativeMethods.lua_gettop(ptr) - 1);
+                PushInteger((long)(uint)~a);
+                return true;
+            }
+            case LuaArithmeticOperator.BAnd:
+            {
+                var b = (uint)ToInteger(-1);
+                var a = (uint)ToInteger(-2);
+                NativeMethods.lua_settop(ptr, NativeMethods.lua_gettop(ptr) - 2);
+                PushInteger((long)(a & b));
+                return true;
+            }
+            case LuaArithmeticOperator.BOr:
+            {
+                var b = (uint)ToInteger(-1);
+                var a = (uint)ToInteger(-2);
+                NativeMethods.lua_settop(ptr, NativeMethods.lua_gettop(ptr) - 2);
+                PushInteger((long)(a | b));
+                return true;
+            }
+            case LuaArithmeticOperator.BXor:
+            {
+                var b = (uint)ToInteger(-1);
+                var a = (uint)ToInteger(-2);
+                NativeMethods.lua_settop(ptr, NativeMethods.lua_gettop(ptr) - 2);
+                PushInteger((long)(a ^ b));
+                return true;
+            }
+            case LuaArithmeticOperator.Shl:
+            {
+                var b = NormalizeShiftCount(ToInteger(-1));
+                var a = (uint)ToInteger(-2);
+                NativeMethods.lua_settop(ptr, NativeMethods.lua_gettop(ptr) - 2);
+                PushInteger((long)(a << b));
+                return true;
+            }
+            case LuaArithmeticOperator.Shr:
+            {
+                var b = NormalizeShiftCount(ToInteger(-1));
+                var a = (uint)ToInteger(-2);
+                NativeMethods.lua_settop(ptr, NativeMethods.lua_gettop(ptr) - 2);
+                PushInteger((long)(a >> b));
+                return true;
+            }
+            default:
+                return false;
+        }
     }
 
     public void Compare(LuaComparisonOperator op)

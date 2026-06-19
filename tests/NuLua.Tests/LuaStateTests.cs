@@ -339,6 +339,11 @@ public class LuaStateTests
         await Assert.That(state.Mod(44, 43).Read<double>()).IsEqualTo(1);
         await Assert.That(state.Pow(2, 5).Read<double>()).IsEqualTo(32);
         await Assert.That(state.Unm(42).Read<double>()).IsEqualTo(-42);
+        await Assert.That(state.BAnd(0b1100, 0b1010).Read<double>()).IsEqualTo(0b1000);
+        await Assert.That(state.BOr(0b1100, 0b1010).Read<double>()).IsEqualTo(0b1110);
+        await Assert.That(state.BXor(0b1100, 0b1010).Read<double>()).IsEqualTo(0b0110);
+        await Assert.That(state.Shl(3, 4).Read<double>()).IsEqualTo(48);
+        await Assert.That(state.Shr(48, 4).Read<double>()).IsEqualTo(3);
     }
 
     [Test]
