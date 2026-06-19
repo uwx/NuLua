@@ -332,12 +332,6 @@ public sealed unsafe partial class LuauState
         NativeMethods.lua_pushvector(ptr, value.X, value.Y, value.Z);
     }
 
-    public bool IsVector(int index)
-    {
-        CheckDisposed();
-        return NativeMethods.lua_type(ptr, index) == (int)LUA_TVECTOR;
-    }
-
     public Vector3 ToVector(int index)
     {
         var span = ToVectorSpan(index);
@@ -355,12 +349,6 @@ public sealed unsafe partial class LuauState
         return new Span<float>(p, 3);
     }
 
-    public bool IsBuffer(int index)
-    {
-        CheckDisposed();
-        return NativeMethods.lua_type(ptr, index) == (int)LUA_TBUFFER;
-    }
-
     public LuauBuffer NewBuffer(int size)
     {
         CheckDisposed();
@@ -371,7 +359,7 @@ public sealed unsafe partial class LuauState
     public LuauBuffer ToBuffer(int index)
     {
         CheckDisposed();
-        if (!IsBuffer(index))
+        if (GetType(index) != LuaValueType.Buffer)
         {
             throw new InvalidOperationException("Value at the specified index is not a buffer.");
         }
@@ -391,16 +379,10 @@ public sealed unsafe partial class LuauState
         return new Span<byte>((byte*)p, (int)len);
     }
 
-    public bool IsClass(int index)
-    {
-        CheckDisposed();
-        return NativeMethods.lua_type(ptr, index) == (int)LUA_TCLASS;
-    }
-
     public LuauClass ToClass(int index)
     {
         CheckDisposed();
-        if (!IsClass(index))
+        if (GetType(index) != LuaValueType.Class)
         {
             throw new InvalidOperationException("Value at the specified index is not a class.");
         }
@@ -408,16 +390,10 @@ public sealed unsafe partial class LuauState
         return new LuauClass(this, this.Ref());
     }
 
-    public bool IsObject(int index)
-    {
-        CheckDisposed();
-        return NativeMethods.lua_type(ptr, index) == (int)LUA_TOBJECT;
-    }
-
     public LuauObject ToObject(int index)
     {
         CheckDisposed();
-        if (!IsObject(index))
+        if (GetType(index) != LuaValueType.Object)
         {
             throw new InvalidOperationException("Value at the specified index is not an object.");
         }
@@ -428,24 +404,6 @@ public sealed unsafe partial class LuauState
     public LuaValue ToLuaValue(int index)
     {
         CheckDisposed();
-        if (IsVector(index))
-        {
-            return LuaValue.FromVector(ToVector(index));
-        }
-        if (IsBuffer(index))
-        {
-            return LuaValue.FromBuffer(ToBuffer(index));
-        }
-        if (IsClass(index))
-        {
-            return LuaValue.FromClass(ToClass(index));
-        }
-        if (IsObject(index))
-        {
-            return LuaValue.FromObject(ToObject(index));
-        }
-        // ILuaState.ToLuaValue is a regular member (not a default impl), so we
-        // duplicate its switch here rather than chain through the interface.
         var type = GetType(index);
         switch (type)
         {
@@ -457,6 +415,14 @@ public sealed unsafe partial class LuauState
                 return ToNumber(index);
             case LuaValueType.String:
                 return ToString(index);
+            case LuaValueType.Vector:
+                return LuaValue.FromVector(ToVector(index));
+            case LuaValueType.Buffer:
+                return LuaValue.FromBuffer(ToBuffer(index));
+            case LuaValueType.Class:
+                return LuaValue.FromClass(ToClass(index));
+            case LuaValueType.Object:
+                return LuaValue.FromObject(ToObject(index));
             case LuaValueType.Table:
             {
                 PushValue(index);

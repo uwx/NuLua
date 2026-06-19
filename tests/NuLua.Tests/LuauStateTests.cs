@@ -13,7 +13,7 @@ public class LuauStateTests
         var input = new Vector3(1.5f, -2.25f, 3.75f);
         state.PushVector(input);
 
-        await Assert.That(state.IsVector(-1)).IsTrue();
+        await Assert.That(state.GetType(-1)).IsEqualTo(LuaValueType.Vector);
         var output = state.ToVector(-1);
         await Assert.That(output).IsEqualTo(input);
     }
@@ -138,25 +138,25 @@ public class LuauStateTests
         var input = new Vector3(11f, 22f, 33f);
         state.Push(LuaValue.FromVector(input));
 
-        await Assert.That(state.IsVector(-1)).IsTrue();
+        await Assert.That(state.GetType(-1)).IsEqualTo(LuaValueType.Vector);
         await Assert.That(state.ToVector(-1)).IsEqualTo(input);
     }
 
     [Test]
-    public async Task IsClassAndIsObjectReturnFalseForNonClassValues()
+    public async Task GetTypeReportsNonClassForOrdinaryValues()
     {
         // Luau's class/object types are gated behind the FFlag::DebugLuauUserDefinedClasses
-        // compiler flag, which we cannot toggle from C#, so we only assert that the
-        // detection methods return false for ordinary values here.
+        // compiler flag, which we cannot toggle from C#, so we only assert that ordinary
+        // values report their own type here.
         using var state = LuauState.Create();
 
         state.PushNumber(1.0);
-        await Assert.That(state.IsClass(-1)).IsFalse();
-        await Assert.That(state.IsObject(-1)).IsFalse();
+        await Assert.That(state.GetType(-1)).IsNotEqualTo(LuaValueType.Class);
+        await Assert.That(state.GetType(-1)).IsNotEqualTo(LuaValueType.Object);
 
         state.PushString("hello");
-        await Assert.That(state.IsClass(-1)).IsFalse();
-        await Assert.That(state.IsObject(-1)).IsFalse();
+        await Assert.That(state.GetType(-1)).IsNotEqualTo(LuaValueType.Class);
+        await Assert.That(state.GetType(-1)).IsNotEqualTo(LuaValueType.Object);
     }
 
     [Test]
