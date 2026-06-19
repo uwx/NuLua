@@ -34,6 +34,28 @@ public sealed unsafe partial class LuauState
     const uint LUA_TCLASS = 12;
     const uint LUA_TOBJECT = 13;
 
+    public static LuauState CreateSandbox()
+    {
+        var state = Create();
+        NativeMethods.luaL_sandbox(state.ptr);
+        return state;
+    }
+
+    public void NewSandboxThread()
+    {
+        NewThread();
+        var thread = ToThread(-1);
+        NativeMethods.luaL_sandboxthread(thread.ptr);
+    }
+
+    public LuauState CreateSandboxThread()
+    {
+        NewThread();
+        var thread = ToThread(-1);
+        NativeMethods.luaL_sandboxthread(thread.ptr);
+        return thread;
+    }
+
     static LuauState GetMainState(lua_State* L)
     {
         var state = ptrToState[(nint)L];
@@ -144,18 +166,6 @@ public sealed unsafe partial class LuauState
     {
         CheckDisposed();
         OpenSingleLibrary(NativeMethods.luaopen_integer);
-    }
-
-    public void Sandbox()
-    {
-        CheckDisposed();
-        NativeMethods.luaL_sandbox(ptr);
-    }
-
-    public void SandboxThread()
-    {
-        CheckDisposed();
-        NativeMethods.luaL_sandboxthread(ptr);
     }
 
     public void LoadString(ReadOnlySpan<byte> utf8Code, ReadOnlySpan<byte> utf8ChunkName)
