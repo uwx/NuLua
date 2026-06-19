@@ -36,6 +36,8 @@ public static class LuaStateCases
             CreateAdderFunction<Lua51State>,
             CreateAsyncFunction<Lua51State>,
             UseModuleLoader<Lua51State>,
+            GetI: (s, i, n) => ((Lua51State)s).GetI(i, n),
+            SetI: (s, i, n) => ((Lua51State)s).SetI(i, n),
             SupportsUserValuePayload: false
         );
         yield return new(
@@ -45,6 +47,8 @@ public static class LuaStateCases
             CreateAdderFunction<Lua52State>,
             CreateAsyncFunction<Lua52State>,
             UseModuleLoader<Lua52State>,
+            GetI: (s, i, n) => ((Lua52State)s).GetI(i, n),
+            SetI: (s, i, n) => ((Lua52State)s).SetI(i, n),
             SupportsUserValuePayload: false
         );
         yield return new(
@@ -84,6 +88,8 @@ public static class LuaStateCases
             CreateAdderFunction<LuaJitState>,
             CreateAsyncFunction<LuaJitState>,
             UseModuleLoader<LuaJitState>,
+            GetI: (s, i, n) => ((LuaJitState)s).GetI(i, n),
+            SetI: (s, i, n) => ((LuaJitState)s).SetI(i, n),
             SupportsUserValuePayload: false
         );
         yield return new(
@@ -93,6 +99,8 @@ public static class LuaStateCases
             CreateAdderFunction<LuauState>,
             CreateAsyncFunction<LuauState>,
             UseModuleLoader<LuauState>,
+            GetI: (s, i, n) => ((LuauState)s).GetI(i, n),
+            SetI: (s, i, n) => ((LuauState)s).SetI(i, n),
             SupportsDump: false,
             SupportsUserValuePayload: false
         );

@@ -48,6 +48,8 @@ public interface ILuaState : ILuaObject
     void SetTable(int index);
     LuaValueType GetField(int index, ReadOnlySpan<char> name);
     void SetField(int index, ReadOnlySpan<char> name);
+    LuaValueType GetI(int index, long n);
+    void SetI(int index, long n);
     void Next(int index);
 
     void NewUserData(int size, int userValueCount);

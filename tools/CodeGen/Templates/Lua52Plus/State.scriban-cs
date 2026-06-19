@@ -403,21 +403,35 @@ public sealed unsafe partial class {{ name }}State
             nameBytes.Pointer
         );
     }
-{{~ if version >= 503 ~}}
 
     public LuaValueType GetI(int index, long n)
     {
         CheckDisposed();
+{{~ if version >= 503 ~}}
         var t = (uint)NativeMethods.lua_geti(ptr, index, n);
         return CodeToType(t);
+{{~ else ~}}
+        // Lua 5.2 lacks lua_geti; emulate with a pushinteger + gettable pair.
+        var absIndex = GetAbsIndex(index);
+        NativeMethods.lua_pushinteger(ptr, (nint)n);
+        NativeMethods.lua_gettable(ptr, absIndex);
+        return CodeToType((uint)NativeMethods.lua_type(ptr, -1));
+{{~ end ~}}
     }
 
     public void SetI(int index, long n)
     {
         CheckDisposed();
+{{~ if version >= 503 ~}}
         NativeMethods.lua_seti(ptr, index, n);
-    }
+{{~ else ~}}
+        // Lua 5.2 lacks lua_seti; emulate by inserting the key under the value.
+        var absIndex = GetAbsIndex(index);
+        NativeMethods.lua_pushinteger(ptr, (nint)n);
+        NativeMethods.lua_insert(ptr, -2);
+        NativeMethods.lua_settable(ptr, absIndex);
 {{~ end ~}}
+    }
 
     public void NewUserData(int size, int userValueCount)
     {

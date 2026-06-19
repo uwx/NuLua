@@ -381,6 +381,26 @@ public sealed unsafe partial class LuauState
         NativeMethods.lua_setfield(ptr, index, nameBytes.Pointer);
     }
 
+    public LuaValueType GetI(int index, long n)
+    {
+        CheckDisposed();
+        // Luau lacks lua_geti; emulate with a pushinteger + gettable pair.
+        var absIndex = NativeMethods.lua_absindex(ptr, index);
+        NativeMethods.lua_pushinteger(ptr, (int)n);
+        _ = NativeMethods.lua_gettable(ptr, absIndex);
+        return CodeToType((uint)NativeMethods.lua_type(ptr, -1));
+    }
+
+    public void SetI(int index, long n)
+    {
+        CheckDisposed();
+        // Luau lacks lua_seti; emulate by inserting the key under the value.
+        var absIndex = NativeMethods.lua_absindex(ptr, index);
+        NativeMethods.lua_pushinteger(ptr, (int)n);
+        NativeMethods.lua_insert(ptr, -2);
+        NativeMethods.lua_settable(ptr, absIndex);
+    }
+
     public void NewUserData(int size, int userValueCount)
     {
         CheckDisposed();
