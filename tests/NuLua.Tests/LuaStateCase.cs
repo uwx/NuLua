@@ -15,7 +15,7 @@ public sealed record LuaStateCase(
     Func<ILuaState, LuaFunction> CreateAdderFunction,
     Func<ILuaState, AsyncLuaFunc<ILuaState>, AsyncLuaFunction> CreateAsyncFunction,
     Action<ILuaState, LuaModuleLoader> UseModuleLoader,
-    Func<ILuaState, int, long, LuaValueType>? GetI = null,
+    Action<ILuaState, int, long>? GetI = null,
     Action<ILuaState, int, long>? SetI = null,
     bool SupportsArithmetic = true,
     bool SupportsDump = true,

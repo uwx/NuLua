@@ -26,13 +26,13 @@ public class LuaStateFieldAccessTests
         state.PushString("value");
         state.SetField(-2, "key");
 
-        var type = state.GetField(-1, "key");
-        await Assert.That(type).IsEqualTo(LuaValueType.String);
+        state.GetField(-1, "key");
+        await Assert.That(state.GetType(-1)).IsEqualTo(LuaValueType.String);
         await Assert.That(state.ToString(-1)).IsEqualTo("value");
         state.Pop(1);
 
-        var missing = state.GetField(-1, "missing");
-        await Assert.That(missing).IsEqualTo(LuaValueType.Nil);
+        state.GetField(-1, "missing");
+        await Assert.That(state.GetType(-1)).IsEqualTo(LuaValueType.Nil);
         state.Pop(2);
     }
 
@@ -46,8 +46,8 @@ public class LuaStateFieldAccessTests
         state.GetGlobal("string");
         await Assert.That(state.GetType(-1)).IsEqualTo(LuaValueType.Table);
 
-        var formatType = state.GetField(-1, "format");
-        await Assert.That(formatType).IsEqualTo(LuaValueType.Function);
+        state.GetField(-1, "format");
+        await Assert.That(state.GetType(-1)).IsEqualTo(LuaValueType.Function);
         state.Pop(2);
     }
 
@@ -69,18 +69,18 @@ public class LuaStateFieldAccessTests
         state.PushString("second");
         lua.SetI(state, -2, 2);
 
-        var t1 = lua.GetI(state, -1, 1);
-        await Assert.That(t1).IsEqualTo(LuaValueType.String);
+        lua.GetI(state, -1, 1);
+        await Assert.That(state.GetType(-1)).IsEqualTo(LuaValueType.String);
         await Assert.That(state.ToString(-1)).IsEqualTo("first");
         state.Pop(1);
 
-        var t2 = lua.GetI(state, -1, 2);
-        await Assert.That(t2).IsEqualTo(LuaValueType.String);
+        lua.GetI(state, -1, 2);
+        await Assert.That(state.GetType(-1)).IsEqualTo(LuaValueType.String);
         await Assert.That(state.ToString(-1)).IsEqualTo("second");
         state.Pop(1);
 
-        var tMissing = lua.GetI(state, -1, 99);
-        await Assert.That(tMissing).IsEqualTo(LuaValueType.Nil);
+        lua.GetI(state, -1, 99);
+        await Assert.That(state.GetType(-1)).IsEqualTo(LuaValueType.Nil);
         state.Pop(2);
     }
 }

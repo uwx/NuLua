@@ -309,7 +309,7 @@ public sealed unsafe partial class Lua51State
         NativeMethods.lua_gettable(ptr, index);
     }
 
-    public LuaValueType GetField(int index, ReadOnlySpan<char> name)
+    public void GetField(int index, ReadOnlySpan<char> name)
     {
         CheckDisposed();
         using var nameBytes = new CString(name);
@@ -318,7 +318,6 @@ public sealed unsafe partial class Lua51State
             index,
             nameBytes.Pointer
         );
-        return CodeToType((uint)NativeMethods.lua_type(ptr, -1));
     }
 
     public void SetField(int index, ReadOnlySpan<char> name)
@@ -332,14 +331,13 @@ public sealed unsafe partial class Lua51State
         );
     }
 
-    public LuaValueType GetI(int index, long n)
+    public void GetI(int index, long n)
     {
         CheckDisposed();
         // Lua 5.1 / LuaJIT lack lua_geti; emulate with a pushinteger + gettable pair.
         var absIndex = GetAbsIndex(index);
         NativeMethods.lua_pushinteger(ptr, (nint)n);
         NativeMethods.lua_gettable(ptr, absIndex);
-        return CodeToType((uint)NativeMethods.lua_type(ptr, -1));
     }
 
     public void SetI(int index, long n)
