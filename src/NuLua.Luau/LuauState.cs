@@ -1,4 +1,5 @@
 using System.Buffers;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -313,6 +314,102 @@ public sealed unsafe partial class LuauState
     {
         CheckDisposed();
         NativeMethods.lua_pushlightuserdatatagged(ptr, (void*)data, 0);
+    }
+
+    public void PushVector(Vector3 value)
+    {
+        CheckDisposed();
+        NativeMethods.lua_pushvector(ptr, value.X, value.Y, value.Z);
+    }
+
+    public bool IsVector(int index)
+    {
+        CheckDisposed();
+        return NativeMethods.lua_type(ptr, index) == (int)LUA_TVECTOR;
+    }
+
+    public Vector3 ToVector(int index)
+    {
+        var span = ToVectorSpan(index);
+        return new Vector3(span[0], span[1], span[2]);
+    }
+
+    public Span<float> ToVectorSpan(int index)
+    {
+        CheckDisposed();
+        var p = NativeMethods.lua_tovector(ptr, index);
+        if (p == null)
+        {
+            throw new InvalidOperationException("Value at the specified index is not a vector.");
+        }
+        return new Span<float>(p, 3);
+    }
+
+    public bool IsBuffer(int index)
+    {
+        CheckDisposed();
+        return NativeMethods.lua_type(ptr, index) == (int)LUA_TBUFFER;
+    }
+
+    public LuauBuffer NewBuffer(int size)
+    {
+        CheckDisposed();
+        _ = NativeMethods.lua_newbuffer(ptr, (nuint)size);
+        return new LuauBuffer(this, this.Ref());
+    }
+
+    public LuauBuffer ToBuffer(int index)
+    {
+        CheckDisposed();
+        if (!IsBuffer(index))
+        {
+            throw new InvalidOperationException("Value at the specified index is not a buffer.");
+        }
+        NativeMethods.lua_pushvalue(ptr, index);
+        return new LuauBuffer(this, this.Ref());
+    }
+
+    public Span<byte> ToBufferSpan(int index)
+    {
+        CheckDisposed();
+        nuint len;
+        var p = NativeMethods.lua_tobuffer(ptr, index, &len);
+        if (p == null)
+        {
+            throw new InvalidOperationException("Value at the specified index is not a buffer.");
+        }
+        return new Span<byte>((byte*)p, (int)len);
+    }
+
+    public LuaValue ToLuaValue(int index)
+    {
+        CheckDisposed();
+        if (IsVector(index))
+        {
+            return LuaValue.FromVector(ToVector(index));
+        }
+        if (IsBuffer(index))
+        {
+            return LuaValue.FromBuffer(ToBuffer(index));
+        }
+        return ((ILuaState)this).ToLuaValue(index);
+    }
+
+    public void Push(LuaValue value)
+    {
+        CheckDisposed();
+        switch (value.Type)
+        {
+            case LuaValueType.Vector:
+                PushVector(value.UnsafeRead<Vector3>());
+                return;
+            case LuaValueType.Buffer:
+                PushValue(value.UnsafeRead<ILuaObject>().Reference);
+                return;
+            default:
+                ((ILuaState)this).Push(value);
+                return;
+        }
     }
 
     public void PushValue(LuaReference reference)

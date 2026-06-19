@@ -71,6 +71,11 @@ public readonly struct LuaValue : IEquatable<LuaValue>
         return new(LuaValueType.Thread, default, value);
     }
 
+    public static LuaValue FromBuffer(ILuaObject value)
+    {
+        return new(LuaValueType.Buffer, default, value);
+    }
+
     readonly LuaValueType type;
     readonly ValueUnion value;
     readonly object? reference;
@@ -98,6 +103,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>
             LuaValueType.Function => ((LuaFunctionBase)reference!).ToString()!,
             LuaValueType.UserData => ((LuaUserData)reference!).ToString()!,
             LuaValueType.Thread => ((ILuaState)reference!).ToString()!,
+            LuaValueType.Buffer => ((ILuaObject)reference!).ToString()!,
             _ => "",
         };
     }
@@ -341,6 +347,20 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                 if (typeof(T) == typeof(object))
                 {
                     var r = (object)(ILuaState)reference!;
+                    result = Unsafe.As<object, T>(ref r)!;
+                    return true;
+                }
+                break;
+            case LuaValueType.Buffer:
+                if (typeof(ILuaObject).IsAssignableFrom(typeof(T)))
+                {
+                    var r = (ILuaObject)reference!;
+                    result = Unsafe.As<ILuaObject, T>(ref r)!;
+                    return true;
+                }
+                if (typeof(T) == typeof(object))
+                {
+                    var r = reference!;
                     result = Unsafe.As<object, T>(ref r)!;
                     return true;
                 }

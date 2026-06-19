@@ -1,0 +1,130 @@
+using System.Numerics;
+using NuLua.Luau;
+
+namespace NuLua.Tests;
+
+public class LuauStateTests
+{
+    [Test]
+    public async Task PushVectorAndToVectorRoundTripsComponents()
+    {
+        using var state = LuauState.Create();
+
+        var input = new Vector3(1.5f, -2.25f, 3.75f);
+        state.PushVector(input);
+
+        await Assert.That(state.IsVector(-1)).IsTrue();
+        var output = state.ToVector(-1);
+        await Assert.That(output).IsEqualTo(input);
+    }
+
+    [Test]
+    public async Task ToVectorThrowsWhenValueIsNotAVector()
+    {
+        using var state = LuauState.Create();
+        state.PushNumber(1.0);
+        await Assert.That(() => state.ToVector(-1)).Throws<InvalidOperationException>();
+    }
+
+    [Test]
+    public async Task NewBufferReturnsBufferOfRequestedSize()
+    {
+        using var state = LuauState.Create();
+
+        using var buffer = state.NewBuffer(16);
+
+        await Assert.That(buffer.Length).IsEqualTo(16);
+    }
+
+    [Test]
+    public async Task LuauBufferIndexerWritesAndReadsBytes()
+    {
+        using var state = LuauState.Create();
+
+        using var buffer = state.NewBuffer(4);
+        buffer[0] = 10;
+        buffer[1] = 20;
+        buffer[2] = 30;
+        buffer[3] = 40;
+
+        await Assert.That(buffer[0]).IsEqualTo((byte)10);
+        await Assert.That(buffer[3]).IsEqualTo((byte)40);
+    }
+
+    [Test]
+    public async Task LuauBufferCopyFromAndToArrayRoundTripsBytes()
+    {
+        using var state = LuauState.Create();
+
+        using var buffer = state.NewBuffer(5);
+        buffer.CopyFrom(new byte[] { 1, 2, 3, 4, 5 });
+
+        var copy = buffer.ToArray();
+        await Assert.That(copy.Length).IsEqualTo(5);
+        await Assert.That(copy[0]).IsEqualTo((byte)1);
+        await Assert.That(copy[4]).IsEqualTo((byte)5);
+    }
+
+    [Test]
+    public async Task ToLuauBufferWrapsExistingBufferOnStack()
+    {
+        using var state = LuauState.Create();
+
+        using var original = state.NewBuffer(3);
+        original[0] = 7;
+        original[1] = 8;
+        original[2] = 9;
+
+        state.PushValue(original.Reference);
+        using var wrapped = state.ToBuffer(-1);
+        state.Pop(1);
+
+        await Assert.That(wrapped.Length).IsEqualTo(3);
+        await Assert.That(wrapped[0]).IsEqualTo((byte)7);
+        await Assert.That(wrapped[2]).IsEqualTo((byte)9);
+    }
+
+    [Test]
+    public async Task LuauToLuaValueReturnsVectorTypeForVectors()
+    {
+        using var state = LuauState.Create();
+
+        var input = new Vector3(4f, 5f, 6f);
+        state.PushVector(input);
+
+        var value = state.ToLuaValue(-1);
+        await Assert.That(value.Type).IsEqualTo(LuaValueType.Vector);
+        await Assert.That(value.Read<Vector3>()).IsEqualTo(input);
+    }
+
+    [Test]
+    public async Task LuauToLuaValueReturnsBufferTypeForBuffers()
+    {
+        using var state = LuauState.Create();
+
+        using var buffer = state.NewBuffer(2);
+        buffer[0] = 100;
+        buffer[1] = 200;
+
+        state.PushValue(buffer.Reference);
+        var value = state.ToLuaValue(-1);
+        state.Pop(1);
+
+        await Assert.That(value.Type).IsEqualTo(LuaValueType.Buffer);
+        using var read = value.Read<LuauBuffer>();
+        await Assert.That(read.Length).IsEqualTo(2);
+        await Assert.That(read[0]).IsEqualTo((byte)100);
+    }
+
+    [Test]
+    public async Task LuauPushHandlesVectorLuaValue()
+    {
+        using var state = LuauState.Create();
+
+        var input = new Vector3(11f, 22f, 33f);
+        state.Push(LuaValue.FromVector(input));
+
+        await Assert.That(state.IsVector(-1)).IsTrue();
+        await Assert.That(state.ToVector(-1)).IsEqualTo(input);
+    }
+}
