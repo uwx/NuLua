@@ -224,6 +224,55 @@ public sealed unsafe partial class {{ name }}State : ILuaState<{{ name }}State>
     }
 
     ILuaState ILuaState.ToThread(int index) => ToThread(index);
+{{~ if name != "Luau" ~}}
+
+    public LuaValue ToLuaValue(int index)
+    {
+        var type = GetType(index);
+        switch (type)
+        {
+            case LuaValueType.Nil:
+                return LuaValue.Nil;
+            case LuaValueType.Boolean:
+                return ToBoolean(index);
+            case LuaValueType.Number:
+                return ToNumber(index);
+            case LuaValueType.String:
+                return ToString(index);
+            case LuaValueType.Table:
+            {
+                PushValue(index);
+                var reference = this.Ref();
+                this.Pop(1);
+                return new LuaTable(this, reference);
+            }
+            case LuaValueType.Function:
+            {
+                PushValue(index);
+                var reference = this.Ref();
+                this.Pop(1);
+                return new LuaFunction(this, reference);
+            }
+            case LuaValueType.Thread:
+            {
+                PushValue(index);
+                var reference = this.Ref();
+                this.Pop(1);
+                PushValue(reference);
+                return LuaValue.FromThread(ToThread(-1));
+            }
+            case LuaValueType.UserData:
+            {
+                PushValue(index);
+                var reference = this.Ref();
+                this.Pop(1);
+                return new LuaUserData(this, reference);
+            }
+            default:
+                throw new NotSupportedException($"Unsupported Lua value type: {type}");
+        }
+    }
+{{~ end ~}}
 
     public void* ToPointer(int index)
     {

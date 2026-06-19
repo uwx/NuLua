@@ -39,6 +39,7 @@ public interface ILuaState : ILuaObject
     string ToString(int index);
     nint ToUserDataPointer(int index);
     ILuaState ToThread(int index);
+    LuaValue ToLuaValue(int index);
 
     void GetGlobal(ReadOnlySpan<char> name);
     void SetGlobal(ReadOnlySpan<char> name);

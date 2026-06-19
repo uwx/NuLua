@@ -101,53 +101,6 @@ public static class LuaStateExtensions
         return new LuaUserData(state, state.ToReference(index));
     }
 
-    public static LuaValue ToLuaValue(this ILuaState state, int index)
-    {
-        var type = state.GetType(index);
-        switch (type)
-        {
-            case LuaValueType.Nil:
-                return LuaValue.Nil;
-            case LuaValueType.Boolean:
-                return state.ToBoolean(index);
-            case LuaValueType.Number:
-                return state.ToNumber(index);
-            case LuaValueType.String:
-                return state.ToString(index);
-            case LuaValueType.Table:
-            {
-                state.PushValue(index);
-                var reference = state.Ref();
-                state.Pop(1);
-                return new LuaTable(state, reference);
-            }
-            case LuaValueType.Function:
-            {
-                state.PushValue(index);
-                var reference = state.Ref();
-                state.Pop(1);
-                return new LuaFunction(state, reference);
-            }
-            case LuaValueType.Thread:
-            {
-                state.PushValue(index);
-                var reference = state.Ref();
-                state.Pop(1);
-                state.PushValue(reference);
-                return LuaValue.FromThread(state.ToThread(-1));
-            }
-            case LuaValueType.UserData:
-            {
-                state.PushValue(index);
-                var reference = state.Ref();
-                state.Pop(1);
-                return new LuaUserData(state, reference);
-            }
-            default:
-                throw new NotSupportedException($"Unsupported Lua value type: {type}");
-        }
-    }
-
     public static LuaReference Ref(this ILuaState state)
     {
         return state.Ref(state.RegistryIndex);

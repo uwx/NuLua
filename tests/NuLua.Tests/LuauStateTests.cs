@@ -27,6 +27,20 @@ public class LuauStateTests
     }
 
     [Test]
+    public async Task GetTypeReportsVectorAndBufferForLuauValues()
+    {
+        using var state = LuauState.Create();
+
+        state.PushVector(new Vector3(1f, 2f, 3f));
+        await Assert.That(state.GetType(-1)).IsEqualTo(LuaValueType.Vector);
+
+        using var buffer = state.NewBuffer(4);
+        state.PushValue(buffer.Reference);
+        await Assert.That(state.GetType(-1)).IsEqualTo(LuaValueType.Buffer);
+        state.Pop(1);
+    }
+
+    [Test]
     public async Task NewBufferReturnsBufferOfRequestedSize()
     {
         using var state = LuauState.Create();

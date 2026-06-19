@@ -392,7 +392,51 @@ public sealed unsafe partial class LuauState
         {
             return LuaValue.FromBuffer(ToBuffer(index));
         }
-        return ((ILuaState)this).ToLuaValue(index);
+        // Default interface methods are inaccessible once shadowed by this class's
+        // own implementation, so we duplicate ILuaState.ToLuaValue's switch here.
+        var type = GetType(index);
+        switch (type)
+        {
+            case LuaValueType.Nil:
+                return LuaValue.Nil;
+            case LuaValueType.Boolean:
+                return ToBoolean(index);
+            case LuaValueType.Number:
+                return ToNumber(index);
+            case LuaValueType.String:
+                return ToString(index);
+            case LuaValueType.Table:
+            {
+                PushValue(index);
+                var reference = this.Ref();
+                this.Pop(1);
+                return new LuaTable(this, reference);
+            }
+            case LuaValueType.Function:
+            {
+                PushValue(index);
+                var reference = this.Ref();
+                this.Pop(1);
+                return new LuaFunction(this, reference);
+            }
+            case LuaValueType.Thread:
+            {
+                PushValue(index);
+                var reference = this.Ref();
+                this.Pop(1);
+                PushValue(reference);
+                return LuaValue.FromThread(ToThread(-1));
+            }
+            case LuaValueType.UserData:
+            {
+                PushValue(index);
+                var reference = this.Ref();
+                this.Pop(1);
+                return new LuaUserData(this, reference);
+            }
+            default:
+                throw new NotSupportedException($"Unsupported Lua value type: {type}");
+        }
     }
 
     public void Push(LuaValue value)
@@ -901,10 +945,10 @@ public sealed unsafe partial class LuauState
             LUA_TFUNCTION => LuaValueType.Function,
             LUA_TUSERDATA => LuaValueType.UserData,
             LUA_TTHREAD => LuaValueType.Thread,
-            // Vector / Buffer / Class / Object are Luau-specific value types
-            // without a direct ILuaState equivalent — surface them as UserData.
-            LUA_TVECTOR => LuaValueType.UserData,
-            LUA_TBUFFER => LuaValueType.UserData,
+            LUA_TVECTOR => LuaValueType.Vector,
+            LUA_TBUFFER => LuaValueType.Buffer,
+            // Class / Object are Luau-specific value types without a direct
+            // ILuaState equivalent — surface them as UserData.
             LUA_TCLASS => LuaValueType.UserData,
             LUA_TOBJECT => LuaValueType.UserData,
             _ => throw new NotSupportedException($"Unsupported Lua type code: {code}"),
