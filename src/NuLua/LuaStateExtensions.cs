@@ -353,6 +353,24 @@ public static class LuaStateExtensions
         return state.GetTop() - baseTop;
     }
 
+    public static LuaValue[] Resume(this ILuaState state, params ReadOnlySpan<LuaValue> args)
+    {
+        foreach (var arg in args)
+        {
+            state.Push(arg);
+        }
+        state.Resume(args.Length);
+
+        var resultCount = state.GetTop();
+        var results = new LuaValue[resultCount];
+        for (int i = 0; i < resultCount; i++)
+        {
+            results[i] = state.ToLuaValue(i + 1);
+        }
+        state.SetTop(0);
+        return results;
+    }
+
     public static LuaValue[] DoString(
         this ILuaState state,
         ReadOnlySpan<char> code,
