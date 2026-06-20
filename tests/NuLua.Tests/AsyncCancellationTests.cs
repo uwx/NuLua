@@ -2,7 +2,7 @@ namespace NuLua.Tests;
 
 public class AsyncCancellationTests
 {
-    static AsyncLuaFunction RegisterWait(LuaStateCase lua, ILuaState state, string name = "wait")
+    static LuaFunction RegisterWait(LuaStateCase lua, ILuaState state, string name = "wait")
     {
         var func = lua.CreateAsyncFunction(
             state,
