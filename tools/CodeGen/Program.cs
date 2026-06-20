@@ -11,7 +11,8 @@ static int Run(
     string commonTemplateDir,
     string outputDir,
     string? dialectTemplateDir = null,
-    bool isJit = false
+    bool isJit = false,
+    string? excludeTemplates = null
 )
 {
     Directory.CreateDirectory(outputDir);
@@ -27,8 +28,19 @@ static int Run(
         templateDirs.Add(dialectTemplateDir);
     }
 
+    var excluded = excludeTemplates is null
+        ? new HashSet<string>(StringComparer.Ordinal)
+        : new HashSet<string>(
+            excludeTemplates.Split(
+                ',',
+                StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
+            ),
+            StringComparer.Ordinal
+        );
+
     var templates = templateDirs
         .SelectMany(dir => Directory.GetFiles(dir, "*.scriban-cs", SearchOption.TopDirectoryOnly))
+        .Where(path => !excluded.Contains(Path.GetFileNameWithoutExtension(path)))
         .ToArray();
     if (templates.Length == 0)
     {
