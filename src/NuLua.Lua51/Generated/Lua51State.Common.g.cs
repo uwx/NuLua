@@ -10,7 +10,7 @@ using NuLua.Interop.Lua51;
 
 namespace NuLua.Lua51;
 
-public sealed unsafe partial class Lua51State : ILuaState<Lua51State>
+public sealed unsafe partial class Lua51State : ILuaState<Lua51State>, ILuaDebug, ILuaGarbageCollection
 {
     static readonly ConcurrentDictionary<nint, Lua51State> ptrToState = new();
 
@@ -388,31 +388,34 @@ public sealed unsafe partial class Lua51State : ILuaState<Lua51State>
         return NativeMethods.luaL_newmetatable(ptr, cName.Pointer) != 0;
     }
 
-    public void StopGC()
+    public ILuaDebug Debug => this;
+    public ILuaGarbageCollection GarbageCollection => this;
+
+    void ILuaGarbageCollection.Stop()
     {
         CheckDisposed();
         _ = NativeMethods.lua_gc(ptr, (int)NativeMethods.LUA_GCSTOP, 0);
     }
 
-    public void RestartGC()
+    void ILuaGarbageCollection.Restart()
     {
         CheckDisposed();
         _ = NativeMethods.lua_gc(ptr, (int)NativeMethods.LUA_GCRESTART, 0);
     }
 
-    public void CollectGC()
+    void ILuaGarbageCollection.Collect()
     {
         CheckDisposed();
         _ = NativeMethods.lua_gc(ptr, (int)NativeMethods.LUA_GCCOLLECT, 0);
     }
 
-    public int StepGC(int stepSize)
+    int ILuaGarbageCollection.Step(int stepSize)
     {
         CheckDisposed();
         return NativeMethods.lua_gc(ptr, (int)NativeMethods.LUA_GCSTEP, stepSize);
     }
 
-    public long GetGCByteCount()
+    long ILuaGarbageCollection.GetByteCount()
     {
         CheckDisposed();
         var kb = NativeMethods.lua_gc(ptr, (int)NativeMethods.LUA_GCCOUNT, 0);
@@ -420,12 +423,12 @@ public sealed unsafe partial class Lua51State : ILuaState<Lua51State>
         return (long)kb * 1024L + b;
     }
 
-    public bool IsGCRunning()
+    bool ILuaGarbageCollection.IsRunning()
     {
         CheckDisposed();
         // Lua 5.1 has no LUA_GCISRUNNING; LuaJIT (which uses the Lua51 dialect template) adds it
         // separately via its own State.scriban-cs.
-        throw new NotSupportedException("IsGCRunning is not supported on Lua 5.1.");
+        throw new NotSupportedException("IsRunning is not supported on Lua 5.1.");
     }
 
     ValueTask ILuaState.CompleteAsync(int initialArgCount, CancellationToken cancellationToken)

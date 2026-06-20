@@ -10,7 +10,7 @@ using NuLua.Interop.Lua54;
 
 namespace NuLua.Lua54;
 
-public sealed unsafe partial class Lua54State : ILuaState<Lua54State>
+public sealed unsafe partial class Lua54State : ILuaState<Lua54State>, ILuaDebug, ILuaGarbageCollection
 {
     static readonly ConcurrentDictionary<nint, Lua54State> ptrToState = new();
 
@@ -388,31 +388,34 @@ public sealed unsafe partial class Lua54State : ILuaState<Lua54State>
         return NativeMethods.luaL_newmetatable(ptr, cName.Pointer) != 0;
     }
 
-    public void StopGC()
+    public ILuaDebug Debug => this;
+    public ILuaGarbageCollection GarbageCollection => this;
+
+    void ILuaGarbageCollection.Stop()
     {
         CheckDisposed();
         _ = NativeMethods.lua_gc(ptr, (int)NativeMethods.LUA_GCSTOP);
     }
 
-    public void RestartGC()
+    void ILuaGarbageCollection.Restart()
     {
         CheckDisposed();
         _ = NativeMethods.lua_gc(ptr, (int)NativeMethods.LUA_GCRESTART);
     }
 
-    public void CollectGC()
+    void ILuaGarbageCollection.Collect()
     {
         CheckDisposed();
         _ = NativeMethods.lua_gc(ptr, (int)NativeMethods.LUA_GCCOLLECT);
     }
 
-    public int StepGC(int stepSize)
+    int ILuaGarbageCollection.Step(int stepSize)
     {
         CheckDisposed();
         return NativeMethods.lua_gc(ptr, (int)NativeMethods.LUA_GCSTEP, stepSize);
     }
 
-    public long GetGCByteCount()
+    long ILuaGarbageCollection.GetByteCount()
     {
         CheckDisposed();
         var kb = NativeMethods.lua_gc(ptr, (int)NativeMethods.LUA_GCCOUNT);
@@ -420,7 +423,7 @@ public sealed unsafe partial class Lua54State : ILuaState<Lua54State>
         return (long)kb * 1024L + b;
     }
 
-    public bool IsGCRunning()
+    bool ILuaGarbageCollection.IsRunning()
     {
         CheckDisposed();
         return NativeMethods.lua_gc(ptr, (int)NativeMethods.LUA_GCISRUNNING) != 0;

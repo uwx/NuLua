@@ -15,7 +15,7 @@ public class LuaDebugTests
         state.Call(0, 1);
 
         // Stack: [function]
-        var name = state.GetUpvalue(-1, 1);
+        var name = state.Debug.GetUpvalue(-1, 1);
 
         await Assert.That(name).IsEqualTo("x");
         await Assert.That(state.GetType(-1)).IsEqualTo(LuaValueType.String);
@@ -31,7 +31,7 @@ public class LuaDebugTests
         state.Call(0, 1);
 
         state.PushString("after");
-        var name = state.SetUpvalue(-2, 1);
+        var name = state.Debug.SetUpvalue(-2, 1);
 
         await Assert.That(name).IsEqualTo("x");
 
@@ -48,7 +48,7 @@ public class LuaDebugTests
         state.LoadDebuggable("return function() end", "chunk");
         state.Call(0, 1);
 
-        var name = state.GetUpvalue(-1, 99);
+        var name = state.Debug.GetUpvalue(-1, 99);
 
         await Assert.That(name).IsNull();
     }
@@ -59,7 +59,7 @@ public class LuaDebugTests
     {
         using var state = lua.CreateState();
 
-        var ok = state.TryGetStackInfo(99, LuaDebugInfoFields.Source, out _);
+        var ok = state.Debug.TryGetStackInfo(99, LuaDebugInfoFields.Source, out _);
 
         await Assert.That(ok).IsFalse();
     }
@@ -74,7 +74,7 @@ public class LuaDebugTests
         var probe = state.CreateProbeFunction(s =>
         {
             if (
-                s.TryGetStackInfo(
+                s.Debug.TryGetStackInfo(
                     1,
                     LuaDebugInfoFields.Source | LuaDebugInfoFields.CurrentLine,
                     out var info
@@ -104,7 +104,7 @@ public class LuaDebugTests
         var probe = state.CreateProbeFunction(s =>
         {
             // level 1 is the caller (Lua function) which has a local "x"
-            var name = s.GetLocal(1, 1);
+            var name = s.Debug.GetLocal(1, 1);
             capturedName = name;
             if (name != null)
             {
@@ -113,7 +113,7 @@ public class LuaDebugTests
 
                 // Overwrite with new value
                 s.PushNumber(99);
-                _ = s.SetLocal(1, 1);
+                _ = s.Debug.SetLocal(1, 1);
             }
         });
 

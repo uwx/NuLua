@@ -13,7 +13,7 @@ public sealed unsafe partial class Lua53State
     LuaHook<Lua53State>? hookDelegate;
     NativeMethods.lua_sethook_func_delegate? hookCallback;
 
-    public int GetStackDepth()
+    int ILuaDebug.GetStackDepth()
     {
         CheckDisposed();
         lua_Debug ar;
@@ -25,7 +25,7 @@ public sealed unsafe partial class Lua53State
         return depth;
     }
 
-    public bool TryGetStackInfo(int level, LuaDebugInfoFields fields, out LuaDebugInfo info)
+    bool ILuaDebug.TryGetStackInfo(int level, LuaDebugInfoFields fields, out LuaDebugInfo info)
     {
         CheckDisposed();
         lua_Debug ar;
@@ -38,7 +38,7 @@ public sealed unsafe partial class Lua53State
         return true;
     }
 
-    public string? GetLocal(int level, int n)
+    string? ILuaDebug.GetLocal(int level, int n)
     {
         CheckDisposed();
         lua_Debug ar;
@@ -50,7 +50,7 @@ public sealed unsafe partial class Lua53State
         return name == null ? null : Utf8NullTerminated(name);
     }
 
-    public string? SetLocal(int level, int n)
+    string? ILuaDebug.SetLocal(int level, int n)
     {
         CheckDisposed();
         lua_Debug ar;
@@ -62,14 +62,14 @@ public sealed unsafe partial class Lua53State
         return name == null ? null : Utf8NullTerminated(name);
     }
 
-    public string? GetUpvalue(int funcIndex, int n)
+    string? ILuaDebug.GetUpvalue(int funcIndex, int n)
     {
         CheckDisposed();
         var name = NativeMethods.lua_getupvalue(ptr, funcIndex, n);
         return name == null ? null : Utf8NullTerminated(name);
     }
 
-    public string? SetUpvalue(int funcIndex, int n)
+    string? ILuaDebug.SetUpvalue(int funcIndex, int n)
     {
         CheckDisposed();
         var name = NativeMethods.lua_setupvalue(ptr, funcIndex, n);

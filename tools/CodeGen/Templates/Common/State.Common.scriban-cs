@@ -10,7 +10,7 @@ using NuLua.Interop.{{ name }};
 
 namespace NuLua.{{ name }};
 
-public sealed unsafe partial class {{ name }}State : ILuaState<{{ name }}State>
+public sealed unsafe partial class {{ name }}State : ILuaState<{{ name }}State>, ILuaDebug, ILuaGarbageCollection
 {
     static readonly ConcurrentDictionary<nint, {{ name }}State> ptrToState = new();
 
@@ -390,7 +390,10 @@ public sealed unsafe partial class {{ name }}State : ILuaState<{{ name }}State>
         return NativeMethods.luaL_newmetatable(ptr, cName.Pointer) != 0;
     }
 
-    public void StopGC()
+    public ILuaDebug Debug => this;
+    public ILuaGarbageCollection GarbageCollection => this;
+
+    void ILuaGarbageCollection.Stop()
     {
         CheckDisposed();
 {{~ if name == "Luau" ~}}
@@ -403,7 +406,7 @@ public sealed unsafe partial class {{ name }}State : ILuaState<{{ name }}State>
 {{~ end ~}}
     }
 
-    public void RestartGC()
+    void ILuaGarbageCollection.Restart()
     {
         CheckDisposed();
 {{~ if name == "Luau" ~}}
@@ -415,7 +418,7 @@ public sealed unsafe partial class {{ name }}State : ILuaState<{{ name }}State>
 {{~ end ~}}
     }
 
-    public void CollectGC()
+    void ILuaGarbageCollection.Collect()
     {
         CheckDisposed();
 {{~ if name == "Luau" ~}}
@@ -427,7 +430,7 @@ public sealed unsafe partial class {{ name }}State : ILuaState<{{ name }}State>
 {{~ end ~}}
     }
 
-    public int StepGC(int stepSize)
+    int ILuaGarbageCollection.Step(int stepSize)
     {
         CheckDisposed();
 {{~ if name == "Luau" ~}}
@@ -437,7 +440,7 @@ public sealed unsafe partial class {{ name }}State : ILuaState<{{ name }}State>
 {{~ end ~}}
     }
 
-    public long GetGCByteCount()
+    long ILuaGarbageCollection.GetByteCount()
     {
         CheckDisposed();
 {{~ if name == "Luau" ~}}
@@ -453,7 +456,7 @@ public sealed unsafe partial class {{ name }}State : ILuaState<{{ name }}State>
         return (long)kb * 1024L + b;
     }
 
-    public bool IsGCRunning()
+    bool ILuaGarbageCollection.IsRunning()
     {
         CheckDisposed();
 {{~ if name == "Luau" ~}}
@@ -461,7 +464,7 @@ public sealed unsafe partial class {{ name }}State : ILuaState<{{ name }}State>
 {{~ else if version == 501 && !is_jit ~}}
         // Lua 5.1 has no LUA_GCISRUNNING; LuaJIT (which uses the Lua51 dialect template) adds it
         // separately via its own State.scriban-cs.
-        throw new NotSupportedException("IsGCRunning is not supported on Lua 5.1.");
+        throw new NotSupportedException("IsRunning is not supported on Lua 5.1.");
 {{~ else if version >= 504 ~}}
         return NativeMethods.lua_gc(ptr, (int)NativeMethods.LUA_GCISRUNNING) != 0;
 {{~ else ~}}

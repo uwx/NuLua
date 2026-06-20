@@ -435,9 +435,9 @@ public class LuaStateTests
         // Allocate a bunch of garbage that's eligible for collection.
         state.DoString("for i=1,1000 do local t={i,i,i} end");
 
-        var before = state.GetGCByteCount();
-        state.CollectGC();
-        var after = state.GetGCByteCount();
+        var before = state.GarbageCollection.GetByteCount();
+        state.GarbageCollection.Collect();
+        var after = state.GarbageCollection.GetByteCount();
 
         await Assert.That(after).IsLessThanOrEqualTo(before);
         await Assert.That(after).IsGreaterThan(0);
@@ -448,21 +448,22 @@ public class LuaStateTests
     public async Task StopAndRestartGCTogglesRunningState(LuaStateCase lua)
     {
         using var state = lua.CreateState();
+        var gc = state.GarbageCollection;
 
         if (lua.StateType.Name == "Lua51State")
         {
-            await Assert.That(() => state.IsGCRunning()).Throws<NotSupportedException>();
+            await Assert.That(() => gc.IsRunning()).Throws<NotSupportedException>();
             // The other ops should still be callable.
-            state.StopGC();
-            state.RestartGC();
+            gc.Stop();
+            gc.Restart();
             return;
         }
 
-        await Assert.That(state.IsGCRunning()).IsTrue();
-        state.StopGC();
-        await Assert.That(state.IsGCRunning()).IsFalse();
-        state.RestartGC();
-        await Assert.That(state.IsGCRunning()).IsTrue();
+        await Assert.That(gc.IsRunning()).IsTrue();
+        gc.Stop();
+        await Assert.That(gc.IsRunning()).IsFalse();
+        gc.Restart();
+        await Assert.That(gc.IsRunning()).IsTrue();
     }
 
     [Test]
@@ -473,9 +474,9 @@ public class LuaStateTests
         state.OpenLibraries();
 
         state.DoString("for i=1,100 do local t={i} end");
-        _ = state.StepGC(1);
+        _ = state.GarbageCollection.Step(1);
 
-        // GetGCByteCount is a useful smoke test that the step left the state usable.
-        await Assert.That(state.GetGCByteCount()).IsGreaterThan(0);
+        // GetByteCount is a useful smoke test that the step left the state usable.
+        await Assert.That(state.GarbageCollection.GetByteCount()).IsGreaterThan(0);
     }
 }
