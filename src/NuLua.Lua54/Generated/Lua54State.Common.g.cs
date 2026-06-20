@@ -10,7 +10,7 @@ using NuLua.Interop.Lua54;
 
 namespace NuLua.Lua54;
 
-public sealed unsafe partial class Lua54State : ILuaState<Lua54State>, ILuaDebug, ILuaGarbageCollection
+public sealed unsafe partial class Lua54State : ILuaState<Lua54State>, ILuaDebug<Lua54State>, ILuaGarbageCollection
 {
     static readonly ConcurrentDictionary<nint, Lua54State> ptrToState = new();
 
@@ -388,7 +388,8 @@ public sealed unsafe partial class Lua54State : ILuaState<Lua54State>, ILuaDebug
         return NativeMethods.luaL_newmetatable(ptr, cName.Pointer) != 0;
     }
 
-    public ILuaDebug Debug => this;
+    public ILuaDebug<Lua54State> Debug => this;
+    ILuaDebug ILuaState.Debug => this;
     public ILuaGarbageCollection GarbageCollection => this;
 
     void ILuaGarbageCollection.Stop()

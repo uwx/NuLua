@@ -107,12 +107,26 @@ public interface ILuaDebug
     string? SetLocal(int level, int n);
     string? GetUpvalue(int funcIndex, int n);
     string? SetUpvalue(int funcIndex, int n);
+    nint UpvalueId(int funcIndex, int n);
+    void UpvalueJoin(int fIdx1, int n1, int fIdx2, int n2);
+    void SetHook(LuaHook? hook, LuaHookMask mask, int count);
+    LuaHook? GetHook();
+    LuaHookMask GetHookMask();
+    int GetHookCount();
+}
+
+public interface ILuaDebug<T> : ILuaDebug
+    where T : ILuaState<T>
+{
+    void SetHook(LuaHook<T>? hook, LuaHookMask mask, int count);
+    new LuaHook<T>? GetHook();
 }
 
 public interface ILuaState<T> : ILuaState
     where T : ILuaState<T>
 {
     new T? From { get; }
+    new ILuaDebug<T> Debug { get; }
 
     void XMove(T target, int count);
     new T ToThread(int index);

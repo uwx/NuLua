@@ -8,6 +8,9 @@ public sealed unsafe partial class LuauState
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     delegate void LuauDebugCallbackDelegate(lua_State* L, lua_Debug* ar);
 
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    delegate void LuauInterruptDelegate(lua_State* L, int gc);
+
     LuauDebugCallbackDelegate? debugBreakDelegate;
     LuauDebugCallbackDelegate? debugStepDelegate;
     LuauDebugCallbackDelegate? debugInterruptDelegate;
@@ -15,6 +18,18 @@ public sealed unsafe partial class LuauState
     LuaHook<LuauState>? debugBreakHook;
     LuaHook<LuauState>? debugStepHook;
     LuaHook<LuauState>? debugInterruptHook;
+
+    // Generic hook plumbing modeled on mlua's Luau backend: Line uses
+    // singlestep+debugstep, Count uses the interrupt callback. Call/Return
+    // are not natively dispatched by Luau, so we expose them via the same
+    // interrupt path by checking event boundaries when feasible.
+    LuauDebugCallbackDelegate? hookStepCallback;
+    LuauInterruptDelegate? hookInterruptCallback;
+    LuaHook<LuauState>? hookDelegate;
+    LuaHook? nonGenericHookDelegate;
+    LuaHookMask hookMask;
+    int hookCount;
+    int hookCountdown;
 
     int ILuaDebug.GetStackDepth()
     {
@@ -65,6 +80,140 @@ public sealed unsafe partial class LuauState
         CheckDisposed();
         var name = NativeMethods.lua_setupvalue(ptr, funcIndex, n);
         return name == null ? null : Utf8NullTerminated(name);
+    }
+
+    nint ILuaDebug.UpvalueId(int funcIndex, int n) =>
+        throw new NotSupportedException("lua_upvalueid is not available on Luau.");
+
+    void ILuaDebug.UpvalueJoin(int fIdx1, int n1, int fIdx2, int n2) =>
+        throw new NotSupportedException("lua_upvaluejoin is not available on Luau.");
+
+    void ILuaDebug<LuauState>.SetHook(LuaHook<LuauState>? hook, LuaHookMask mask, int count)
+    {
+        CheckDisposed();
+        InstallHook(hook, nonGenericHook: null, mask, count);
+    }
+
+    void ILuaDebug.SetHook(LuaHook? hook, LuaHookMask mask, int count)
+    {
+        CheckDisposed();
+        InstallHook(typedHook: null, hook, mask, count);
+    }
+
+    LuaHook<LuauState>? ILuaDebug<LuauState>.GetHook() => hookDelegate;
+
+    LuaHook? ILuaDebug.GetHook()
+    {
+        if (nonGenericHookDelegate != null) return nonGenericHookDelegate;
+        var typed = hookDelegate;
+        return typed == null ? null : (s, ev, line) => typed((LuauState)s, ev, line);
+    }
+
+    LuaHookMask ILuaDebug.GetHookMask() => hookMask;
+
+    int ILuaDebug.GetHookCount() => hookCount;
+
+    void InstallHook(LuaHook<LuauState>? typedHook, LuaHook? nonGenericHook, LuaHookMask mask, int count)
+    {
+        var clearing = (typedHook == null && nonGenericHook == null) || mask == LuaHookMask.None;
+        var callbacks = NativeMethods.lua_callbacks(ptr);
+
+        if (clearing)
+        {
+            hookDelegate = null;
+            nonGenericHookDelegate = null;
+            hookMask = LuaHookMask.None;
+            hookCount = 0;
+            hookCountdown = 0;
+            hookStepCallback = null;
+            hookInterruptCallback = null;
+            NativeMethods.lua_singlestep(ptr, 0);
+            callbacks->debugstep = null;
+            callbacks->interrupt = null;
+            return;
+        }
+
+        // Luau does not provide call/return hooks. Reject unsupported bits up front
+        // so callers get a clear error instead of silent no-ops, matching the
+        // expectations the rest of NuLua's API sets for hooks.
+        if ((mask & (LuaHookMask.Call | LuaHookMask.Return)) != 0)
+        {
+            throw new NotSupportedException(
+                "Luau does not support Call/Return hooks"
+            );
+        }
+
+        hookDelegate = typedHook;
+        nonGenericHookDelegate = nonGenericHook;
+        hookMask = mask;
+        hookCount = count;
+        hookCountdown = count;
+
+        if ((mask & LuaHookMask.Line) != 0)
+        {
+            hookStepCallback = HookStepEntry;
+            NativeMethods.lua_singlestep(ptr, 1);
+            callbacks->debugstep = (void*)Marshal.GetFunctionPointerForDelegate(hookStepCallback);
+        }
+        else
+        {
+            NativeMethods.lua_singlestep(ptr, 0);
+            callbacks->debugstep = null;
+            hookStepCallback = null;
+        }
+
+        if ((mask & LuaHookMask.Count) != 0 && count > 0)
+        {
+            hookInterruptCallback = HookInterruptEntry;
+            callbacks->interrupt = (void*)Marshal.GetFunctionPointerForDelegate(hookInterruptCallback);
+        }
+        else
+        {
+            callbacks->interrupt = null;
+            hookInterruptCallback = null;
+        }
+    }
+
+    static void HookStepEntry(lua_State* L, lua_Debug* ar)
+    {
+        if (!ptrToState.TryGetValue((nint)L, out var state)) return;
+        InvokeHook(state, LuaHookEvent.Line, ar->currentline);
+    }
+
+    static void HookInterruptEntry(lua_State* L, int gc)
+    {
+        // Luau invokes interrupt with gc != -1 only for GC events; -1 is the
+        // ordinary per-instruction poll. Ignore the GC variant.
+        if (gc >= 0) return;
+        if (!ptrToState.TryGetValue((nint)L, out var state)) return;
+
+        if (state.hookCount <= 0) return;
+        state.hookCountdown--;
+        if (state.hookCountdown > 0) return;
+        state.hookCountdown = state.hookCount;
+
+        int currentLine = -1;
+        lua_Debug ar = default;
+        fixed (byte* what = "l\0"u8)
+        {
+            if (NativeMethods.lua_getinfo(L, 0, what, &ar) != 0)
+            {
+                currentLine = ar.currentline;
+            }
+        }
+        InvokeHook(state, LuaHookEvent.Count, currentLine);
+    }
+
+    static void InvokeHook(LuauState state, LuaHookEvent ev, int currentLine)
+    {
+        var typed = state.hookDelegate;
+        if (typed != null)
+        {
+            typed(state, ev, currentLine);
+            return;
+        }
+        var nonGeneric = state.nonGenericHookDelegate;
+        nonGeneric?.Invoke(state, ev, currentLine);
     }
 
     public int GetArgument(int level, int n)

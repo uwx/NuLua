@@ -134,10 +134,10 @@ public class LuaDebugTests
         using var state = Lua54State.Create();
 
         var events = new List<(LuaHookEvent ev, int line)>();
-        state.SetHook((s, ev, line) => events.Add((ev, line)), LuaHookMask.Line, 0);
+        state.Debug.SetHook((s, ev, line) => events.Add((ev, line)), LuaHookMask.Line, 0);
 
         state.DoString("local a = 1\nlocal b = 2\nlocal c = a + b\n");
-        state.SetHook(null, LuaHookMask.None, 0);
+        state.Debug.SetHook(null, LuaHookMask.None, 0);
 
         await Assert.That(events.Count).IsGreaterThanOrEqualTo(3);
         await Assert.That(events.TrueForAll(e => e.ev == LuaHookEvent.Line)).IsTrue();
@@ -164,6 +164,46 @@ public class LuaDebugTests
         state.SetSingleStep(false);
 
         await Assert.That(stepCount).IsGreaterThan(0);
+    }
+
+    [Test]
+    public async Task LuauLineHookFiresViaSingleStepFallback()
+    {
+        using var state = LuauState.Create();
+
+        var events = new List<(LuaHookEvent ev, int line)>();
+        state.Debug.SetHook((s, ev, line) => events.Add((ev, line)), LuaHookMask.Line, 0);
+
+        var bytes = Encoding.UTF8.GetBytes("local a = 1\nlocal b = 2\nlocal c = a + b\n");
+        var bytecode = LuauCompiler.Compile(
+            bytes,
+            new LuauCompileOptions { DebugLevel = 2, OptimizationLevel = 0 }
+        );
+        state.LoadBuffer(bytecode, "chunk");
+        state.Call(0, 0);
+
+        state.Debug.SetHook(null, LuaHookMask.None, 0);
+
+        await Assert.That(events.Count).IsGreaterThan(0);
+        await Assert.That(events.TrueForAll(e => e.ev == LuaHookEvent.Line)).IsTrue();
+    }
+
+    [Test]
+    public async Task LuauSetHookRejectsCallAndReturnMasks()
+    {
+        using var state = LuauState.Create();
+
+        await Assert
+            .That(
+                () => state.Debug.SetHook((s, ev, line) => { }, LuaHookMask.Call, 0)
+            )
+            .Throws<NotSupportedException>();
+
+        await Assert
+            .That(
+                () => state.Debug.SetHook((s, ev, line) => { }, LuaHookMask.Return, 0)
+            )
+            .Throws<NotSupportedException>();
     }
 
     [Test]

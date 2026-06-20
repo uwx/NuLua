@@ -11,6 +11,7 @@ namespace NuLua.Lua54;
 public sealed unsafe partial class Lua54State
 {
     LuaHook<Lua54State>? hookDelegate;
+    LuaHook? nonGenericHookDelegate;
     NativeMethods.lua_sethook_func_delegate? hookCallback;
 
     int ILuaDebug.GetStackDepth()
@@ -76,30 +77,32 @@ public sealed unsafe partial class Lua54State
         return name == null ? null : Utf8NullTerminated(name);
     }
 
-    public nint UpvalueId(int funcIndex, int n)
+    nint ILuaDebug.UpvalueId(int funcIndex, int n)
     {
         CheckDisposed();
         return (nint)NativeMethods.lua_upvalueid(ptr, funcIndex, n);
     }
 
-    public void UpvalueJoin(int fIdx1, int n1, int fIdx2, int n2)
+    void ILuaDebug.UpvalueJoin(int fIdx1, int n1, int fIdx2, int n2)
     {
         CheckDisposed();
         NativeMethods.lua_upvaluejoin(ptr, fIdx1, n1, fIdx2, n2);
     }
 
-    public void SetHook(LuaHook<Lua54State>? hook, LuaHookMask mask, int count)
+    void ILuaDebug<Lua54State>.SetHook(LuaHook<Lua54State>? hook, LuaHookMask mask, int count)
     {
         CheckDisposed();
         if (hook == null || mask == LuaHookMask.None)
         {
             hookDelegate = null;
+            nonGenericHookDelegate = null;
             hookCallback = null;
             NativeMethods.lua_sethook(ptr, null!, 0, 0);
             return;
         }
 
         hookDelegate = hook;
+        nonGenericHookDelegate = null;
         hookCallback = HookEntry;
         var nativeMask = 0;
         if ((mask & LuaHookMask.Call) != 0) nativeMask |= (int)NativeMethods.LUA_MASKCALL;
@@ -109,9 +112,39 @@ public sealed unsafe partial class Lua54State
         NativeMethods.lua_sethook(ptr, hookCallback, nativeMask, count);
     }
 
-    public LuaHook<Lua54State>? GetHook() => hookDelegate;
+    void ILuaDebug.SetHook(LuaHook? hook, LuaHookMask mask, int count)
+    {
+        CheckDisposed();
+        if (hook == null || mask == LuaHookMask.None)
+        {
+            hookDelegate = null;
+            nonGenericHookDelegate = null;
+            hookCallback = null;
+            NativeMethods.lua_sethook(ptr, null!, 0, 0);
+            return;
+        }
 
-    public LuaHookMask GetHookMask()
+        hookDelegate = null;
+        nonGenericHookDelegate = hook;
+        hookCallback = HookEntry;
+        var nativeMask = 0;
+        if ((mask & LuaHookMask.Call) != 0) nativeMask |= (int)NativeMethods.LUA_MASKCALL;
+        if ((mask & LuaHookMask.Return) != 0) nativeMask |= (int)NativeMethods.LUA_MASKRET;
+        if ((mask & LuaHookMask.Line) != 0) nativeMask |= (int)NativeMethods.LUA_MASKLINE;
+        if ((mask & LuaHookMask.Count) != 0) nativeMask |= (int)NativeMethods.LUA_MASKCOUNT;
+        NativeMethods.lua_sethook(ptr, hookCallback, nativeMask, count);
+    }
+
+    LuaHook<Lua54State>? ILuaDebug<Lua54State>.GetHook() => hookDelegate;
+
+    LuaHook? ILuaDebug.GetHook()
+    {
+        if (nonGenericHookDelegate != null) return nonGenericHookDelegate;
+        var typed = hookDelegate;
+        return typed == null ? null : (s, ev, line) => typed((Lua54State)s, ev, line);
+    }
+
+    LuaHookMask ILuaDebug.GetHookMask()
     {
         CheckDisposed();
         var mask = NativeMethods.lua_gethookmask(ptr);
@@ -123,7 +156,7 @@ public sealed unsafe partial class Lua54State
         return result;
     }
 
-    public int GetHookCount()
+    int ILuaDebug.GetHookCount()
     {
         CheckDisposed();
         return NativeMethods.lua_gethookcount(ptr);
@@ -135,8 +168,9 @@ public sealed unsafe partial class Lua54State
         {
             return;
         }
-        var hook = state.hookDelegate;
-        if (hook == null)
+        var typed = state.hookDelegate;
+        var nonGeneric = state.nonGenericHookDelegate;
+        if (typed == null && nonGeneric == null)
         {
             return;
         }
@@ -161,7 +195,8 @@ public sealed unsafe partial class Lua54State
             line = ar->currentline;
         }
 
-        hook(state, ev, line);
+        if (typed != null) typed(state, ev, line);
+        else nonGeneric!(state, ev, line);
     }
 
     LuaDebugInfo ReadDebugInfo(lua_Debug* ar, LuaDebugInfoFields fields)
