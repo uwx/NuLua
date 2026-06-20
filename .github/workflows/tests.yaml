@@ -1,0 +1,45 @@
+name: Tests
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+          cache: true
+          cache-dependency-path: '**/*.csproj'
+      - name: Restore tools
+        run: dotnet tool restore
+      - name: Verify format
+        run: dotnet csharpier check .
+
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15, windows-2025]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+          cache: true
+          cache-dependency-path: '**/*.csproj'
+      - name: Restore
+        run: dotnet restore NuLua.slnx
+      - name: Build
+        run: dotnet build NuLua.slnx --no-restore -c Release
+      - name: Run NuLua.Tests
+        run: dotnet test tests/NuLua.Tests/NuLua.Tests.csproj --no-build -c Release
+      - name: Run NuLua.Tests.Interop
+        run: dotnet test tests/NuLua.Tests.Interop/NuLua.Tests.Interop.csproj --no-build -c Release
