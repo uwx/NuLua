@@ -47,7 +47,7 @@ partial class LuaJitState
         OpenSingleLibrary(NativeMethods.luaopen_string_buffer, "string.buffer"u8);
     }
 
-    public unsafe bool TrySetMode(int index, LuaJitMode mode, LuaJitModeFlag flag)
+    public unsafe bool TrySetJitMode(int index, LuaJitMode mode, LuaJitModeFlag flag)
     {
         CheckDisposed();
         return NativeMethods.luaJIT_setmode(ptr, index, (int)mode | (int)flag) != 0;
