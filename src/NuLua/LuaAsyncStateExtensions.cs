@@ -98,7 +98,7 @@ public static class LuaAsyncStateExtensions
     {
         try
         {
-            await co.CompleteAsync(argCount, cancellationToken).ConfigureAwait(false);
+            await co.ResumeAsync(argCount, cancellationToken).ConfigureAwait(false);
             int actual = co.GetTop();
             if (resultCount < 0)
             {
@@ -135,7 +135,7 @@ public static class LuaAsyncStateExtensions
     {
         try
         {
-            await co.CompleteAsync(initialArgCount, cancellationToken).ConfigureAwait(false);
+            await co.ResumeAsync(initialArgCount, cancellationToken).ConfigureAwait(false);
             int top = co.GetTop();
             if (top == 0)
             {

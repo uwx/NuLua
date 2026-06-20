@@ -435,12 +435,6 @@ public sealed unsafe partial class Lua52State : ILuaState<Lua52State>, ILuaDebug
         return Lua52AsyncDriver.ResumeAsync(this, argCount, cancellationToken);
     }
 
-    ValueTask ILuaState.CompleteAsync(int initialArgCount, CancellationToken cancellationToken)
-    {
-        CheckDisposed();
-        return Lua52AsyncDriver.RunAsync(this, initialArgCount, cancellationToken);
-    }
-
     internal void SetAsyncCancellationToken(CancellationToken cancellationToken)
     {
         asyncCancellationToken = cancellationToken;
@@ -470,7 +464,6 @@ public sealed unsafe partial class Lua52State : ILuaState<Lua52State>, ILuaDebug
 internal static class Lua52AsyncDriver
 {
     const int LUA_OK = 0;
-    const uint LUA_ERRRUN = 2;
 
     public static async ValueTask ResumeAsync(
         Lua52State state,
@@ -494,42 +487,6 @@ internal static class Lua52AsyncDriver
                 if (!state.TryTakePendingAsyncTask(out var task))
                 {
                     return;
-                }
-
-                currentArgs = await task.ConfigureAwait(false);
-            }
-        }
-        finally
-        {
-            state.ResetAsyncState();
-        }
-    }
-
-    public static async ValueTask RunAsync(
-        Lua52State state,
-        int initialArgCount,
-        CancellationToken cancellationToken
-    )
-    {
-        state.SetAsyncCancellationToken(cancellationToken);
-        try
-        {
-            int currentArgs = initialArgCount;
-            while (true)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                var status = state.RunResumeStep(currentArgs);
-                if (status == LUA_OK)
-                {
-                    return;
-                }
-
-                if (!state.TryTakePendingAsyncTask(out var task))
-                {
-                    throw new LuaException(
-                        LUA_ERRRUN,
-                        "Coroutine yielded without a pending async task."
-                    );
                 }
 
                 currentArgs = await task.ConfigureAwait(false);
