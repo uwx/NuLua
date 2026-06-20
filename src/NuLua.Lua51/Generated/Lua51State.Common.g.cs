@@ -388,6 +388,46 @@ public sealed unsafe partial class Lua51State : ILuaState<Lua51State>
         return NativeMethods.luaL_newmetatable(ptr, cName.Pointer) != 0;
     }
 
+    public void StopGC()
+    {
+        CheckDisposed();
+        _ = NativeMethods.lua_gc(ptr, (int)NativeMethods.LUA_GCSTOP, 0);
+    }
+
+    public void RestartGC()
+    {
+        CheckDisposed();
+        _ = NativeMethods.lua_gc(ptr, (int)NativeMethods.LUA_GCRESTART, 0);
+    }
+
+    public void CollectGC()
+    {
+        CheckDisposed();
+        _ = NativeMethods.lua_gc(ptr, (int)NativeMethods.LUA_GCCOLLECT, 0);
+    }
+
+    public int StepGC(int stepSize)
+    {
+        CheckDisposed();
+        return NativeMethods.lua_gc(ptr, (int)NativeMethods.LUA_GCSTEP, stepSize);
+    }
+
+    public long GetGCByteCount()
+    {
+        CheckDisposed();
+        var kb = NativeMethods.lua_gc(ptr, (int)NativeMethods.LUA_GCCOUNT, 0);
+        var b = NativeMethods.lua_gc(ptr, (int)NativeMethods.LUA_GCCOUNTB, 0);
+        return (long)kb * 1024L + b;
+    }
+
+    public bool IsGCRunning()
+    {
+        CheckDisposed();
+        // Lua 5.1 has no LUA_GCISRUNNING; LuaJIT (which uses the Lua51 dialect template) adds it
+        // separately via its own State.scriban-cs.
+        throw new NotSupportedException("IsGCRunning is not supported on Lua 5.1.");
+    }
+
     ValueTask ILuaState.CompleteAsync(int initialArgCount, CancellationToken cancellationToken)
     {
         CheckDisposed();

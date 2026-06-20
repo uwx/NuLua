@@ -85,6 +85,13 @@ public interface ILuaState : ILuaObject
     void LoadBuffer(ReadOnlySpan<byte> buffer, ReadOnlySpan<char> chunkName);
     bool TryDump(int index, bool strip, Span<byte> buffer, out int bytesWritten);
 
+    void StopGC();
+    void RestartGC();
+    void CollectGC();
+    int StepGC(int stepSize);
+    long GetGCByteCount();
+    bool IsGCRunning();
+
     int GetStackDepth();
     bool TryGetStackInfo(int level, LuaDebugInfoFields fields, out LuaDebugInfo info);
     string? GetLocal(int level, int n);

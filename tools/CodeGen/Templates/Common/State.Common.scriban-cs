@@ -390,6 +390,85 @@ public sealed unsafe partial class {{ name }}State : ILuaState<{{ name }}State>
         return NativeMethods.luaL_newmetatable(ptr, cName.Pointer) != 0;
     }
 
+    public void StopGC()
+    {
+        CheckDisposed();
+{{~ if name == "Luau" ~}}
+        // Luau's LUA_GCSTOP is the first member of an unnamed enum exposed only through the C header.
+        _ = NativeMethods.lua_gc(ptr, 0 /* LUA_GCSTOP */, 0);
+{{~ else if version >= 504 ~}}
+        _ = NativeMethods.lua_gc(ptr, (int)NativeMethods.LUA_GCSTOP);
+{{~ else ~}}
+        _ = NativeMethods.lua_gc(ptr, (int)NativeMethods.LUA_GCSTOP, 0);
+{{~ end ~}}
+    }
+
+    public void RestartGC()
+    {
+        CheckDisposed();
+{{~ if name == "Luau" ~}}
+        _ = NativeMethods.lua_gc(ptr, 1 /* LUA_GCRESTART */, 0);
+{{~ else if version >= 504 ~}}
+        _ = NativeMethods.lua_gc(ptr, (int)NativeMethods.LUA_GCRESTART);
+{{~ else ~}}
+        _ = NativeMethods.lua_gc(ptr, (int)NativeMethods.LUA_GCRESTART, 0);
+{{~ end ~}}
+    }
+
+    public void CollectGC()
+    {
+        CheckDisposed();
+{{~ if name == "Luau" ~}}
+        _ = NativeMethods.lua_gc(ptr, 2 /* LUA_GCCOLLECT */, 0);
+{{~ else if version >= 504 ~}}
+        _ = NativeMethods.lua_gc(ptr, (int)NativeMethods.LUA_GCCOLLECT);
+{{~ else ~}}
+        _ = NativeMethods.lua_gc(ptr, (int)NativeMethods.LUA_GCCOLLECT, 0);
+{{~ end ~}}
+    }
+
+    public int StepGC(int stepSize)
+    {
+        CheckDisposed();
+{{~ if name == "Luau" ~}}
+        return NativeMethods.lua_gc(ptr, 6 /* LUA_GCSTEP */, stepSize);
+{{~ else ~}}
+        return NativeMethods.lua_gc(ptr, (int)NativeMethods.LUA_GCSTEP, stepSize);
+{{~ end ~}}
+    }
+
+    public long GetGCByteCount()
+    {
+        CheckDisposed();
+{{~ if name == "Luau" ~}}
+        var kb = NativeMethods.lua_gc(ptr, 3 /* LUA_GCCOUNT */, 0);
+        var b = NativeMethods.lua_gc(ptr, 4 /* LUA_GCCOUNTB */, 0);
+{{~ else if version >= 504 ~}}
+        var kb = NativeMethods.lua_gc(ptr, (int)NativeMethods.LUA_GCCOUNT);
+        var b = NativeMethods.lua_gc(ptr, (int)NativeMethods.LUA_GCCOUNTB);
+{{~ else ~}}
+        var kb = NativeMethods.lua_gc(ptr, (int)NativeMethods.LUA_GCCOUNT, 0);
+        var b = NativeMethods.lua_gc(ptr, (int)NativeMethods.LUA_GCCOUNTB, 0);
+{{~ end ~}}
+        return (long)kb * 1024L + b;
+    }
+
+    public bool IsGCRunning()
+    {
+        CheckDisposed();
+{{~ if name == "Luau" ~}}
+        return NativeMethods.lua_gc(ptr, 5 /* LUA_GCISRUNNING */, 0) != 0;
+{{~ else if version == 501 && !is_jit ~}}
+        // Lua 5.1 has no LUA_GCISRUNNING; LuaJIT (which uses the Lua51 dialect template) adds it
+        // separately via its own State.scriban-cs.
+        throw new NotSupportedException("IsGCRunning is not supported on Lua 5.1.");
+{{~ else if version >= 504 ~}}
+        return NativeMethods.lua_gc(ptr, (int)NativeMethods.LUA_GCISRUNNING) != 0;
+{{~ else ~}}
+        return NativeMethods.lua_gc(ptr, (int)NativeMethods.LUA_GCISRUNNING, 0) != 0;
+{{~ end ~}}
+    }
+
     ValueTask ILuaState.CompleteAsync(int initialArgCount, CancellationToken cancellationToken)
     {
         CheckDisposed();

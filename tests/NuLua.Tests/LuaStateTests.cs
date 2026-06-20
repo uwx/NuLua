@@ -424,4 +424,58 @@ public class LuaStateTests
         await Assert.That(results).Count().IsEqualTo(1);
         await Assert.That(results[0].Read<double>()).IsEqualTo(42);
     }
+
+    [Test]
+    [MethodDataSource(typeof(LuaStateCases), nameof(LuaStateCases.All))]
+    public async Task CollectGCReclaimsAllocatedMemory(LuaStateCase lua)
+    {
+        using var state = lua.CreateState();
+        state.OpenLibraries();
+
+        // Allocate a bunch of garbage that's eligible for collection.
+        state.DoString("for i=1,1000 do local t={i,i,i} end");
+
+        var before = state.GetGCByteCount();
+        state.CollectGC();
+        var after = state.GetGCByteCount();
+
+        await Assert.That(after).IsLessThanOrEqualTo(before);
+        await Assert.That(after).IsGreaterThan(0);
+    }
+
+    [Test]
+    [MethodDataSource(typeof(LuaStateCases), nameof(LuaStateCases.All))]
+    public async Task StopAndRestartGCTogglesRunningState(LuaStateCase lua)
+    {
+        using var state = lua.CreateState();
+
+        if (lua.StateType.Name == "Lua51State")
+        {
+            await Assert.That(() => state.IsGCRunning()).Throws<NotSupportedException>();
+            // The other ops should still be callable.
+            state.StopGC();
+            state.RestartGC();
+            return;
+        }
+
+        await Assert.That(state.IsGCRunning()).IsTrue();
+        state.StopGC();
+        await Assert.That(state.IsGCRunning()).IsFalse();
+        state.RestartGC();
+        await Assert.That(state.IsGCRunning()).IsTrue();
+    }
+
+    [Test]
+    [MethodDataSource(typeof(LuaStateCases), nameof(LuaStateCases.All))]
+    public async Task StepGCRunsWithoutThrowing(LuaStateCase lua)
+    {
+        using var state = lua.CreateState();
+        state.OpenLibraries();
+
+        state.DoString("for i=1,100 do local t={i} end");
+        _ = state.StepGC(1);
+
+        // GetGCByteCount is a useful smoke test that the step left the state usable.
+        await Assert.That(state.GetGCByteCount()).IsGreaterThan(0);
+    }
 }

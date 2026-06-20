@@ -341,6 +341,45 @@ public sealed unsafe partial class LuauState : ILuaState<LuauState>
         return NativeMethods.luaL_newmetatable(ptr, cName.Pointer) != 0;
     }
 
+    public void StopGC()
+    {
+        CheckDisposed();
+        // Luau's LUA_GCSTOP is the first member of an unnamed enum exposed only through the C header.
+        _ = NativeMethods.lua_gc(ptr, 0 /* LUA_GCSTOP */, 0);
+    }
+
+    public void RestartGC()
+    {
+        CheckDisposed();
+        _ = NativeMethods.lua_gc(ptr, 1 /* LUA_GCRESTART */, 0);
+    }
+
+    public void CollectGC()
+    {
+        CheckDisposed();
+        _ = NativeMethods.lua_gc(ptr, 2 /* LUA_GCCOLLECT */, 0);
+    }
+
+    public int StepGC(int stepSize)
+    {
+        CheckDisposed();
+        return NativeMethods.lua_gc(ptr, 6 /* LUA_GCSTEP */, stepSize);
+    }
+
+    public long GetGCByteCount()
+    {
+        CheckDisposed();
+        var kb = NativeMethods.lua_gc(ptr, 3 /* LUA_GCCOUNT */, 0);
+        var b = NativeMethods.lua_gc(ptr, 4 /* LUA_GCCOUNTB */, 0);
+        return (long)kb * 1024L + b;
+    }
+
+    public bool IsGCRunning()
+    {
+        CheckDisposed();
+        return NativeMethods.lua_gc(ptr, 5 /* LUA_GCISRUNNING */, 0) != 0;
+    }
+
     ValueTask ILuaState.CompleteAsync(int initialArgCount, CancellationToken cancellationToken)
     {
         CheckDisposed();

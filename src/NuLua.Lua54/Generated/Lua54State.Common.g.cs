@@ -388,6 +388,44 @@ public sealed unsafe partial class Lua54State : ILuaState<Lua54State>
         return NativeMethods.luaL_newmetatable(ptr, cName.Pointer) != 0;
     }
 
+    public void StopGC()
+    {
+        CheckDisposed();
+        _ = NativeMethods.lua_gc(ptr, (int)NativeMethods.LUA_GCSTOP);
+    }
+
+    public void RestartGC()
+    {
+        CheckDisposed();
+        _ = NativeMethods.lua_gc(ptr, (int)NativeMethods.LUA_GCRESTART);
+    }
+
+    public void CollectGC()
+    {
+        CheckDisposed();
+        _ = NativeMethods.lua_gc(ptr, (int)NativeMethods.LUA_GCCOLLECT);
+    }
+
+    public int StepGC(int stepSize)
+    {
+        CheckDisposed();
+        return NativeMethods.lua_gc(ptr, (int)NativeMethods.LUA_GCSTEP, stepSize);
+    }
+
+    public long GetGCByteCount()
+    {
+        CheckDisposed();
+        var kb = NativeMethods.lua_gc(ptr, (int)NativeMethods.LUA_GCCOUNT);
+        var b = NativeMethods.lua_gc(ptr, (int)NativeMethods.LUA_GCCOUNTB);
+        return (long)kb * 1024L + b;
+    }
+
+    public bool IsGCRunning()
+    {
+        CheckDisposed();
+        return NativeMethods.lua_gc(ptr, (int)NativeMethods.LUA_GCISRUNNING) != 0;
+    }
+
     ValueTask ILuaState.CompleteAsync(int initialArgCount, CancellationToken cancellationToken)
     {
         CheckDisposed();
