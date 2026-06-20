@@ -38,6 +38,38 @@ public static class LuaAsyncStateExtensions
         return RunAndPushAsync(state, co, argCount, resultCount, cancellationToken);
     }
 
+    public static ValueTask<LuaValue[]> ResumeAsync(
+        this ILuaState state,
+        LuaValue[] args,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return ResumeAsync(state, args.AsMemory(), cancellationToken);
+    }
+
+    public static async ValueTask<LuaValue[]> ResumeAsync(
+        this ILuaState state,
+        ReadOnlyMemory<LuaValue> args,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var span = args.Span;
+        for (int i = 0; i < span.Length; i++)
+        {
+            state.Push(span[i]);
+        }
+        await state.ResumeAsync(args.Length, cancellationToken).ConfigureAwait(false);
+
+        var resultCount = state.GetTop();
+        var results = new LuaValue[resultCount];
+        for (int i = 0; i < resultCount; i++)
+        {
+            results[i] = state.ToLuaValue(i + 1);
+        }
+        state.SetTop(0);
+        return results;
+    }
+
     public static ValueTask<LuaValue[]> DoStringAsync(
         this ILuaState state,
         ReadOnlySpan<char> code,

@@ -65,6 +65,7 @@ public interface ILuaState : ILuaObject
     void Len(int index);
     void Call(int argCount, int returnCount);
     void Resume(int argCount);
+    ValueTask ResumeAsync(int argCount, CancellationToken cancellationToken);
     ValueTask CompleteAsync(int initialArgCount, CancellationToken cancellationToken);
 
     bool RawEqual(int index1, int index2);

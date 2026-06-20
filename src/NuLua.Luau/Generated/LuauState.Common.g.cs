@@ -383,6 +383,12 @@ public sealed unsafe partial class LuauState : ILuaState<LuauState>, ILuaDebug, 
         return NativeMethods.lua_gc(ptr, 5 /* LUA_GCISRUNNING */, 0) != 0;
     }
 
+    ValueTask ILuaState.ResumeAsync(int argCount, CancellationToken cancellationToken)
+    {
+        CheckDisposed();
+        return LuauAsyncDriver.ResumeAsync(this, argCount, cancellationToken);
+    }
+
     ValueTask ILuaState.CompleteAsync(int initialArgCount, CancellationToken cancellationToken)
     {
         CheckDisposed();
@@ -419,6 +425,39 @@ internal static class LuauAsyncDriver
 {
     const int LUA_OK = 0;
     const uint LUA_ERRRUN = 2;
+
+    public static async ValueTask ResumeAsync(
+        LuauState state,
+        int initialArgCount,
+        CancellationToken cancellationToken
+    )
+    {
+        state.SetAsyncCancellationToken(cancellationToken);
+        try
+        {
+            int currentArgs = initialArgCount;
+            while (true)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var status = state.RunResumeStep(currentArgs);
+                if (status == LUA_OK)
+                {
+                    return;
+                }
+
+                if (!state.TryTakePendingAsyncTask(out var task))
+                {
+                    return;
+                }
+
+                currentArgs = await task.ConfigureAwait(false);
+            }
+        }
+        finally
+        {
+            state.ResetAsyncState();
+        }
+    }
 
     public static async ValueTask RunAsync(
         LuauState state,
