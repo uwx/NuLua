@@ -8,9 +8,16 @@
     <NoWarn>$(NoWarn);NU5100;NU5128</NoWarn>
     <Description>lua55 native runtime for osx-x64.</Description>
 
-    <!-- NuGet -->
+    <!-- NuGet Packaging -->
     <IsPackable>true</IsPackable>
+    <PackageTags>lua;luau;luajit</PackageTags>
+    <Description>NuLua Runtime for Lua 5.5 macOS x64</Description>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="README.md" />
+    <EmbeddedResource Include="..\..\LICENSE" />
+  </ItemGroup>
 
   <ItemGroup>
     <None Remove="runtimes\**" />

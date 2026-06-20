@@ -6,23 +6,37 @@
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
+    <!-- NuGet Packaging -->
+    <PackageTags>lua;luau;luajit</PackageTags>
+    <Description>NuLua High-level API for Luau</Description>
+
+    <!-- Code Generation Parameters -->
     <CodeGenName>Luau</CodeGenName>
     <CodeGenVersion>0</CodeGenVersion>
     <CodeGenProject>$(MSBuildThisFileDirectory)..\..\tools\CodeGen\CodeGen.csproj</CodeGenProject>
     <CodeGenCommonTemplateDir>$(MSBuildThisFileDirectory)..\..\tools\CodeGen\Templates\Common</CodeGenCommonTemplateDir>
     <CodeGenOutputDir>$(MSBuildThisFileDirectory)Generated</CodeGenOutputDir>
   </PropertyGroup>
+
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.2" />
   </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\NuLua\NuLua.csproj" />
     <ProjectReference Include="..\NuLua.Runtime.Luau\NuLua.Runtime.Luau.csproj" />
     <ProjectReference Include="..\NuLua.Interop.Luau\NuLua.Interop.Luau.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="README.md" />
+    <EmbeddedResource Include="..\..\LICENSE" />
+  </ItemGroup>
+
   <ItemGroup>
     <CodeGenTemplate Include="$(CodeGenCommonTemplateDir)\*.scriban-cs" />
   </ItemGroup>
+
   <Target Name="BuildCodeGen" BeforeTargets="RunCodeGen">
     <MSBuild
       Projects="$(CodeGenProject)"
@@ -31,6 +45,7 @@
       RemoveProperties="TargetFramework"
     />
   </Target>
+
   <Target
     Name="RunCodeGen"
     BeforeTargets="CoreCompile"
@@ -40,6 +55,7 @@
     <MakeDir Directories="$(CodeGenOutputDir)" />
     <Exec Command="dotnet run --project &quot;$(CodeGenProject)&quot; --no-build -- --name $(CodeGenName) --version $(CodeGenVersion) --common-template-dir &quot;$(CodeGenCommonTemplateDir)&quot; --output-dir &quot;$(CodeGenOutputDir)&quot; --exclude-templates State.Debug" />
   </Target>
+
   <Target Name="IncludeCodeGenOutput" BeforeTargets="CoreCompile" DependsOnTargets="RunCodeGen">
     <ItemGroup>
       <Compile Include="$(CodeGenOutputDir)\*.g.cs" Exclude="@(Compile)" />

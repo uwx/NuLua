@@ -8,9 +8,16 @@
     <NoWarn>$(NoWarn);NU5100;NU5128</NoWarn>
     <Description>luajit native runtimes for NuLua.Interop.LuaJit.</Description>
 
-    <!-- NuGet -->
+    <!-- NuGet Packaging -->
     <IsPackable>true</IsPackable>
+    <PackageTags>lua;luau;luajit</PackageTags>
+    <Description>NuLua Runtime for LuaJIT</Description>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="README.md" />
+    <EmbeddedResource Include="..\..\LICENSE" />
+  </ItemGroup>
 
   <ItemGroup>
     <None Remove="runtimes\**" />

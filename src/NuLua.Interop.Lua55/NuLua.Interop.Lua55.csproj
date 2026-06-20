@@ -5,9 +5,18 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+    <!-- NuGet Packaging -->
+    <PackageTags>lua;luau;luajit</PackageTags>
+    <Description>NuLua Low-Level Bindings for Lua5.5</Description>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Include="..\Polyfills\CLong.cs" Link="Polyfills\CLong.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="README.md" />
+    <EmbeddedResource Include="..\..\LICENSE" />
   </ItemGroup>
 </Project>
