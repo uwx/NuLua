@@ -2,7 +2,7 @@ namespace NuLua;
 
 public static class LuaAsyncStateExtensions
 {
-    public static AsyncLuaFunction CreateFunction<TState>(
+    public static LuaFunction CreateFunction<TState>(
         this ILuaState<TState> state,
         AsyncLuaFunc<TState> function,
         int upvalueCount = 0
@@ -10,7 +10,7 @@ public static class LuaAsyncStateExtensions
         where TState : ILuaState<TState>
     {
         state.NewFunction(function, upvalueCount);
-        return new AsyncLuaFunction(state, state.Ref());
+        return new LuaFunction(state, state.Ref());
     }
 
     public static void RegisterFunction<TState>(
