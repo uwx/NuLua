@@ -2,7 +2,10 @@ using NuLua.Interop.LuaJit;
 
 namespace NuLua.LuaJit;
 
-public enum LuaJitMode
+#pragma warning disable CA1069
+
+[Flags]
+public enum LuaJitFlags
 {
     Engine = 0,
     Debug = 1,
@@ -11,15 +14,12 @@ public enum LuaJitMode
     AllSubFunc = 4,
     Trace = 5,
     WrapCFunc = 0x10,
-}
-
-[Flags]
-public enum LuaJitModeFlag
-{
     Off = 0x0000,
     On = 0x0100,
     Flush = 0x0200,
 }
+
+#pragma warning restore CA1069
 
 partial class LuaJitState
 {
@@ -47,9 +47,9 @@ partial class LuaJitState
         OpenSingleLibrary(NativeMethods.luaopen_string_buffer, "string.buffer"u8);
     }
 
-    public unsafe bool TrySetJitMode(int index, LuaJitMode mode, LuaJitModeFlag flag)
+    public unsafe bool TrySetJitMode(int index, LuaJitFlags flags)
     {
         CheckDisposed();
-        return NativeMethods.luaJIT_setmode(ptr, index, (int)mode | (int)flag) != 0;
+        return NativeMethods.luaJIT_setmode(ptr, index, (int)flags) != 0;
     }
 }
