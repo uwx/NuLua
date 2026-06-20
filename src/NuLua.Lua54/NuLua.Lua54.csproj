@@ -17,7 +17,7 @@
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.2" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\NuLua.Shared\NuLua.Shared.csproj" />
+    <ProjectReference Include="..\NuLua\NuLua.csproj" />
     <ProjectReference Include="..\NuLua.Runtime.Lua54\NuLua.Runtime.Lua54.csproj" />
     <ProjectReference Include="..\NuLua.Interop.Lua54\NuLua.Interop.Lua54.csproj" />
   </ItemGroup>

@@ -24,7 +24,6 @@
     <Project Path="src/NuLua.Runtime.Lua55/NuLua.Runtime.Lua55.csproj" />
     <Project Path="src/NuLua.Runtime.LuaJit/NuLua.Runtime.LuaJit.csproj" />
     <Project Path="src/NuLua.Runtime.Luau/NuLua.Runtime.Luau.csproj" />
-    <Project Path="src/NuLua.Shared/NuLua.Shared.csproj" />
     <Project Path="src/NuLua/NuLua.csproj" />
   </Folder>
   <Folder Name="/src/NuLua.Runtime.Lua51/">
