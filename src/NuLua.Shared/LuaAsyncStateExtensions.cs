@@ -13,6 +13,18 @@ public static class LuaAsyncStateExtensions
         return new AsyncLuaFunction(state, state.Ref());
     }
 
+    public static void RegisterFunction<TState>(
+        this ILuaState<TState> state,
+        ReadOnlySpan<char> name,
+        AsyncLuaFunc<TState> function,
+        int upvalueCount = 0
+    )
+        where TState : ILuaState<TState>
+    {
+        state.NewFunction(function, upvalueCount);
+        state.SetGlobal(name);
+    }
+
     public static ValueTask CallAsync(
         this ILuaState state,
         int argCount,

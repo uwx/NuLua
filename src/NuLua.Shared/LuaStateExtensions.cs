@@ -284,6 +284,18 @@ public static class LuaStateExtensions
         return new LuaFunction(state, state.Ref());
     }
 
+    public static void RegisterFunction<TState>(
+        this ILuaState<TState> state,
+        ReadOnlySpan<char> name,
+        LuaFunc<TState> function,
+        int upvalueCount = 0
+    )
+        where TState : ILuaState<TState>
+    {
+        state.NewFunction(function, upvalueCount);
+        state.SetGlobal(name);
+    }
+
     public static ILuaState CreateThread(this ILuaState state)
     {
         state.NewThread();
