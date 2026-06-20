@@ -130,6 +130,15 @@ else
     -DLUAU_SHIM_API='extern "C" __attribute__((visibility("default")))'
 endif
 
+# On Windows, statically link the C++ runtime so the produced luau.dll has no
+# external dependency on libc++.dll / libunwind.dll from the llvm-mingw toolchain.
+ifeq ($(TARGET_OS),windows)
+  LUAU_LDFLAGS_EXTRA := -static-libgcc -static-libstdc++ \
+                        -Wl,-Bstatic -lc++ -lunwind -Wl,-Bdynamic
+else
+  LUAU_LDFLAGS_EXTRA :=
+endif
+
 CXXFLAGS_LUAU := -O2 -fPIC -w -std=c++17 $(LUAU_INCS) $(LUAU_API_DEFS) $(CFLAGS_EXTRA) $(CXXFLAGS_EXTRA)
 
 $(BUILD)/luau/$(RID)/vm/%.o: $(LUAU_VM_SRC)/%.cpp
@@ -157,7 +166,7 @@ $(BUILD)/luau/$(RID)/shim/%.o: $(LUAU_SHIM_SRC)/%.cpp
 	$(CXX) $(CXXFLAGS_LUAU) -c $< -o $@
 
 $(BUILD)/luau/$(RID)/$(call dylib_name,luau): $(LUAU_OBJS)
-	$(CXX) $(SHARED_FLAGS) $(LDFLAGS) -o $@ $^ $(PLATFORM_LIBS)
+	$(CXX) $(SHARED_FLAGS) $(LDFLAGS) -o $@ $^ $(PLATFORM_LIBS) $(LUAU_LDFLAGS_EXTRA)
 
 luau: $(BUILD)/luau/$(RID)/$(call dylib_name,luau)
 .PHONY: luau
