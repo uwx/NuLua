@@ -105,9 +105,7 @@ public class AsyncCancellationTests
         state["step"] = func;
 
         using var cts = new CancellationTokenSource();
-        var task = state
-            .DoStringAsync("for i=1,10 do step() end", default, cts.Token)
-            .AsTask();
+        var task = state.DoStringAsync("for i=1,10 do step() end", default, cts.Token).AsTask();
 
         await Task.Delay(50).ConfigureAwait(false);
         cts.Cancel();

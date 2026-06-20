@@ -4,10 +4,12 @@ public class LuaStateTests
 {
     static int CountCachedStates(LuaStateCase lua)
     {
-        var cache = lua.StateType.GetField(
-            "ptrToState",
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static
-        )!.GetValue(null)!;
+        var cache = lua
+            .StateType.GetField(
+                "ptrToState",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static
+            )!
+            .GetValue(null)!;
         return (int)cache.GetType().GetProperty("Count")!.GetValue(cache)!;
     }
 
