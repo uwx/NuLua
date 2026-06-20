@@ -341,7 +341,8 @@ public sealed unsafe partial class LuauState : ILuaState<LuauState>, ILuaDebug<L
         return NativeMethods.luaL_newmetatable(ptr, cName.Pointer) != 0;
     }
 
-    public ILuaDebug<LuauState> Debug => this;
+    public ILuauDebug Debug => this;
+    ILuaDebug<LuauState> ILuaState<LuauState>.Debug => this;
     ILuaDebug ILuaState.Debug => this;
     public ILuaGarbageCollection GarbageCollection => this;
 

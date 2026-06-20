@@ -3,13 +3,10 @@ using NuLua.Interop.Luau;
 
 namespace NuLua.Luau;
 
-public sealed unsafe partial class LuauState
+public sealed unsafe partial class LuauState : ILuauDebug
 {
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     delegate void LuauDebugCallbackDelegate(lua_State* L, lua_Debug* ar);
-
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    delegate void LuauInterruptDelegate(lua_State* L, int gc);
 
     LuauDebugCallbackDelegate? debugBreakDelegate;
     LuauDebugCallbackDelegate? debugStepDelegate;
@@ -18,18 +15,6 @@ public sealed unsafe partial class LuauState
     LuaHook<LuauState>? debugBreakHook;
     LuaHook<LuauState>? debugStepHook;
     LuaHook<LuauState>? debugInterruptHook;
-
-    // Generic hook plumbing modeled on mlua's Luau backend: Line uses
-    // singlestep+debugstep, Count uses the interrupt callback. Call/Return
-    // are not natively dispatched by Luau, so we expose them via the same
-    // interrupt path by checking event boundaries when feasible.
-    LuauDebugCallbackDelegate? hookStepCallback;
-    LuauInterruptDelegate? hookInterruptCallback;
-    LuaHook<LuauState>? hookDelegate;
-    LuaHook? nonGenericHookDelegate;
-    LuaHookMask hookMask;
-    int hookCount;
-    int hookCountdown;
 
     int ILuaDebug.GetStackDepth()
     {
@@ -40,7 +25,25 @@ public sealed unsafe partial class LuauState
     bool ILuaDebug.TryGetStackInfo(int level, LuaDebugInfoFields fields, out LuaDebugInfo info)
     {
         CheckDisposed();
-        var what = BuildWhatString(fields);
+
+        scoped Span<byte> buffer = stackalloc byte[16];
+        int len = 0;
+        if ((fields & LuaDebugInfoFields.Name) != 0)
+            buffer[len++] = (byte)'n';
+        if ((fields & LuaDebugInfoFields.Source) != 0)
+            buffer[len++] = (byte)'s';
+        if ((fields & LuaDebugInfoFields.CurrentLine) != 0)
+            buffer[len++] = (byte)'l';
+        if ((fields & LuaDebugInfoFields.Upvalues) != 0)
+        {
+            buffer[len++] = (byte)'u';
+            buffer[len++] = (byte)'a';
+        }
+        if ((fields & LuaDebugInfoFields.Function) != 0)
+            buffer[len++] = (byte)'f';
+        buffer[len] = 0;
+        var what = buffer[..(len + 1)];
+
         lua_Debug ar = default;
         fixed (byte* whatPtr = what)
         {
@@ -83,165 +86,55 @@ public sealed unsafe partial class LuauState
     }
 
     nint ILuaDebug.UpvalueId(int funcIndex, int n) =>
-        throw new NotSupportedException("lua_upvalueid is not available on Luau.");
+        throw new NotSupportedException("Luau does not support UpvalueId()");
 
     void ILuaDebug.UpvalueJoin(int fIdx1, int n1, int fIdx2, int n2) =>
-        throw new NotSupportedException("lua_upvaluejoin is not available on Luau.");
+        throw new NotSupportedException("Luau does not support UpvalueJoin()");
 
-    void ILuaDebug<LuauState>.SetHook(LuaHook<LuauState>? hook, LuaHookMask mask, int count)
-    {
-        CheckDisposed();
-        InstallHook(hook, nonGenericHook: null, mask, count);
-    }
+    void ILuaDebug<LuauState>.SetHook(LuaHook<LuauState>? hook, LuaHookMask mask, int count) =>
+        throw new NotSupportedException(
+            "Luau does not support SetHook(). Use the Luauc debug callbacks instead."
+        );
 
-    void ILuaDebug.SetHook(LuaHook? hook, LuaHookMask mask, int count)
-    {
-        CheckDisposed();
-        InstallHook(typedHook: null, hook, mask, count);
-    }
+    void ILuaDebug.SetHook(LuaHook? hook, LuaHookMask mask, int count) =>
+        throw new NotSupportedException(
+            "Luau does not support SetHook(). Use the Luauc debug callbacks instead."
+        );
 
-    LuaHook<LuauState>? ILuaDebug<LuauState>.GetHook() => hookDelegate;
+    LuaHook<LuauState>? ILuaDebug<LuauState>.GetHook() => null;
 
-    LuaHook? ILuaDebug.GetHook()
-    {
-        if (nonGenericHookDelegate != null) return nonGenericHookDelegate;
-        var typed = hookDelegate;
-        return typed == null ? null : (s, ev, line) => typed((LuauState)s, ev, line);
-    }
+    LuaHook? ILuaDebug.GetHook() => null;
 
-    LuaHookMask ILuaDebug.GetHookMask() => hookMask;
+    LuaHookMask ILuaDebug.GetHookMask() => LuaHookMask.None;
 
-    int ILuaDebug.GetHookCount() => hookCount;
+    int ILuaDebug.GetHookCount() => 0;
 
-    void InstallHook(LuaHook<LuauState>? typedHook, LuaHook? nonGenericHook, LuaHookMask mask, int count)
-    {
-        var clearing = (typedHook == null && nonGenericHook == null) || mask == LuaHookMask.None;
-        var callbacks = NativeMethods.lua_callbacks(ptr);
-
-        if (clearing)
-        {
-            hookDelegate = null;
-            nonGenericHookDelegate = null;
-            hookMask = LuaHookMask.None;
-            hookCount = 0;
-            hookCountdown = 0;
-            hookStepCallback = null;
-            hookInterruptCallback = null;
-            NativeMethods.lua_singlestep(ptr, 0);
-            callbacks->debugstep = null;
-            callbacks->interrupt = null;
-            return;
-        }
-
-        // Luau does not provide call/return hooks. Reject unsupported bits up front
-        // so callers get a clear error instead of silent no-ops, matching the
-        // expectations the rest of NuLua's API sets for hooks.
-        if ((mask & (LuaHookMask.Call | LuaHookMask.Return)) != 0)
-        {
-            throw new NotSupportedException(
-                "Luau does not support Call/Return hooks"
-            );
-        }
-
-        hookDelegate = typedHook;
-        nonGenericHookDelegate = nonGenericHook;
-        hookMask = mask;
-        hookCount = count;
-        hookCountdown = count;
-
-        if ((mask & LuaHookMask.Line) != 0)
-        {
-            hookStepCallback = HookStepEntry;
-            NativeMethods.lua_singlestep(ptr, 1);
-            callbacks->debugstep = (void*)Marshal.GetFunctionPointerForDelegate(hookStepCallback);
-        }
-        else
-        {
-            NativeMethods.lua_singlestep(ptr, 0);
-            callbacks->debugstep = null;
-            hookStepCallback = null;
-        }
-
-        if ((mask & LuaHookMask.Count) != 0 && count > 0)
-        {
-            hookInterruptCallback = HookInterruptEntry;
-            callbacks->interrupt = (void*)Marshal.GetFunctionPointerForDelegate(hookInterruptCallback);
-        }
-        else
-        {
-            callbacks->interrupt = null;
-            hookInterruptCallback = null;
-        }
-    }
-
-    static void HookStepEntry(lua_State* L, lua_Debug* ar)
-    {
-        if (!ptrToState.TryGetValue((nint)L, out var state)) return;
-        InvokeHook(state, LuaHookEvent.Line, ar->currentline);
-    }
-
-    static void HookInterruptEntry(lua_State* L, int gc)
-    {
-        // Luau invokes interrupt with gc != -1 only for GC events; -1 is the
-        // ordinary per-instruction poll. Ignore the GC variant.
-        if (gc >= 0) return;
-        if (!ptrToState.TryGetValue((nint)L, out var state)) return;
-
-        if (state.hookCount <= 0) return;
-        state.hookCountdown--;
-        if (state.hookCountdown > 0) return;
-        state.hookCountdown = state.hookCount;
-
-        int currentLine = -1;
-        lua_Debug ar = default;
-        fixed (byte* what = "l\0"u8)
-        {
-            if (NativeMethods.lua_getinfo(L, 0, what, &ar) != 0)
-            {
-                currentLine = ar.currentline;
-            }
-        }
-        InvokeHook(state, LuaHookEvent.Count, currentLine);
-    }
-
-    static void InvokeHook(LuauState state, LuaHookEvent ev, int currentLine)
-    {
-        var typed = state.hookDelegate;
-        if (typed != null)
-        {
-            typed(state, ev, currentLine);
-            return;
-        }
-        var nonGeneric = state.nonGenericHookDelegate;
-        nonGeneric?.Invoke(state, ev, currentLine);
-    }
-
-    public int GetArgument(int level, int n)
+    int ILuauDebug.GetArgument(int level, int n)
     {
         CheckDisposed();
         return NativeMethods.lua_getargument(ptr, level, n);
     }
 
-    public void SetSingleStep(bool enabled)
+    void ILuauDebug.SetSingleStep(bool enabled)
     {
         CheckDisposed();
         NativeMethods.lua_singlestep(ptr, enabled ? 1 : 0);
     }
 
-    public int SetBreakpoint(int funcIndex, int line, bool enabled)
+    int ILuauDebug.SetBreakpoint(int funcIndex, int line, bool enabled)
     {
         CheckDisposed();
         return NativeMethods.lua_breakpoint(ptr, funcIndex, line, enabled ? 1 : 0);
     }
 
-    public string GetDebugTrace()
+    string ILuauDebug.GetDebugTrace()
     {
         CheckDisposed();
         var p = NativeMethods.lua_debugtrace(ptr);
         return Utf8NullTerminated(p) ?? string.Empty;
     }
 
-    public void GetCoverage(int funcIndex, Action<LuauCoverageEntry> visit)
+    void ILuauDebug.GetCoverage(int funcIndex, Action<LuauCoverageEntry> visit)
     {
         CheckDisposed();
         if (visit == null)
@@ -295,7 +188,7 @@ public sealed unsafe partial class LuauState
         );
     }
 
-    public void SetDebugBreakCallback(LuaHook<LuauState>? callback)
+    void ILuauDebug.SetDebugBreakCallback(LuaHook<LuauState>? callback)
     {
         CheckDisposed();
         debugBreakHook = callback;
@@ -307,7 +200,7 @@ public sealed unsafe partial class LuauState
                 : (void*)Marshal.GetFunctionPointerForDelegate(debugBreakDelegate!);
     }
 
-    public void SetDebugStepCallback(LuaHook<LuauState>? callback)
+    void ILuauDebug.SetDebugStepCallback(LuaHook<LuauState>? callback)
     {
         CheckDisposed();
         debugStepHook = callback;
@@ -319,7 +212,7 @@ public sealed unsafe partial class LuauState
                 : (void*)Marshal.GetFunctionPointerForDelegate(debugStepDelegate!);
     }
 
-    public void SetDebugInterruptCallback(LuaHook<LuauState>? callback)
+    void ILuauDebug.SetDebugInterruptCallback(LuaHook<LuauState>? callback)
     {
         CheckDisposed();
         debugInterruptHook = callback;
@@ -353,27 +246,6 @@ public sealed unsafe partial class LuauState
             return;
         var hook = state.debugInterruptHook;
         hook?.Invoke(state, LuaHookEvent.Line, ar->currentline);
-    }
-
-    static byte[] BuildWhatString(LuaDebugInfoFields fields)
-    {
-        Span<byte> buffer = stackalloc byte[16];
-        int len = 0;
-        if ((fields & LuaDebugInfoFields.Name) != 0)
-            buffer[len++] = (byte)'n';
-        if ((fields & LuaDebugInfoFields.Source) != 0)
-            buffer[len++] = (byte)'s';
-        if ((fields & LuaDebugInfoFields.CurrentLine) != 0)
-            buffer[len++] = (byte)'l';
-        if ((fields & LuaDebugInfoFields.Upvalues) != 0)
-        {
-            buffer[len++] = (byte)'u';
-            buffer[len++] = (byte)'a';
-        }
-        if ((fields & LuaDebugInfoFields.Function) != 0)
-            buffer[len++] = (byte)'f';
-        buffer[len] = 0;
-        return buffer[..(len + 1)].ToArray();
     }
 
     static LuaDebugInfo ReadDebugInfo(lua_Debug* ar)

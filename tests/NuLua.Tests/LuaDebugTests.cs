@@ -149,8 +149,8 @@ public class LuaDebugTests
         using var state = LuauState.Create();
 
         int stepCount = 0;
-        state.SetSingleStep(true);
-        state.SetDebugStepCallback((s, ev, line) => stepCount++);
+        state.Debug.SetSingleStep(true);
+        state.Debug.SetDebugStepCallback((s, ev, line) => stepCount++);
 
         var bytes = Encoding.UTF8.GetBytes("local a = 1; local b = 2; local c = a + b");
         var bytecode = LuauCompiler.Compile(
@@ -160,48 +160,20 @@ public class LuaDebugTests
         state.LoadBuffer(bytecode, "chunk");
         state.Call(0, 0);
 
-        state.SetDebugStepCallback(null);
-        state.SetSingleStep(false);
+        state.Debug.SetDebugStepCallback(null);
+        state.Debug.SetSingleStep(false);
 
         await Assert.That(stepCount).IsGreaterThan(0);
     }
 
     [Test]
-    public async Task LuauLineHookFiresViaSingleStepFallback()
-    {
-        using var state = LuauState.Create();
-
-        var events = new List<(LuaHookEvent ev, int line)>();
-        state.Debug.SetHook((s, ev, line) => events.Add((ev, line)), LuaHookMask.Line, 0);
-
-        var bytes = Encoding.UTF8.GetBytes("local a = 1\nlocal b = 2\nlocal c = a + b\n");
-        var bytecode = LuauCompiler.Compile(
-            bytes,
-            new LuauCompileOptions { DebugLevel = 2, OptimizationLevel = 0 }
-        );
-        state.LoadBuffer(bytecode, "chunk");
-        state.Call(0, 0);
-
-        state.Debug.SetHook(null, LuaHookMask.None, 0);
-
-        await Assert.That(events.Count).IsGreaterThan(0);
-        await Assert.That(events.TrueForAll(e => e.ev == LuaHookEvent.Line)).IsTrue();
-    }
-
-    [Test]
-    public async Task LuauSetHookRejectsCallAndReturnMasks()
+    public async Task LuauSetHookThrows()
     {
         using var state = LuauState.Create();
 
         await Assert
             .That(
-                () => state.Debug.SetHook((s, ev, line) => { }, LuaHookMask.Call, 0)
-            )
-            .Throws<NotSupportedException>();
-
-        await Assert
-            .That(
-                () => state.Debug.SetHook((s, ev, line) => { }, LuaHookMask.Return, 0)
+                () => state.Debug.SetHook((s, ev, line) => { }, LuaHookMask.Line, 0)
             )
             .Throws<NotSupportedException>();
     }
@@ -210,7 +182,7 @@ public class LuaDebugTests
     public async Task LuauDebugTraceReturnsString()
     {
         using var state = LuauState.Create();
-        var trace = state.GetDebugTrace();
+        var trace = state.Debug.GetDebugTrace();
         await Assert.That(trace).IsNotNull();
     }
 }

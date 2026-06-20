@@ -390,7 +390,12 @@ public sealed unsafe partial class {{ name }}State : ILuaState<{{ name }}State>,
         return NativeMethods.luaL_newmetatable(ptr, cName.Pointer) != 0;
     }
 
+{{~ if name == "Luau" ~}}
+    public ILuauDebug Debug => this;
+    ILuaDebug<LuauState> ILuaState<LuauState>.Debug => this;
+{{~ else ~}}
     public ILuaDebug<{{ name }}State> Debug => this;
+{{~ end ~}}
     ILuaDebug ILuaState.Debug => this;
     public ILuaGarbageCollection GarbageCollection => this;
 
