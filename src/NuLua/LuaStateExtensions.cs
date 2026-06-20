@@ -309,6 +309,50 @@ public static class LuaStateExtensions
         return state.ToThread(-1);
     }
 
+    public static int Call(
+        this ILuaState state,
+        LuaFunction function,
+        params ReadOnlySpan<LuaValue> args
+    )
+    {
+        var baseTop = state.GetTop();
+        state.PushValue(function.Reference);
+        foreach (var arg in args)
+        {
+            state.Push(arg);
+        }
+        state.Call(args.Length, -1);
+        return state.GetTop() - baseTop;
+    }
+
+    public static ValueTask<int> CallAsync(
+        this ILuaState state,
+        LuaFunction function,
+        LuaValue[] args,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return CallAsync(state, function, args.AsMemory(), cancellationToken);
+    }
+
+    public static async ValueTask<int> CallAsync(
+        this ILuaState state,
+        LuaFunction function,
+        ReadOnlyMemory<LuaValue> args,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var baseTop = state.GetTop();
+        state.PushValue(function.Reference);
+        var span = args.Span;
+        for (int i = 0; i < span.Length; i++)
+        {
+            state.Push(span[i]);
+        }
+        await state.CallAsync(args.Length, -1, cancellationToken).ConfigureAwait(false);
+        return state.GetTop() - baseTop;
+    }
+
     public static LuaValue[] DoString(
         this ILuaState state,
         ReadOnlySpan<char> code,

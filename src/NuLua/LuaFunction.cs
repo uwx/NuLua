@@ -4,31 +4,31 @@ public sealed class LuaFunction(ILuaState state, LuaReference reference) : ILuaO
 {
     public LuaReference Reference => reference;
 
-    public int Invoke(ReadOnlySpan<LuaValue> args)
+    public LuaValue[] Invoke(params ReadOnlySpan<LuaValue> args)
     {
-        state.PushValue(Reference);
-        foreach (var arg in args)
+        var resultCount = state.Call(this, args);
+        var results = new LuaValue[resultCount];
+        for (int i = 0; i < resultCount; i++)
         {
-            state.Push(arg);
+            results[i] = state.ToLuaValue(-resultCount + i);
         }
-        state.Call(args.Length, 0);
-        return 0;
+        state.SetTop(-resultCount - 1);
+        return results;
     }
 
-    public async ValueTask<int> InvokeAsync(
+    public async ValueTask<LuaValue[]> InvokeAsync(
         ReadOnlyMemory<LuaValue> args,
         CancellationToken cancellationToken = default
     )
     {
-        int baseTop = state.GetTop();
-        state.PushValue(Reference);
-        var span = args.Span;
-        for (int i = 0; i < span.Length; i++)
+        var resultCount = await state.CallAsync(this, args, cancellationToken);
+        var results = new LuaValue[resultCount];
+        for (int i = 0; i < resultCount; i++)
         {
-            state.Push(span[i]);
+            results[i] = state.ToLuaValue(-resultCount + i);
         }
-        await state.CallAsync(args.Length, -1, cancellationToken).ConfigureAwait(false);
-        return state.GetTop() - baseTop;
+        state.SetTop(-resultCount - 1);
+        return results;
     }
 
     public void Dispose()
