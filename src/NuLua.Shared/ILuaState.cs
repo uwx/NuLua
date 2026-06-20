@@ -84,6 +84,13 @@ public interface ILuaState : ILuaObject
     void LoadBuffer(ReadOnlySpan<byte> buffer, ReadOnlySpan<byte> utf8ChunkName);
     void LoadBuffer(ReadOnlySpan<byte> buffer, ReadOnlySpan<char> chunkName);
     bool TryDump(int index, bool strip, Span<byte> buffer, out int bytesWritten);
+
+    int GetStackDepth();
+    bool TryGetStackInfo(int level, LuaDebugInfoFields fields, out LuaDebugInfo info);
+    string? GetLocal(int level, int n);
+    string? SetLocal(int level, int n);
+    string? GetUpvalue(int funcIndex, int n);
+    string? SetUpvalue(int funcIndex, int n);
 }
 
 public interface ILuaState<T> : ILuaState
