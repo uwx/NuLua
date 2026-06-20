@@ -13,7 +13,7 @@ public sealed record LuaStateCase(
     Type StateType,
     Func<ILuaState> CreateState,
     Func<ILuaState, LuaFunction> CreateAdderFunction,
-    Func<ILuaState, AsyncLuaFunc<ILuaState>, AsyncLuaFunction> CreateAsyncFunction,
+    Func<ILuaState, AsyncLuaFunc<ILuaState>, LuaFunction> CreateAsyncFunction,
     Action<ILuaState, LuaModuleLoader> UseModuleLoader,
     Action<ILuaState, int, long>? GetI = null,
     Action<ILuaState, int, long>? SetI = null,
@@ -118,7 +118,7 @@ public static class LuaStateCases
         );
     }
 
-    static AsyncLuaFunction CreateAsyncFunction<TState>(
+    static LuaFunction CreateAsyncFunction<TState>(
         ILuaState state,
         AsyncLuaFunc<ILuaState> function
     )
