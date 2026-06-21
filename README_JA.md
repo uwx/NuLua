@@ -1,34 +1,34 @@
 # NuLua
-
+ 
 Unified Lua5.x/LuaJIT/Luau bindings for .NET and Unity
 
 [![NuGet](https://img.shields.io/nuget/v/NuLua.svg)](https://www.nuget.org/packages/NuLua)
 [![Releases](https://img.shields.io/github/release/nuskey8/NuLua.svg)](https://github.com/nuskey8/NuLua/releases)
 [![license](https://img.shields.io/badge/LICENSE-MIT-green.svg)](LICENSE)
 
-English | [日本語](README_JA.md)
+[English](README.md) | 日本語
 
-## Overview
+## 概要
 
-NuLua (pronounced like "new Lua") is a new Lua library for .NET / Unity. It provides common abstractions for using Lua from C#, as well as bindings and high-level APIs for each runtime.
+NuLua("new Lua"と同じように発音します)は.NET / Unity向けの新しいLuaライブラリです。C#でLuaを扱うための共通の抽象化と、各ランタイムのバインディング及び高レベルAPIを提供します。
 
 > [!CAUTION]
-> This library is currently provided as a preview. It currently supports Windows/macOS/Linux only; iOS/Android/Web support is planned for the future.
+> このライブラリは現在プレビュー版として提供されています。現在はWindows/macOS/Linuxのみをサポートしていますが、将来的にはiOS/Android/Webもサポートされる予定です。
 
-## Features
+## 特徴
 
-- High-performance design that minimizes heap allocations on the C# side
-- Modern, easy-to-use API design
-- Choose the backend from Lua 5.1/5.2/5.3/5.4/5.5 and LuaJIT/Luau
-- async/await support
+- C#側でのヒープアロケーションを最小限に抑えた高速な設計
+- モダンで扱いやすいAPI設計
+- Lua5.1/5.2/5.3/5.4/5.5及びLuaJIT/Luauからバックエンドを選択可能
+- async/awaitに対応
 
-## Installation
+## インストール
 
-NuLua requires .NET Standard 2.1 or later.
+NuLuaを利用するには.NET Standard2.1以上が必要です。
 
-All packages are distributed on NuGet. To use NuLua, install the core package plus the package for the runtime you want to use.
+全てのパッケージはNuGetで配布されています。NuLuaを利用するにはコアパッケージに加え、利用するランタイムのパッケージを追加でインストールする必要があります。
 
-| Package      | Latest Version                                                |
+| パッケージ   | 最新バージョン                                                |
 | ------------ | ------------------------------------------------------------- |
 | NuLua        | ![NuGet Version](https://img.shields.io/nuget/v/NuLua)        |
 | NuLua.Lua51  | ![NuGet Version](https://img.shields.io/nuget/v/NuLua.Lua51)  |
@@ -39,9 +39,9 @@ All packages are distributed on NuGet. To use NuLua, install the core package pl
 | NuLua.LuaJit | ![NuGet Version](https://img.shields.io/nuget/v/NuLua.LuaJit) |
 | NuLua.Luau   | ![NuGet Version](https://img.shields.io/nuget/v/NuLua.Luau)   |
 
-Low-level binding APIs and pre-built native binaries can also be added separately. These are included as dependencies of each package, so users normally do not need to install them manually.
+また、低レベルなバインディングAPIおよびビルド済みのネイティブバイナリも個別に追加することが可能です。これは各パッケージの依存に含まれるため、通常ユーザーが手動でインストールする必要はありません。
 
-| Package              | Latest Version                                                        |
+| パッケージ           | 最新バージョン                                                        |
 | -------------------- | --------------------------------------------------------------------- |
 | NuLua.Runtime.Lua51  | ![NuGet Version](https://img.shields.io/nuget/v/NuLua.Runtime.Lua51)  |
 | NuLua.Runtime.Lua52  | ![NuGet Version](https://img.shields.io/nuget/v/NuLua.Runtime.Lua52)  |
@@ -58,21 +58,21 @@ Low-level binding APIs and pre-built native binaries can also be added separatel
 | NuLua.Interop.LuaJit | ![NuGet Version](https://img.shields.io/nuget/v/NuLua.Interop.LuaJit) |
 | NuLua.Interop.Luau   | ![NuGet Version](https://img.shields.io/nuget/v/NuLua.Interop.Luau)   |
 
-## Platforms
+## プラットフォーム
 
-| Platform | Architecture | Supported |
-| -------- | ------------ | --------- |
-| Windows  | x64          | ✅         |
-|          | arm64        | ✅         |
-| macOS    | x64          | ✅         |
-|          | arm64        | ✅         |
-| Linux    | x64          | ✅         |
-|          | arm64        | ✅         |
-| iOS      |              | 🚧         |
-| Android  |              | 🚧         |
-| Web      |              | 🚧         |
+| プラットフォーム | アーキテクチャ | 対応 |
+| ---------------- | -------------- | ---- |
+| Windows          | x64            | ✅    |
+|                  | arm64          | ✅    |
+| macOS            | x64            | ✅    |
+|                  | arm64          | ✅    |
+| Linux            | x64            | ✅    |
+|                  | arm64          | ✅    |
+| iOS              |                | 🚧    |
+| Android          |                | 🚧    |
+| Web              |                | 🚧    |
 
-## Quick Start
+## クイックスタート
 
 ```cs
 using NuLua;
@@ -86,11 +86,11 @@ Console.WriteLine(results[0]); // 3
 ```
 
 > [!WARNING]
-> `ILuaState` is not thread-safe. Do not access it from multiple threads simultaneously.
+> `ILuaState`はスレッドセーフではありません。同時に複数のスレッドからアクセスしないでください。
 
 ## LuaValue
 
-In NuLua, values inside Lua are represented by the `LuaValue` struct. They can be read with `Read<T>()`.
+NuLuaではLua内部の値は`LuaValue`構造体として表現されます。これは`Read<T>()`で読み取ることが可能です。
 
 ```cs
 LuaValue value = state.DoString("return 42")[0];
@@ -98,7 +98,7 @@ Console.WriteLine(value.Type);        // Number
 Console.WriteLine(value.Read<int>()); // 42
 ```
 
-The type mappings between Lua and C# are shown below.
+Lua-C#間の型の対応を以下に示します。
 
 | Lua             | C#                        |
 | --------------- | ------------------------- |
@@ -114,7 +114,7 @@ The type mappings between Lua and C# are shown below.
 | `vector` (Luau) | `System.Numerics.Vector3` |
 | `buffer` (Luau) | `LuauBuffer`              |
 
-When creating a `LuaValue` from C#, convertible types are implicitly converted to `LuaValue`.
+C#側から`LuaValue`を作成する際には、変換可能な型の場合であれば暗黙的に`LuaValue`に変換されます。
 
 ```cs
 LuaValue value;
@@ -125,7 +125,7 @@ value = state.CreateTable(); // LuaTable ->  LuaValue
 
 ## ILuaState
 
-NuLua provides `ILuaState` as an abstraction over Lua runtimes.
+NuLuaはLuaランタイムの抽象化として`ILuaState`を提供しています。
 
 ```cs
 ILuaState lua55 = Lua55State.Create();
@@ -133,11 +133,11 @@ ILuaState luaJit = LuaJitState.Create();
 ILuaState luau = LuauState.Create();
 ```
 
-This makes it easy to swap the backend runtime without having to account for differences between versions.
+これによりバージョン間の差異を考慮することなく、バックエンドとなるランタイムの差し替えが容易に行えるようになっています。
 
-## Libraries
+## ライブラリ
 
-You can load the standard libraries by calling `OpenLibraries()`. Individual libraries can also be loaded selectively.
+`OpenLibraries()`を呼び出すことで標準ライブラリを追加できます。個別のライブラリを選択して追加することも可能です。
 
 ```cs
 state.OpenLibraries();
@@ -153,9 +153,9 @@ state.OpenOsLibrary();
 state.OpenUtf8Library();
 ```
 
-## Global Environment
+## グローバル環境
 
-You can access the Lua global environment using the indexer.
+インデクサを用いてLuaのグローバル環境にアクセスすることが可能です。
 
 ```cs
 state.DoString("""
@@ -171,15 +171,15 @@ state["bar"] = "world";
 
 state.DoString("""
     print(foo) -- 20
-    print(bar) -- world
+    print(bar) -- bar
     """);
 ```
 
-## Functions
+## 関数
 
-Lua functions are represented by `LuaFunction`.
+Luaの関数は`LuaFunction`で表現されます。
 
-### Calling Lua functions from C#
+### C#からLuaの関数を呼ぶ
 
 ```cs
 state.DoString("""
@@ -194,19 +194,19 @@ var results = addFunction.Invoke(1, 2);
 Console.WriteLine(results[0]); // 3
 ```
 
-### Calling C# functions from Lua
+### LuaからC#の関数を呼ぶ
 
 ```cs
-var addFunction = state.CreateFunction((state, args) =>
+var addFunction = state.CreateFunction((state, args) => 
 {
-    // Read arguments
+    // 引数の読み取り
     var a = args[0].Read<double>();
     var b = args[1].Read<double>();
 
-    // Push return value onto the stack
+    // 戻り値をスタックにPush
     state.Push(a + b);
 
-    return 1; // Return the number of return values
+    return 1; // 戻り値の数を返す
 });
 
 state["add"] = addFunction;
@@ -217,7 +217,7 @@ var results = state.DoString("""
 Console.WriteLine(results[0]); // 3
 ```
 
-When registering a function in the global environment, it is more efficient to call `RegisterFunction()`.
+関数をグローバル環境に登録する場合は`RegisterFunction()`を呼び出す方が効率的です。
 
 ```cs
 state.RegisterFunction("foo", (state, args) => { ... });
@@ -225,7 +225,7 @@ state.RegisterFunction("foo", (state, args) => { ... });
 
 ## LuaTable
 
-Lua tables are represented by `LuaTable`.
+Luaのテーブルは`LuaTable`で表現されます。
 
 ```cs
 var table1 = state.CreateTable();
@@ -240,9 +240,9 @@ Console.WriteLine(table2["a"]); // 10
 
 ## UserData
 
-C# structs can be passed to Lua as UserData. Structs used as UserData must be unmanaged (they must not contain references).
+C#の構造体をUserDataとしてLuaに渡すことが可能です。UserDataとして使う構造体はunmanagedである(参照を含まない)必要があります。
 
-Use `state.CreateUserData<T>()` to create UserData. The returned `LuaUserData` is a handle that holds information such as the UserData pointer and size.
+UserDataを作成するには`state.CreateUserData<T>()`を利用します。戻り値の`LuaUserData`はUserDataのポインタやサイズなどの情報を保持するハンドルです。
 
 ```cs
 LuaUserData userdata = state.CreateUserData<Example>(new()
@@ -258,25 +258,25 @@ struct Example
 }
 ```
 
-A `LuaValue` representing UserData can be read directly with `Read<T>()`.
+UserDataを表す`LuaValue`は直接`Read<T>()`で読み取ることが可能です。
 
 ```cs
 var value = state["example"]; // userdata
 var example = value.Read<Example>();
 ```
 
-## Threads / Coroutines
+## スレッド / コルーチン
 
-Lua threads are represented by `ILuaState`.
+Luaのスレッドは`ILuaState`で表現されます。
 
-You can create threads that share the global environment using `state.CreateThread()`. This is useful when running multiple independent Lua scripts.
+`state.CreateThread()`を用いてグローバル環境を共有するスレッドを作成できます。これは独立したLuaスクリプトを複数実行する際に便利です。
 
 ```cs
 var thread = state.CreateThread();
 thread.DoString("return 1 + 2");
 ```
 
-You can also obtain Lua coroutines as `ILuaState` and control them from C#.
+またLuaのコルーチンを`ILuaState`として取得し、C#側で操作することも可能です。
 
 ```lua
 -- coroutine.lua
@@ -302,15 +302,15 @@ for (int i = 0; i < 10; i++)
 {
     var resumeResults = co.Resume(state);
 
-    // Like coroutine.resume(), the first element is true on success, followed by the function's return values
+    // coroutine.resume()と同様、成功時は最初の要素にtrue、それ以降に関数の戻り値を返す
     // 1, 2, 3, 4, ...
     Console.WriteLine(resumeResults[1]);
 }
 ```
 
-## Module Resolution
+## モジュール解決
 
-You can replace Lua's module resolution with a custom implementation using `LuaModuleLoader`. Built-in loaders include `FileSystemModuleLoader` and `InMemoryModuleLoader`.
+`LuaModuleLoader`を用いてLuaのモジュール解決をカスタム実装に置き換えることが可能です。組み込みのLoaderとして`FileSystemModuleLoader`と`InMemoryModuleLoader`が用意されています。
 
 ```cs
 state.OpenPackageLibrary();
@@ -324,14 +324,14 @@ state.UseModuleLoader(new InMemoryModuleLoader(new Dictionary<string, string>
 ```
 
 > [!NOTE]
-> `UseModuleLoader()` must be called after `OpenPackageLibrary()`. In Luau, `OpenPackageLibrary()` does not exist, so it works by replacing `require()`.
+> `UseModuleLoader()`を呼び出す前に`OpenPackageLibrary()`を呼び出す必要があります。Luauでは`OpenPackageLibrary()`が存在しないため、`require()`を置き換える形で動作します。
 
-## Asynchronous API
+## 非同期API
 
-Lua script execution itself always completes synchronously, but C# functions passed to Lua can be asynchronous.
+Luaスクリプト自体の実行は常に同期的に終了しますが、Lua側に渡すC#関数は非同期にすることが可能です。
 
 ```cs
-state.RegisterFunction("wait", async (state, args) =>
+state.RegisterFunction("wait", async (state, args) => 
 {
     var sec = args[0].Read<double>();
     await Task.Delay(TimeSpan.FromSeconds(sec));
@@ -339,7 +339,7 @@ state.RegisterFunction("wait", async (state, args) =>
 });
 ```
 
-When executing a Lua script that contains calls to asynchronous functions, the caller must also use the asynchronous API.
+非同期関数の呼び出しを含むLuaスクリプトを実行する場合、呼び出し元も非同期APIを利用する必要があります。
 
 ```cs
 await state.DoStringAsync("""
@@ -347,7 +347,7 @@ await state.DoStringAsync("""
     print("delayed")
     """);
 
-// This causes a runtime error
+// これは実行時エラー
 state.DoString("""
     wait(2)
     print("delayed")
@@ -355,15 +355,15 @@ state.DoString("""
 ```
 
 > [!NOTE]
-> Asynchronous functions cannot be set as metamethods. These must always be synchronous functions.
+> metamethodに非同期関数を設定することはできません。これは常に同期関数である必要があります。
 
 ## Debug
 
-You can access Lua's debug API through `ILuaState.Debug`.
+`ILuaState.Debug`を通じてLuaのデバッグAPIにアクセスできます。
 
-### Retrieving Stack Information
+### スタック情報の取得
 
-`GetStackDepth()` returns the depth of the call stack. `TryGetStackInfo()` retrieves stack information for the specified level.
+`GetStackDepth()`でコールスタックの深さを取得できます。`TryGetStackInfo()`で指定した階層のスタック情報を取得できます。
 
 ```cs
 int depth = state.Debug.GetStackDepth();
@@ -376,18 +376,18 @@ if (state.Debug.TryGetStackInfo(0, LuaDebugInfoFields.All, out var info))
 }
 ```
 
-### Local Variables / Upvalues
+### ローカル変数/Upvalue
 
-You can get and set local variables and upvalues using `GetLocal()`/`SetLocal()` and `GetUpvalue()`/`SetUpvalue()`.
+`GetLocal()`/`SetLocal()`や`GetUpvalue()`/`SetUpvalue()`でローカル変数・Upvalueの値を取得・変更できます。
 
 ```cs
-// Push the function onto the stack first
+// スタックに関数を積んでから
 var name = state.Debug.GetUpvalue(-1, 1);
 ```
 
-### Hooks
+### フック
 
-You can use `SetHook()` to set callbacks for each function call or line executed.
+`SetHook()`を用いて関数呼び出しや行の実行ごとにコールバックを設定できます。
 
 ```cs
 state.SetHook((s, ev, line) =>
@@ -396,39 +396,39 @@ state.SetHook((s, ev, line) =>
 }, LuaHookMask.Line, 0);
 ```
 
-To remove the hook, pass `null` and `LuaHookMask.None`.
+フックを解除するには`null`と`LuaHookMask.None`を指定します。
 
 ```cs
 state.SetHook(null, LuaHookMask.None, 0);
 ```
 
 > [!NOTE]
-> `SetHook()` is not supported in Luau. Use the Luau debug API instead.
+> `SetHook()`はLuauではサポートされていません。LuauのDebug APIを利用してください。
 
 ## Garbage Collection
 
-You can control Lua's GC through `ILuaState.GarbageCollection`.
+`ILuaState.GarbageCollection`を通じてLuaのGCを制御できます。
 
 ```cs
 var before = state.GarbageCollection.GetByteCount();
 state.GarbageCollection.Collect();
 var after = state.GarbageCollection.GetByteCount();
 
-// Step the GC
+// GCのステップ実行
 bool finished = state.GarbageCollection.Step(1);
 
-// Stop and restart the GC
+// GCの停止と再開
 state.GarbageCollection.Stop();
 Console.WriteLine(state.GarbageCollection.IsRunning()); // False
 state.GarbageCollection.Restart();
 ```
 
 > [!NOTE]
-> `IsRunning()` is not supported in Lua 5.1.
+> `IsRunning()`はLua 5.1ではサポートされていません。
 
 ## Low-level API
 
-You can also perform stack operations directly by calling the low-level API of `ILuaState`.
+`ILuaState`の低レベルAPIを呼び出すことで、スタック操作を直接行うことも可能です。
 
 ```cs
 state.Push(1);
@@ -446,11 +446,11 @@ Console.WriteLine(strResult); // foobar
 
 ## LuaJIT
 
-`NuLua.LuaJit` provides additional APIs for LuaJIT-specific features.
+`NuLua.LuaJit`にはLuaJIT独自の機能に対応したAPIが追加で用意されています。
 
-### Libraries
+### ライブラリ
 
-`LuaJitState` supports LuaJIT's extension libraries.
+`LuaJitState`ではLuaJITの拡張ライブラリを利用可能です。
 
 ```cs
 using NuLua;
@@ -465,7 +465,7 @@ state.OpenJitLibrary();
 
 ### TrySetJitMode
 
-You can use `TrySetJitMode()` to set the JIT compiler mode.
+`TrySetJitMode()`を用いてJITコンパイラのモードを設定することが可能です。
 
 ```cs
 state.TrySetJitMode(0, LuaJitFlags.Engine | LuaJitFlags.Off);
@@ -473,11 +473,11 @@ state.TrySetJitMode(0, LuaJitFlags.Engine | LuaJitFlags.Off);
 
 ## Luau
 
-`NuLua.Luau` provides additional APIs for Luau-specific features.
+`NuLua.Luau`にはLuau独自の機能に対応したAPIが追加で用意されています。
 
-### Libraries
+### ライブラリ
 
-`LuauState` supports Luau's extension libraries.
+`LuauState`ではLuauの拡張ライブラリを利用可能です。
 
 ```cs
 using NuLua;
@@ -490,7 +490,7 @@ state.OpenVectorLibrary();
 
 ### LuauBuffer
 
-Luau's `buffer` type is represented by `LuauBuffer`.
+Luauの`buffer`型は`LuauBuffer`で表現されます。
 
 ```cs
 state.OpenBufferLibrary();
@@ -501,7 +501,7 @@ var buffer = results[0].Read<LuauBuffer>();
 Console.WriteLine(Encoding.UTF8.GetString(buffer.AsSpan())); // hello
 ```
 
-You can also create buffers from C#.
+C#側でbufferを作成することも可能です。
 
 ```cs
 var buffer = state.CreateBuffer(10);
@@ -521,14 +521,14 @@ Console.WriteLine(results[0]); // 12345hello
 
 ### LuauCompiler
 
-`TryDump()` and `Dump()` are not supported in `LuauState`.
+`LuauState`では`TryDump()`及び`Dump()`はサポートされていません。
 
 ```cs
 using var state = LuauState.Create();
-state.Dump(index, strip); // NotSupportedException
+state.Dump(index, strip); // NotSupoprtedException
 ```
 
-If you want to compile Luau code to bytecode, use `LuauCompiler` instead.
+Luauコードをバイトコードに変換したい場合、代わりに`LuauCompiler`が利用できます。
 
 ```cs
 byte[] bytecode = LuauCompiler.Compile("return 1 + 2");
@@ -536,7 +536,7 @@ byte[] bytecode = LuauCompiler.Compile("return 1 + 2");
 
 ### Sandbox
 
-Luau provides APIs for sandboxing threads. These are available via `CreateSandbox()` and `CreateSandboxThread()`.
+Luauにはスレッドをサンドボックス化するAPIが用意されています。これは`CreateSandbox()`及び`CreateSandboxThread()`で利用できます。
 
 ```cs
 using var state = LuauState.CreateSandbox();
@@ -545,19 +545,19 @@ var thread = state.CreateSandboxThread();
 
 ### Debug
 
-In Luau, `UpvalueId()`, `UpvalueJoin()`, and `SetHook()` are not available. Instead, you can use Luau's own debug API.
+Luauでは`UpvalueId()`、`UpvalueJoin()`および`SetHook()`が利用できません。代替として、Luau独自のDebug APIが利用できます。
 
-#### Retrieving Arguments
+#### 引数の取得
 
-`GetArgument()` pushes the `n`th argument of the function call at the specified level onto the stack. The return value is the number of values pushed.
+`GetArgument()`は指定した階層の関数呼び出しの`n`番目の引数をスタックに積みます。戻り値は積んだ値の個数です。
 
 ```cs
 int pushed = state.Debug.GetArgument(1, 1);
 ```
 
-#### Single Stepping
+#### シングルステップ
 
-When `SetSingleStep()` is set to `true`, the callback registered with `SetDebugStepCallback()` is called for each instruction executed. Debug information must be enabled to use this.
+`SetSingleStep()`を`true`に設定すると、実行する命令ごとに`SetDebugStepCallback()`で登録したコールバックが呼ばれます。これを利用するにはデバッグ情報が有効になっている必要があります。
 
 ```cs
 state.Debug.SetSingleStep(true);
@@ -566,20 +566,20 @@ state.Debug.SetDebugStepCallback((s, ev, line) =>
     Console.WriteLine($"step: {line}");
 });
 
-// Pass null to remove the callback
+// コールバックを解除するにはnullを渡します
 state.Debug.SetDebugStepCallback(null);
 state.Debug.SetSingleStep(false);
 ```
 
-#### Breakpoints
+#### ブレークポイント
 
-You can use `SetBreakpoint()` to set a breakpoint on a function on the stack. `funcIndex` is the stack index where the function is located, `line` is the line number, and `enabled` specifies whether it is enabled.
+`SetBreakpoint()`を使用すると、スタック上の関数にブレークポイントを設定できます。`funcIndex`は関数が積まれているスタックインデックス、`line`は行番号、`enabled`は有効/無効を指定します。
 
 ```cs
 state.Debug.SetBreakpoint(-1, 10, true);
 ```
 
-`SetDebugBreakCallback()` registers a callback that is called when a BREAK instruction is reached.
+`SetDebugBreakCallback()`にはBREAK命令に到達した際に呼ばれるコールバックを登録できます。
 
 ```cs
 state.Debug.SetDebugBreakCallback((s, ev, line) =>
@@ -588,18 +588,18 @@ state.Debug.SetDebugBreakCallback((s, ev, line) =>
 });
 ```
 
-#### Debug Trace
+#### デバッグトレース
 
-`GetDebugTrace()` retrieves the current call stack as a string.
+`GetDebugTrace()`は現在のコールスタックを文字列として取得します。
 
 ```cs
 string trace = state.Debug.GetDebugTrace();
 Console.WriteLine(trace);
 ```
 
-#### Coverage
+#### カバレッジ
 
-`GetCoverage()` collects execution counts per line for the specified function.
+`GetCoverage()`は指定した関数の実行回数を行単位で収集できます。
 
 ```cs
 state.Debug.GetCoverage(-1, entry =>
@@ -612,9 +612,9 @@ state.Debug.GetCoverage(-1, entry =>
 });
 ```
 
-#### Thread Interrupt Callback
+#### スレッド中断コールバック
 
-`SetDebugInterruptCallback()` registers a callback that is called when execution of another thread is interrupted.
+`SetDebugInterruptCallback()`には、他のスレッドの実行が中断された際に呼ばれるコールバックを登録できます。
 
 ```cs
 state.Debug.SetDebugInterruptCallback((s, ev, line) =>
@@ -627,6 +627,6 @@ state.Debug.SetDebugInterruptCallback((s, ev, line) =>
 
 TODO
 
-## License
+## ライセンス
 
-This library is released under the [MIT License](LICENSE).
+このライブラリは[MIT License](LICENSE)の下で公開されています。
