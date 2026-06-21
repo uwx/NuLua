@@ -10,15 +10,23 @@ public abstract class LuaModuleLoader
         var baseTop = state.GetTop();
         var thread = state.CreateThread();
 
-        if (!TryLoadModule(thread, fullPath, argument))
+        try
+        {
+            if (!TryLoadModule(thread, fullPath, argument))
+            {
+                state.SetTop(baseTop);
+                return false;
+            }
+
+            thread.XMove(state, 1);
+            state.Remove(-2);
+            return true;
+        }
+        catch
         {
             state.SetTop(baseTop);
-            return false;
+            throw;
         }
-
-        thread.XMove(state, 1);
-        state.Remove(-2);
-        return true;
     }
 
     internal string ResolveCacheKey(string argument) => GetCacheKey(AliasToPath(argument));
