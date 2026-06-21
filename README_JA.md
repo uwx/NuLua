@@ -76,9 +76,9 @@ NuLuaを利用するには.NET Standard2.1以上が必要です。
 
 ```cs
 using NuLua;
-using NuLua.Lua55;
+using NuLua.Lua54;
 
-using var state = Lua55State.Create();
+using var state = Lua54State.Create();
 state.OpenLibraries();
 
 var results = state.DoString("return 1 + 2");

@@ -76,9 +76,9 @@ Low-level binding APIs and pre-built native binaries can also be added separatel
 
 ```cs
 using NuLua;
-using NuLua.Lua55;
+using NuLua.Lua54;
 
-using var state = Lua55State.Create();
+using var state = Lua54State.Create();
 state.OpenLibraries();
 
 var results = state.DoString("return 1 + 2");
