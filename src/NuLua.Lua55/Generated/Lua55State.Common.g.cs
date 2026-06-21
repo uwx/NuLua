@@ -258,7 +258,9 @@ public sealed unsafe partial class Lua55State : ILuaState<Lua55State>, ILuaDebug
                 var reference = this.Ref();
                 this.Pop(1);
                 PushValue(reference);
-                return LuaValue.FromThread(ToThread(-1));
+                var thread = ToThread(-1);
+                this.Pop(1);
+                return LuaValue.FromThread(thread);
             }
             case LuaValueType.UserData:
             {
