@@ -25,7 +25,7 @@ public class LuaModuleLoaderTests
             var requirer = new FileSystemModuleLoader { WorkingDirectory = directory };
             lua.UseModuleLoader(state, requirer);
 
-            var results = state.DoString("return require('answer')");
+            var results = state.DoString("return (require('answer'))");
 
             await Assert.That(results).Count().IsEqualTo(1);
             await Assert.That(results[0].Read<double>()).IsEqualTo(42);
@@ -88,7 +88,7 @@ public class LuaModuleLoaderTests
             };
             lua.UseModuleLoader(state, requirer);
 
-            var results = state.DoString("return require('@lib/hello')");
+            var results = state.DoString("return (require('@lib/hello'))");
 
             await Assert.That(results[0].Read<string>()).IsEqualTo("hello");
         }
@@ -110,8 +110,60 @@ public class LuaModuleLoaderTests
         );
         lua.UseModuleLoader(state, requirer);
 
-        var results = state.DoString("return require('greeting')");
+        var results = state.DoString("return (require('greeting'))");
 
         await Assert.That(results[0].Read<string>()).IsEqualTo("hi from memory");
+    }
+
+    [Test]
+    [MethodDataSource(typeof(LuaStateCases), nameof(LuaStateCases.All))]
+    public async Task LoaderIsAppendedAsCustomSearcher(LuaStateCase lua)
+    {
+        if (lua.Name == "Luau")
+        {
+            return;
+        }
+
+        using var state = lua.CreateState();
+        state.OpenLibraries();
+
+        var beforeResults = state.DoString(
+            "return #(package.searchers or package.loaders)"
+        );
+        var beforeCount = beforeResults[0].Read<double>();
+
+        var requirer = new InMemoryModuleLoader(new Dictionary<string, string>());
+        lua.UseModuleLoader(state, requirer);
+
+        var afterResults = state.DoString(
+            "return #(package.searchers or package.loaders)"
+        );
+        var afterCount = afterResults[0].Read<double>();
+
+        await Assert.That(afterCount).IsEqualTo(beforeCount + 1);
+    }
+
+    [Test]
+    [MethodDataSource(typeof(LuaStateCases), nameof(LuaStateCases.All))]
+    public async Task RequireStoresResultInPackageLoaded(LuaStateCase lua)
+    {
+        if (lua.Name == "Luau")
+        {
+            return;
+        }
+
+        using var state = lua.CreateState();
+        state.OpenLibraries();
+
+        var requirer = new InMemoryModuleLoader(
+            new Dictionary<string, string> { ["mod"] = "return { value = 42 }" }
+        );
+        lua.UseModuleLoader(state, requirer);
+
+        var results = state.DoString(
+            "require('mod'); return (package.loaded['mod']).value"
+        );
+
+        await Assert.That(results[0].Read<double>()).IsEqualTo(42);
     }
 }

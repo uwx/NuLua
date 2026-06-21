@@ -4,33 +4,9 @@ namespace NuLua;
 
 public abstract class LuaModuleLoader
 {
-    const string CacheKey = "_NULUA_MODULES";
-
     public bool TryLoad(ILuaState state, string argument)
     {
-        var cache = state[CacheKey];
-        LuaTable cacheTable;
-
-        if (cache.IsNil)
-        {
-            cacheTable = state.CreateTable();
-            state[CacheKey] = cacheTable;
-        }
-        else
-        {
-            cacheTable = cache.Read<LuaTable>();
-        }
-
         var fullPath = AliasToPath(argument);
-        var cacheKey = GetCacheKey(fullPath);
-
-        var cached = cacheTable[cacheKey];
-        if (!cached.IsNil)
-        {
-            state.Push(cached);
-            return true;
-        }
-
         var baseTop = state.GetTop();
         var thread = state.CreateThread();
 
@@ -41,13 +17,11 @@ public abstract class LuaModuleLoader
         }
 
         thread.XMove(state, 1);
-        var moduleValue = state.ToLuaValue(-1);
-        cacheTable[cacheKey] = moduleValue;
-        state.SetTop(baseTop);
-        state.Push(moduleValue);
-
+        state.Remove(-2);
         return true;
     }
+
+    internal string ResolveCacheKey(string argument) => GetCacheKey(AliasToPath(argument));
 
     protected abstract bool TryLoadModule(ILuaState state, string fullPath, string requireArgument);
 
