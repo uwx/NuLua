@@ -6,6 +6,8 @@ Unified Lua5.x/LuaJIT/Luau bindings for .NET and Unity
 [![Releases](https://img.shields.io/github/release/nuskey8/NuLua.svg)](https://github.com/nuskey8/NuLua/releases)
 [![license](https://img.shields.io/badge/LICENSE-MIT-green.svg)](LICENSE)
 
+![Hero Image](assets/hero.png)
+
 English | [日本語](README_JA.md)
 
 ## Overview
