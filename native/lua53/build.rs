@@ -14,10 +14,11 @@ fn main() {
         .unwrap()
         .to_path_buf();
     let lua_src = workspace_root.join("submodules").join(FLAVOR);
+    let shim = workspace_root.join("native").join("shim");
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
 
     let bindings_rs = out_dir.join(format!("{FLAVOR}.rs"));
-    generate_rust_bindings(&lua_src, &bindings_rs);
+    generate_rust_bindings(&lua_src, &shim, &bindings_rs);
 
     let cs_out = workspace_root
         .join("src")
@@ -29,17 +30,20 @@ fn main() {
 
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-changed={}", lua_src.display());
+    println!("cargo:rerun-if-changed={}", shim.display());
 }
 
-fn generate_rust_bindings(lua_src: &Path, out: &Path) {
+fn generate_rust_bindings(lua_src: &Path, shim: &Path, out: &Path) {
     let bindings = bindgen::Builder::default()
         .header(lua_src.join("lua.h").to_string_lossy())
         .header(lua_src.join("lualib.h").to_string_lossy())
         .header(lua_src.join("lauxlib.h").to_string_lossy())
+        .header(shim.join("nulua_shim.h").to_string_lossy())
         .clang_arg(format!("-I{}", lua_src.display()))
         .allowlist_function("lua_.*")
         .allowlist_function("luaL_.*")
         .allowlist_function("luaopen_.*")
+        .allowlist_function("nulua_.*")
         .allowlist_type("lua_.*")
         .allowlist_type("luaL_.*")
         .allowlist_var("LUA_.*")

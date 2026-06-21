@@ -175,6 +175,180 @@ public class LuaStateTests
 
     [Test]
     [MethodDataSource(typeof(LuaStateCases), nameof(LuaStateCases.All))]
+    public async Task GetTableThrowsLuaExceptionWhenIndexMetamethodErrors(LuaStateCase lua)
+    {
+        using var state = lua.CreateState();
+        using var table = state.CreateTable();
+        using var metatable = state.CreateTable();
+        metatable["__index"] = 42;
+        state.PushValue(table.Reference);
+        state.SetMetatable(-1, metatable);
+        state.Pop(1);
+
+        await Assert.That(() => table["missing"]).Throws<LuaException>();
+    }
+
+    [Test]
+    [MethodDataSource(typeof(LuaStateCases), nameof(LuaStateCases.All))]
+    public async Task GetFieldThrowsLuaExceptionWhenIndexMetamethodErrors(LuaStateCase lua)
+    {
+        using var state = lua.CreateState();
+        using var table = state.CreateTable();
+        using var metatable = state.CreateTable();
+        metatable["__index"] = 42;
+        state.PushValue(table.Reference);
+        state.SetMetatable(-1, metatable);
+
+        await Assert.That(() => state.GetField(-1, "missing")).Throws<LuaException>();
+    }
+
+    [Test]
+    [MethodDataSource(typeof(LuaStateCases), nameof(LuaStateCases.All))]
+    public async Task SetTableThrowsLuaExceptionWhenNewIndexMetamethodErrors(LuaStateCase lua)
+    {
+        using var state = lua.CreateState();
+        using var table = state.CreateTable();
+        using var metatable = state.CreateTable();
+        metatable["__newindex"] = 42;
+        state.PushValue(table.Reference);
+        state.SetMetatable(-1, metatable);
+        state.Pop(1);
+
+        await Assert.That(() => table["missing"] = 1).Throws<LuaException>();
+    }
+
+    [Test]
+    [MethodDataSource(typeof(LuaStateCases), nameof(LuaStateCases.All))]
+    public async Task SetFieldThrowsLuaExceptionWhenNewIndexMetamethodErrors(LuaStateCase lua)
+    {
+        using var state = lua.CreateState();
+        using var table = state.CreateTable();
+        using var metatable = state.CreateTable();
+        metatable["__newindex"] = 42;
+        state.PushValue(table.Reference);
+        state.SetMetatable(-1, metatable);
+        state.PushInteger(1);
+
+        await Assert.That(() => state.SetField(-2, "missing")).Throws<LuaException>();
+    }
+
+    [Test]
+    [MethodDataSource(typeof(LuaStateCases), nameof(LuaStateCases.All))]
+    public async Task IntegerTableAccessThrowsLuaExceptionWhenMetamethodErrors(LuaStateCase lua)
+    {
+        using var state = lua.CreateState();
+        using var table = state.CreateTable();
+        using var metatable = state.CreateTable();
+        metatable["__index"] = 42;
+        metatable["__newindex"] = 42;
+        state.PushValue(table.Reference);
+        state.SetMetatable(-1, metatable);
+
+        await Assert.That(() => lua.GetI!(state, -1, 1)).Throws<LuaException>();
+
+        state.PushInteger(1);
+        await Assert.That(() => lua.SetI!(state, -2, 1)).Throws<LuaException>();
+    }
+
+    [Test]
+    [MethodDataSource(typeof(LuaStateCases), nameof(LuaStateCases.All))]
+    public async Task GlobalAccessThrowsLuaExceptionWhenMetamethodErrors(LuaStateCase lua)
+    {
+        using var state = lua.CreateState();
+        state.OpenLibraries();
+        state.DoString("setmetatable(_G, { __index = 42, __newindex = 42 })");
+
+        await Assert.That(() => state.GetGlobal("missing")).Throws<LuaException>();
+
+        state.PushInteger(1);
+        await Assert.That(() => state.SetGlobal("missing")).Throws<LuaException>();
+    }
+
+    [Test]
+    [MethodDataSource(typeof(LuaStateCases), nameof(LuaStateCases.All))]
+    public async Task ConcatThrowsLuaExceptionWhenMetamethodErrors(LuaStateCase lua)
+    {
+        using var state = lua.CreateState();
+        using var left = state.CreateTable();
+        using var right = state.CreateTable();
+        using var metatable = state.CreateTable();
+        metatable["__concat"] = 42;
+        state.PushValue(left.Reference);
+        state.SetMetatable(-1, metatable);
+        state.PushValue(right.Reference);
+        state.SetMetatable(-1, metatable);
+
+        await Assert.That(() => state.Concat(2)).Throws<LuaException>();
+    }
+
+    [Test]
+    [MethodDataSource(typeof(LuaStateCases), nameof(LuaStateCases.All))]
+    public async Task LenThrowsLuaExceptionWhenMetamethodErrors(LuaStateCase lua)
+    {
+        if (lua.Name is "Lua 5.1" or "LuaJIT" or "Luau")
+        {
+            return;
+        }
+
+        using var state = lua.CreateState();
+        using var table = state.CreateTable();
+        using var metatable = state.CreateTable();
+        metatable["__len"] = 42;
+        state.PushValue(table.Reference);
+        state.SetMetatable(-1, metatable);
+
+        await Assert.That(() => state.Len(-1)).Throws<LuaException>();
+    }
+
+    [Test]
+    [MethodDataSource(typeof(LuaStateCases), nameof(LuaStateCases.All))]
+    public async Task ArithmeticThrowsLuaExceptionWhenMetamethodErrors(LuaStateCase lua)
+    {
+        using var state = lua.CreateState();
+        using var left = state.CreateTable();
+        using var right = state.CreateTable();
+        using var metatable = state.CreateTable();
+        metatable["__add"] = 42;
+        state.PushValue(left.Reference);
+        state.SetMetatable(-1, metatable);
+        state.PushValue(right.Reference);
+        state.SetMetatable(-1, metatable);
+
+        await Assert.That(() => state.Arith(LuaArithmeticOperator.Add)).Throws<LuaException>();
+    }
+
+    [Test]
+    [MethodDataSource(typeof(LuaStateCases), nameof(LuaStateCases.All))]
+    public async Task CompareThrowsLuaExceptionWhenMetamethodErrors(LuaStateCase lua)
+    {
+        using var state = lua.CreateState();
+        using var left = state.CreateTable();
+        using var right = state.CreateTable();
+        using var metatable = state.CreateTable();
+        metatable["__lt"] = 42;
+        state.PushValue(left.Reference);
+        state.SetMetatable(-1, metatable);
+        state.PushValue(right.Reference);
+        state.SetMetatable(-1, metatable);
+
+        await Assert.That(() => state.Compare(LuaComparisonOperator.Less)).Throws<LuaException>();
+    }
+
+    [Test]
+    [MethodDataSource(typeof(LuaStateCases), nameof(LuaStateCases.All))]
+    public async Task NextThrowsLuaExceptionForInvalidKey(LuaStateCase lua)
+    {
+        using var state = lua.CreateState();
+        using var table = state.CreateTable();
+        table["existing"] = 1;
+        state.PushValue(table.Reference);
+        state.PushString("missing");
+
+        await Assert.That(() => state.Next(-2)).Throws<LuaException>();
+    }
+
+    [Test]
+    [MethodDataSource(typeof(LuaStateCases), nameof(LuaStateCases.All))]
     public async Task ReferencesCanBePushedAndUnreferenced(LuaStateCase lua)
     {
         using var state = lua.CreateState();

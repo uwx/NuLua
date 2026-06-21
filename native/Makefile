@@ -23,6 +23,7 @@ BUILD  := build
 
 C_FLAVORS   := lua51 lua52 lua53 lua54 lua55
 ALL_FLAVORS := $(C_FLAVORS) luau luajit
+NULUA_SHIM  := shim/nulua_shim.c
 
 SKIP_lua51 := lua.c luac.c print.c
 SKIP_lua52 := lua.c luac.c
@@ -33,8 +34,9 @@ SKIP_lua55 := lua.c luac.c ltests.c onelua.c
 PLATFORM_DEFINE := $(if $(filter macos,$(TARGET_OS)),-DLUA_USE_MACOSX,\
                   $(if $(filter linux,$(TARGET_OS)),-DLUA_USE_LINUX,\
                   $(if $(filter windows,$(TARGET_OS)),-DLUA_BUILD_AS_DLL,-DLUA_USE_POSIX)))
+NULUA_API_DEFINE := $(if $(filter windows,$(TARGET_OS)),-DNULUA_SHIM_API='extern __declspec(dllexport)',)
 
-CFLAGS  := -O2 -fPIC -w $(PLATFORM_DEFINE) $(CFLAGS_EXTRA)
+CFLAGS  := -O2 -fPIC -w $(PLATFORM_DEFINE) $(NULUA_API_DEFINE) $(CFLAGS_EXTRA)
 LDFLAGS := $(LDFLAGS_EXTRA)
 
 # Shared-library link flags + filename per OS.
@@ -61,12 +63,16 @@ endif
 # -----------------------------------------------------------------------------
 
 flavor_srcs = $(filter-out $(addprefix $(SUBMOD)/$1/,$(SKIP_$1)),$(wildcard $(SUBMOD)/$1/*.c))
-flavor_objs = $(patsubst $(SUBMOD)/$1/%.c,$(BUILD)/$1/$(RID)/%.o,$(call flavor_srcs,$1))
+flavor_objs = $(patsubst $(SUBMOD)/$1/%.c,$(BUILD)/$1/$(RID)/%.o,$(call flavor_srcs,$1)) $(BUILD)/$1/$(RID)/shim/nulua_shim.o
 
 define flavor_rules
 $(BUILD)/$1/$(RID)/%.o: $(SUBMOD)/$1/%.c
 	@mkdir -p $$(@D)
 	$$(CC) $$(CFLAGS) -I$(SUBMOD)/$1 -c $$< -o $$@
+
+$(BUILD)/$1/$(RID)/shim/nulua_shim.o: $(NULUA_SHIM)
+	@mkdir -p $$(@D)
+	$$(CC) $$(CFLAGS) -I$(SUBMOD)/$1 -Ishim -c $$< -o $$@
 
 $(BUILD)/$1/$(RID)/$(call dylib_name,$1): $(call flavor_objs,$1)
 	$$(CC) $(SHARED_FLAGS) $$(LDFLAGS) -o $$@ $$^ $(PLATFORM_LIBS)
@@ -122,7 +128,8 @@ ifeq ($(TARGET_OS),windows)
   LUAU_API_DEFS := \
     -DLUA_API='extern "C" __declspec(dllexport)' \
     -DLUACODE_API='extern "C" __declspec(dllexport)' \
-    -DLUAU_SHIM_API='extern "C" __declspec(dllexport)'
+    -DLUAU_SHIM_API='extern "C" __declspec(dllexport)' \
+    -DNULUA_SHIM_API='extern "C" __declspec(dllexport)'
 else
   LUAU_API_DEFS := \
     -DLUA_API='extern "C" __attribute__((visibility("default")))' \
@@ -139,7 +146,7 @@ else
   LUAU_LDFLAGS_EXTRA :=
 endif
 
-CXXFLAGS_LUAU := -O2 -fPIC -w -std=c++17 $(LUAU_INCS) $(LUAU_API_DEFS) $(CFLAGS_EXTRA) $(CXXFLAGS_EXTRA)
+CXXFLAGS_LUAU := -O2 -fPIC -w -std=c++17 -DNULUA_LUAU $(LUAU_INCS) $(LUAU_API_DEFS) $(CFLAGS_EXTRA) $(CXXFLAGS_EXTRA)
 
 $(BUILD)/luau/$(RID)/vm/%.o: $(LUAU_VM_SRC)/%.cpp
 	@mkdir -p $(@D)
@@ -161,7 +168,7 @@ $(BUILD)/luau/$(RID)/common/%.o: $(LUAU_COMMON_SRC)/%.cpp
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS_LUAU) -c $< -o $@
 
-$(BUILD)/luau/$(RID)/shim/%.o: $(LUAU_SHIM_SRC)/%.cpp
+$(BUILD)/luau/$(RID)/shim/%.o: $(LUAU_SHIM_SRC)/%.cpp $(NULUA_SHIM)
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS_LUAU) -c $< -o $@
 
@@ -214,16 +221,22 @@ LUAJIT_FORWARD := \
   TARGET_FLAGS="$(CFLAGS_EXTRA)" \
   TARGET_DLLNAME=luajit.dll
 
+LUAJIT_SHIM_O := $(LUAJIT_OUT)/nulua_shim.o
+
+$(LUAJIT_SHIM_O): $(NULUA_SHIM)
+	@mkdir -p $(@D)
+	$(CC) $(CFLAGS) -I$(LUAJIT_SRC) -Ishim -c $< -o $@
+
 # LuaJIT's Makefile aborts on macOS unless MACOSX_DEPLOYMENT_TARGET is exported.
 # Provide a sensible default that the workflow can override.
 ifeq ($(TARGET_OS),macos)
   export MACOSX_DEPLOYMENT_TARGET ?= 11.0
 endif
 
-luajit:
+luajit: $(LUAJIT_SHIM_O)
 	@mkdir -p $(LUAJIT_OUT)
 	$(MAKE) -C $(LUAJIT_SRC) $(LUAJIT_FORWARD) clean
-	$(MAKE) -C $(LUAJIT_SRC) $(LUAJIT_FORWARD)
+	$(MAKE) -C $(LUAJIT_SRC) $(LUAJIT_FORWARD) TARGET_XLIBS="$(abspath $(LUAJIT_SHIM_O)) -lm"
 	cp $(LUAJIT_BUILT) $(LUAJIT_OUT)/$(call dylib_name,luajit)
 ifeq ($(TARGET_OS),macos)
 	install_name_tool -id @rpath/libluajit.dylib $(LUAJIT_OUT)/libluajit.dylib

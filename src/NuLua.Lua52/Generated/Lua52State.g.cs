@@ -315,67 +315,59 @@ public sealed unsafe partial class Lua52State
     {
         CheckDisposed();
         using var nameBytes = new CString(name);
-        NativeMethods.lua_getglobal(
-            ptr,
-            nameBytes.Pointer
-        );
+        CheckResult(NativeMethods.nulua_pgetglobal(ptr, nameBytes.Pointer));
     }
 
     public void SetGlobal(ReadOnlySpan<char> name)
     {
         CheckDisposed();
         using var nameBytes = new CString(name);
-        NativeMethods.lua_setglobal(
-            ptr,
-            nameBytes.Pointer
-        );
+        CheckResult(NativeMethods.nulua_psetglobal(ptr, nameBytes.Pointer));
     }
 
     public void GetTable(int index)
     {
         CheckDisposed();
-        NativeMethods.lua_gettable(ptr, index);
+        CheckResult(NativeMethods.nulua_pgettable(ptr, index));
     }
 
     public void GetField(int index, ReadOnlySpan<char> name)
     {
         CheckDisposed();
         using var nameBytes = new CString(name);
-        NativeMethods.lua_getfield(
+        CheckResult(NativeMethods.nulua_pgetfield(
             ptr,
             index,
             nameBytes.Pointer
-        );
+        ));
     }
 
     public void SetField(int index, ReadOnlySpan<char> name)
     {
         CheckDisposed();
         using var nameBytes = new CString(name);
-        NativeMethods.lua_setfield(
+        CheckResult(NativeMethods.nulua_psetfield(
             ptr,
             index,
             nameBytes.Pointer
-        );
+        ));
     }
 
     public void GetI(int index, long n)
     {
         CheckDisposed();
-        // Lua 5.2 lacks lua_geti; emulate with a pushinteger + gettable pair.
         var absIndex = GetAbsIndex(index);
         NativeMethods.lua_pushinteger(ptr, (nint)n);
-        NativeMethods.lua_gettable(ptr, absIndex);
+        CheckResult(NativeMethods.nulua_pgettable(ptr, absIndex));
     }
 
     public void SetI(int index, long n)
     {
         CheckDisposed();
-        // Lua 5.2 lacks lua_seti; emulate by inserting the key under the value.
         var absIndex = GetAbsIndex(index);
         NativeMethods.lua_pushinteger(ptr, (nint)n);
         NativeMethods.lua_insert(ptr, -2);
-        NativeMethods.lua_settable(ptr, absIndex);
+        CheckResult(NativeMethods.nulua_psettable(ptr, absIndex));
     }
 
     public void NewUserData(int size, int userValueCount)
@@ -506,32 +498,18 @@ public sealed unsafe partial class Lua52State
             return;
         }
 
-        switch (op)
+        var (nativeOp, operandCount) = op switch
         {
-            case LuaArithmeticOperator.Add:
-                NativeMethods.lua_arith(ptr, (int)NativeMethods.LUA_OPADD);
-                break;
-            case LuaArithmeticOperator.Sub:
-                NativeMethods.lua_arith(ptr, (int)NativeMethods.LUA_OPSUB);
-                break;
-            case LuaArithmeticOperator.Mul:
-                NativeMethods.lua_arith(ptr, (int)NativeMethods.LUA_OPMUL);
-                break;
-            case LuaArithmeticOperator.Div:
-                NativeMethods.lua_arith(ptr, (int)NativeMethods.LUA_OPDIV);
-                break;
-            case LuaArithmeticOperator.Mod:
-                NativeMethods.lua_arith(ptr, (int)NativeMethods.LUA_OPMOD);
-                break;
-            case LuaArithmeticOperator.Pow:
-                NativeMethods.lua_arith(ptr, (int)NativeMethods.LUA_OPPOW);
-                break;
-            case LuaArithmeticOperator.Unm:
-                NativeMethods.lua_arith(ptr, (int)NativeMethods.LUA_OPUNM);
-                break;
-            default:
-                throw new NotSupportedException($"Unsupported Lua arithmetic operator: {op}");
-        }
+            LuaArithmeticOperator.Add => ((int)NativeMethods.LUA_OPADD, 2),
+            LuaArithmeticOperator.Sub => ((int)NativeMethods.LUA_OPSUB, 2),
+            LuaArithmeticOperator.Mul => ((int)NativeMethods.LUA_OPMUL, 2),
+            LuaArithmeticOperator.Div => ((int)NativeMethods.LUA_OPDIV, 2),
+            LuaArithmeticOperator.Mod => ((int)NativeMethods.LUA_OPMOD, 2),
+            LuaArithmeticOperator.Pow => ((int)NativeMethods.LUA_OPPOW, 2),
+            LuaArithmeticOperator.Unm => ((int)NativeMethods.LUA_OPUNM, 1),
+            _ => throw new NotSupportedException($"Unsupported Lua arithmetic operator: {op}"),
+        };
+        CheckResult(NativeMethods.nulua_parith(ptr, nativeOp, operandCount));
     }
 
     bool TryArithBit32(LuaArithmeticOperator op)
@@ -595,27 +573,20 @@ public sealed unsafe partial class Lua52State
     public void Compare(LuaComparisonOperator op)
     {
         CheckDisposed();
-        var result = NativeMethods.lua_compare(
-            ptr,
-            -2,
-            -1,
-            op switch
-            {
-                LuaComparisonOperator.Equal => (int)NativeMethods.LUA_OPEQ,
-                LuaComparisonOperator.Less => (int)NativeMethods.LUA_OPLT,
-                LuaComparisonOperator.LessOrEqual => (int)NativeMethods.LUA_OPLE,
-                _ => throw new NotSupportedException($"Unsupported Lua comparison operator: {op}"),
-            }
-        );
-
-        NativeMethods.lua_settop(ptr, NativeMethods.lua_gettop(ptr) - 2);
-        NativeMethods.lua_pushboolean(ptr, result);
+        var nativeOp = op switch
+        {
+            LuaComparisonOperator.Equal => (int)NativeMethods.LUA_OPEQ,
+            LuaComparisonOperator.Less => (int)NativeMethods.LUA_OPLT,
+            LuaComparisonOperator.LessOrEqual => (int)NativeMethods.LUA_OPLE,
+            _ => throw new NotSupportedException($"Unsupported Lua comparison operator: {op}"),
+        };
+        CheckResult(NativeMethods.nulua_pcompare(ptr, nativeOp));
     }
 
     public void Len(int index)
     {
         CheckDisposed();
-        NativeMethods.lua_len(ptr, index);
+        CheckResult(NativeMethods.nulua_plen(ptr, index));
     }
 
     public void Call(int argCount, int returnCount)
@@ -628,8 +599,8 @@ public sealed unsafe partial class Lua52State
     public void Next(int index)
     {
         CheckDisposed();
-        var result = NativeMethods.lua_next(ptr, index);
-        CheckResult(result);
+        int hasNext;
+        CheckResult(NativeMethods.nulua_pnext(ptr, index, &hasNext));
     }
 
     public LuaValueType RawGet(int index)

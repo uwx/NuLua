@@ -314,7 +314,7 @@ public sealed unsafe partial class Lua53State : ILuaState<Lua53State>, ILuaDebug
     public void SetTable(int index)
     {
         CheckDisposed();
-        NativeMethods.lua_settable(ptr, index);
+        CheckResult(NativeMethods.nulua_psettable(ptr, index));
     }
 
     public void NewThread()
@@ -330,7 +330,7 @@ public sealed unsafe partial class Lua53State : ILuaState<Lua53State>, ILuaDebug
     public void Concat(int count)
     {
         CheckDisposed();
-        NativeMethods.lua_concat(ptr, count);
+        CheckResult(NativeMethods.nulua_pconcat(ptr, count));
     }
 
     public bool RawEqual(int index1, int index2)

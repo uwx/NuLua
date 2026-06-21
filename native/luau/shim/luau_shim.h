@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../../shim/nulua_shim.h"
+
 // can be used to reconfigure visibility/exports for public APIs
 #ifndef LUAU_SHIM_API
 #define LUAU_SHIM_API extern

@@ -711,6 +711,39 @@ namespace NuLua.Interop.Luau
         [DllImport(__DllName, EntryPoint = "luau_set_compile_constant_string", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void luau_set_compile_constant_string(void** constant, byte* s, nuint l);
 
+        [DllImport(__DllName, EntryPoint = "nulua_pgettable", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern int nulua_pgettable(void* L, int index);
+
+        [DllImport(__DllName, EntryPoint = "nulua_pgetfield", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern int nulua_pgetfield(void* L, int index, byte* name);
+
+        [DllImport(__DllName, EntryPoint = "nulua_psettable", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern int nulua_psettable(void* L, int index);
+
+        [DllImport(__DllName, EntryPoint = "nulua_psetfield", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern int nulua_psetfield(void* L, int index, byte* name);
+
+        [DllImport(__DllName, EntryPoint = "nulua_pgetglobal", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern int nulua_pgetglobal(void* L, byte* name);
+
+        [DllImport(__DllName, EntryPoint = "nulua_psetglobal", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern int nulua_psetglobal(void* L, byte* name);
+
+        [DllImport(__DllName, EntryPoint = "nulua_plen", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern int nulua_plen(void* L, int index);
+
+        [DllImport(__DllName, EntryPoint = "nulua_pconcat", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern int nulua_pconcat(void* L, int count);
+
+        [DllImport(__DllName, EntryPoint = "nulua_parith", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern int nulua_parith(void* L, int op, int operand_count);
+
+        [DllImport(__DllName, EntryPoint = "nulua_pcompare", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern int nulua_pcompare(void* L, int op);
+
+        [DllImport(__DllName, EntryPoint = "nulua_pnext", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern int nulua_pnext(void* L, int index, int* has_next);
+
         [DllImport(__DllName, EntryPoint = "luau_free", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void luau_free(void* p);
 

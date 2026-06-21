@@ -13,14 +13,12 @@ fn main() {
         .parent()
         .unwrap()
         .to_path_buf();
-    let header_dir = workspace_root
-        .join("submodules")
-        .join("luajit")
-        .join("src");
+    let header_dir = workspace_root.join("submodules").join("luajit").join("src");
+    let shim = workspace_root.join("native").join("shim");
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
 
     let bindings_rs = out_dir.join(format!("{FLAVOR}.rs"));
-    generate_rust_bindings(&header_dir, &bindings_rs);
+    generate_rust_bindings(&header_dir, &shim, &bindings_rs);
 
     let cs_out = workspace_root
         .join("src")
@@ -32,19 +30,22 @@ fn main() {
 
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-changed={}", header_dir.display());
+    println!("cargo:rerun-if-changed={}", shim.display());
 }
 
-fn generate_rust_bindings(header_dir: &Path, out: &Path) {
+fn generate_rust_bindings(header_dir: &Path, shim: &Path, out: &Path) {
     let bindings = bindgen::Builder::default()
         .header(header_dir.join("lua.h").to_string_lossy())
         .header(header_dir.join("lualib.h").to_string_lossy())
         .header(header_dir.join("lauxlib.h").to_string_lossy())
         .header(header_dir.join("luajit.h").to_string_lossy())
+        .header(shim.join("nulua_shim.h").to_string_lossy())
         .clang_arg(format!("-I{}", header_dir.display()))
         .allowlist_function("lua_.*")
         .allowlist_function("luaL_.*")
         .allowlist_function("luaopen_.*")
         .allowlist_function("luaJIT_.*")
+        .allowlist_function("nulua_.*")
         .allowlist_type("lua_.*")
         .allowlist_type("luaL_.*")
         .allowlist_var("LUA_.*")

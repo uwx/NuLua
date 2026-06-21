@@ -510,54 +510,51 @@ public sealed unsafe partial class LuauState
     {
         CheckDisposed();
         using var nameBytes = new CString(name);
-        // Luau does not expose lua_getglobal — it's a macro over lua_getfield+LUA_GLOBALSINDEX.
-        NativeMethods.lua_getfield(ptr, NativeMethods.LUA_GLOBALSINDEX, nameBytes.Pointer);
+        CheckResult(NativeMethods.nulua_pgetglobal(ptr, nameBytes.Pointer));
     }
 
     public void SetGlobal(ReadOnlySpan<char> name)
     {
         CheckDisposed();
         using var nameBytes = new CString(name);
-        NativeMethods.lua_setfield(ptr, NativeMethods.LUA_GLOBALSINDEX, nameBytes.Pointer);
+        CheckResult(NativeMethods.nulua_psetglobal(ptr, nameBytes.Pointer));
     }
 
     public void GetTable(int index)
     {
         CheckDisposed();
-        NativeMethods.lua_gettable(ptr, index);
+        CheckResult(NativeMethods.nulua_pgettable(ptr, index));
     }
 
     public void GetField(int index, ReadOnlySpan<char> name)
     {
         CheckDisposed();
         using var nameBytes = new CString(name);
-        _ = NativeMethods.lua_getfield(ptr, index, nameBytes.Pointer);
+        CheckResult(NativeMethods.nulua_pgetfield(ptr, index, nameBytes.Pointer));
     }
 
     public void SetField(int index, ReadOnlySpan<char> name)
     {
         CheckDisposed();
         using var nameBytes = new CString(name);
-        NativeMethods.lua_setfield(ptr, index, nameBytes.Pointer);
+        CheckResult(NativeMethods.nulua_psetfield(ptr, index, nameBytes.Pointer));
     }
 
     public void GetI(int index, long n)
     {
         CheckDisposed();
-        // Luau lacks lua_geti; emulate with a pushinteger + gettable pair.
         var absIndex = NativeMethods.lua_absindex(ptr, index);
         NativeMethods.lua_pushinteger(ptr, (int)n);
-        _ = NativeMethods.lua_gettable(ptr, absIndex);
+        CheckResult(NativeMethods.nulua_pgettable(ptr, absIndex));
     }
 
     public void SetI(int index, long n)
     {
         CheckDisposed();
-        // Luau lacks lua_seti; emulate by inserting the key under the value.
         var absIndex = NativeMethods.lua_absindex(ptr, index);
         NativeMethods.lua_pushinteger(ptr, (int)n);
         NativeMethods.lua_insert(ptr, -2);
-        NativeMethods.lua_settable(ptr, absIndex);
+        CheckResult(NativeMethods.nulua_psettable(ptr, absIndex));
     }
 
     public void NewUserData(int size, int userValueCount)
@@ -850,28 +847,20 @@ public sealed unsafe partial class LuauState
     public void Compare(LuaComparisonOperator op)
     {
         CheckDisposed();
-        int result = op switch
+        var nativeOp = op switch
         {
-            LuaComparisonOperator.Equal => NativeMethods.lua_equal(ptr, -2, -1),
-            LuaComparisonOperator.Less => NativeMethods.lua_lessthan(ptr, -2, -1),
-            // Luau lacks lua_compare; emulate <= via !(b < a).
-            LuaComparisonOperator.LessOrEqual => NativeMethods.lua_lessthan(ptr, -1, -2) == 0
-                ? 1
-                : 0,
+            LuaComparisonOperator.Equal => 0,
+            LuaComparisonOperator.Less => 1,
+            LuaComparisonOperator.LessOrEqual => 2,
             _ => throw new NotSupportedException($"Unsupported Lua comparison operator: {op}"),
         };
-
-        // Pop the operands and push the result for symmetry with newer versions.
-        NativeMethods.lua_settop(ptr, NativeMethods.lua_gettop(ptr) - 2);
-        NativeMethods.lua_pushboolean(ptr, result);
+        CheckResult(NativeMethods.nulua_pcompare(ptr, nativeOp));
     }
 
     public void Len(int index)
     {
         CheckDisposed();
-        // Luau uses lua_objlen, which returns the length without pushing it.
-        var len = NativeMethods.lua_objlen(ptr, index);
-        NativeMethods.lua_pushinteger(ptr, len);
+        CheckResult(NativeMethods.nulua_plen(ptr, index));
     }
 
     public void Call(int argCount, int returnCount)
@@ -884,10 +873,8 @@ public sealed unsafe partial class LuauState
     public void Next(int index)
     {
         CheckDisposed();
-        var result = NativeMethods.lua_next(ptr, index);
-        // lua_next returns 0 when iteration ends and !=0 when a key/value pair was pushed.
-        // Treat both as success; only protected-call style routines should error here.
-        _ = result;
+        int hasNext;
+        CheckResult(NativeMethods.nulua_pnext(ptr, index, &hasNext));
     }
 
     public LuaValueType RawGet(int index)

@@ -24,6 +24,7 @@ fn main() {
         .join("Compiler")
         .join("include");
     let shim_include = manifest_dir.join("shim");
+    let common_shim_include = workspace_root.join("native").join("shim");
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
 
     let bindings_rs = out_dir.join(format!("{FLAVOR}.rs"));
@@ -41,6 +42,7 @@ fn main() {
     println!("cargo:rerun-if-changed={}", vm_include.display());
     println!("cargo:rerun-if-changed={}", compiler_include.display());
     println!("cargo:rerun-if-changed={}", shim_include.display());
+    println!("cargo:rerun-if-changed={}", common_shim_include.display());
 }
 
 fn generate_rust_bindings(
@@ -64,6 +66,7 @@ fn generate_rust_bindings(
         .allowlist_function("luaL_.*")
         .allowlist_function("luaopen_.*")
         .allowlist_function("luau_.*")
+        .allowlist_function("nulua_.*")
         .allowlist_type("lua_.*")
         .allowlist_type("luaL_.*")
         .allowlist_var("LUA_.*")

@@ -5,6 +5,8 @@
 #include "lua.h"
 #include "lualib.h"
 
+#include "../../shim/nulua_shim.c"
+
 extern "C" void luau_free(void* p) {
     std::free(p);
 }
