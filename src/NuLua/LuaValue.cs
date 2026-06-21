@@ -388,8 +388,8 @@ public readonly struct LuaValue : IEquatable<LuaValue>
         {
             LuaValueType.Nil => true,
             LuaValueType.Boolean => value.BooleanValue == other.value.BooleanValue,
-            LuaValueType.LightUserData or LuaValueType.UserData => value.PointerValue
-                == other.value.PointerValue,
+            LuaValueType.LightUserData => value.PointerValue == other.value.PointerValue,
+            LuaValueType.UserData => reference == other.reference,
             LuaValueType.Number => value.NumberValue == other.value.NumberValue,
             LuaValueType.Vector => value.VectorValue == other.value.VectorValue,
             LuaValueType.String => ((string)reference!).Equals((string)other.reference!),
