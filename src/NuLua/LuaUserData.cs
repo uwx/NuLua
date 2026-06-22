@@ -92,6 +92,11 @@ public sealed class LuaUserData(ILuaState state, LuaReference reference) : ILuaO
 
     public bool TryWrite<T>(in T value)
     {
+        if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+        {
+            return false;
+        }
+
         if (Size != Unsafe.SizeOf<T>())
         {
             return false;

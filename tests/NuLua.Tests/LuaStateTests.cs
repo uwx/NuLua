@@ -2,6 +2,8 @@ namespace NuLua.Tests;
 
 public class LuaStateTests
 {
+    readonly record struct ValueContainingReference(string Value);
+
     static int CountCachedStates(LuaStateCase lua)
     {
         var cache = lua
@@ -450,6 +452,23 @@ public class LuaStateTests
 
             await Assert.That(userValues[1].Read<string>()).IsEqualTo("payload");
         }
+    }
+
+    [Test]
+    [MethodDataSource(typeof(LuaStateCases), nameof(LuaStateCases.All))]
+    public async Task UserDataWriteRejectsReferenceContainingTypes(LuaStateCase lua)
+    {
+        using var state = lua.CreateState();
+        using var userData = state.CreateUserData(IntPtr.Size);
+        var text = "unsafe reference";
+        var containingReference = new ValueContainingReference(text);
+
+        await Assert.That(userData.TryWrite(text)).IsFalse();
+        await Assert.That(userData.TryWrite(containingReference)).IsFalse();
+        await Assert.That(() => userData.Write(text)).Throws<InvalidOperationException>();
+        await Assert
+            .That(() => userData.Write(containingReference))
+            .Throws<InvalidOperationException>();
     }
 
     [Test]
