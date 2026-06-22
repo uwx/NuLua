@@ -30,6 +30,13 @@ NuLua requires .NET Standard 2.1 or later.
 
 All packages are distributed on NuGet. To use NuLua, install the core package plus the package for the runtime you want to use.
 
+```bash
+dotnet package add NuLua
+dotnet package add NuLua.Lua54 # For using Lua 5.4
+```
+
+## Package Structure
+
 | Package      | Latest Version                                                |
 | ------------ | ------------------------------------------------------------- |
 | NuLua        | ![NuGet Version](https://img.shields.io/nuget/v/NuLua)        |
