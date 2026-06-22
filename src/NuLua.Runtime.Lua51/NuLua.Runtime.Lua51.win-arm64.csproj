@@ -25,7 +25,6 @@
       Include="runtimes\win-arm64\native\lua51.dll"
       PackagePath="runtimes\win-arm64\native\"
       Pack="true"
-      Condition="Exists('runtimes\win-arm64\native\lua51.dll')"
     >
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

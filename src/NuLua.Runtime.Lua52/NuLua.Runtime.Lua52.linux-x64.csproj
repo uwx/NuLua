@@ -25,7 +25,6 @@
       Include="runtimes\linux-x64\native\liblua52.so"
       PackagePath="runtimes\linux-x64\native\"
       Pack="true"
-      Condition="Exists('runtimes\linux-x64\native\liblua52.so')"
     >
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

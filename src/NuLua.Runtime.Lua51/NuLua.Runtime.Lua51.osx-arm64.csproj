@@ -25,7 +25,6 @@
       Include="runtimes\osx-arm64\native\liblua51.dylib"
       PackagePath="runtimes\osx-arm64\native\"
       Pack="true"
-      Condition="Exists('runtimes\osx-arm64\native\liblua51.dylib')"
     >
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

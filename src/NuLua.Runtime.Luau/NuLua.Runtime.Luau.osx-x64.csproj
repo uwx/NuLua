@@ -25,7 +25,6 @@
       Include="runtimes\osx-x64\native\libluau.dylib"
       PackagePath="runtimes\osx-x64\native\"
       Pack="true"
-      Condition="Exists('runtimes\osx-x64\native\libluau.dylib')"
     >
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
