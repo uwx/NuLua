@@ -170,32 +170,8 @@ public sealed unsafe partial class LuauState
 
     public void LoadString(ReadOnlySpan<byte> utf8Code, ReadOnlySpan<byte> utf8ChunkName)
     {
-        CheckDisposed();
-        nuint bytecodeSize;
-        byte* bytecode;
-        fixed (byte* codePtr = utf8Code)
-        {
-            bytecode = NativeMethods.luau_compile(
-                codePtr,
-                (nuint)utf8Code.Length,
-                null,
-                &bytecodeSize
-            );
-        }
-        if (bytecode == null)
-        {
-            throw new LuaException(LUA_ERRMEM, "luau_compile returned null.");
-        }
-        try
-        {
-            using var chunkName = new CString(utf8ChunkName);
-            var result = NativeMethods.luau_load(ptr, chunkName.Pointer, bytecode, bytecodeSize, 0);
-            CheckResult(result);
-        }
-        finally
-        {
-            NativeMethods.luau_free(bytecode);
-        }
+        using var chunkName = new CString(utf8ChunkName);
+        LoadStringCore(utf8Code, chunkName);
     }
 
     public void LoadString(ReadOnlySpan<char> code, ReadOnlySpan<char> chunkName)
@@ -205,7 +181,7 @@ public sealed unsafe partial class LuauState
         {
             var codeBytes = Encoding.UTF8.GetBytes(code, codeBuffer);
             using var chunkNameBytes = new CString(chunkName);
-            LoadString(codeBuffer.AsSpan(0, codeBytes), chunkNameBytes.AsSpan());
+            LoadStringCore(codeBuffer.AsSpan(0, codeBytes), chunkNameBytes);
         }
         finally
         {
