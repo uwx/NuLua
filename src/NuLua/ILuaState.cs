@@ -6,6 +6,7 @@ public interface ILuaState : ILuaObject
 {
     ILuaState? From { get; }
     int RegistryIndex { get; }
+    int UpvalueIndexBase { get; }
 
     LuaValue this[ReadOnlySpan<char> name] { get; set; }
 

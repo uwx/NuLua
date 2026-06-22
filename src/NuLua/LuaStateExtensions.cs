@@ -89,7 +89,12 @@ public static class LuaStateExtensions
 
     public static int GetUpvalueIndex(this ILuaState state, int index)
     {
-        return state.RegistryIndex - index;
+        if (index <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(index));
+        }
+
+        return state.UpvalueIndexBase - index;
     }
 
     public static LuaReference ToReference(this ILuaState state, int index)

@@ -13,6 +13,7 @@ public sealed record LuaStateCase(
     Type StateType,
     Func<ILuaState> CreateState,
     Func<ILuaState, LuaFunction> CreateAdderFunction,
+    Func<ILuaState, string, LuaFunction> CreateUpvalueReaderFunction,
     Func<ILuaState, AsyncLuaFunc<ILuaState>, LuaFunction> CreateAsyncFunction,
     Action<ILuaState, LuaModuleLoader> UseModuleLoader,
     Action<ILuaState, int, long>? GetI = null,
@@ -34,6 +35,7 @@ public static class LuaStateCases
             typeof(Lua51State),
             Lua51State.Create,
             CreateAdderFunction<Lua51State>,
+            CreateUpvalueReaderFunction<Lua51State>,
             CreateAsyncFunction<Lua51State>,
             UseModuleLoader<Lua51State>,
             GetI: (s, i, n) => ((Lua51State)s).GetI(i, n),
@@ -45,6 +47,7 @@ public static class LuaStateCases
             typeof(Lua52State),
             Lua52State.Create,
             CreateAdderFunction<Lua52State>,
+            CreateUpvalueReaderFunction<Lua52State>,
             CreateAsyncFunction<Lua52State>,
             UseModuleLoader<Lua52State>,
             GetI: (s, i, n) => ((Lua52State)s).GetI(i, n),
@@ -56,6 +59,7 @@ public static class LuaStateCases
             typeof(Lua53State),
             Lua53State.Create,
             CreateAdderFunction<Lua53State>,
+            CreateUpvalueReaderFunction<Lua53State>,
             CreateAsyncFunction<Lua53State>,
             UseModuleLoader<Lua53State>,
             GetI: (s, i, n) => ((Lua53State)s).GetI(i, n),
@@ -66,6 +70,7 @@ public static class LuaStateCases
             typeof(Lua54State),
             Lua54State.Create,
             CreateAdderFunction<Lua54State>,
+            CreateUpvalueReaderFunction<Lua54State>,
             CreateAsyncFunction<Lua54State>,
             UseModuleLoader<Lua54State>,
             GetI: (s, i, n) => ((Lua54State)s).GetI(i, n),
@@ -76,6 +81,7 @@ public static class LuaStateCases
             typeof(Lua55State),
             Lua55State.Create,
             CreateAdderFunction<Lua55State>,
+            CreateUpvalueReaderFunction<Lua55State>,
             CreateAsyncFunction<Lua55State>,
             UseModuleLoader<Lua55State>,
             GetI: (s, i, n) => ((Lua55State)s).GetI(i, n),
@@ -86,6 +92,7 @@ public static class LuaStateCases
             typeof(LuaJitState),
             LuaJitState.Create,
             CreateAdderFunction<LuaJitState>,
+            CreateUpvalueReaderFunction<LuaJitState>,
             CreateAsyncFunction<LuaJitState>,
             UseModuleLoader<LuaJitState>,
             GetI: (s, i, n) => ((LuaJitState)s).GetI(i, n),
@@ -97,6 +104,7 @@ public static class LuaStateCases
             typeof(LuauState),
             LuauState.Create,
             CreateAdderFunction<LuauState>,
+            CreateUpvalueReaderFunction<LuauState>,
             CreateAsyncFunction<LuauState>,
             UseModuleLoader<LuauState>,
             GetI: (s, i, n) => ((LuauState)s).GetI(i, n),
@@ -115,6 +123,21 @@ public static class LuaStateCases
                 lua.PushNumber(args[0].Read<double>() + args[1].Read<double>());
                 return 1;
             }
+        );
+    }
+
+    static LuaFunction CreateUpvalueReaderFunction<TState>(ILuaState state, string value)
+        where TState : ILuaState<TState>
+    {
+        var typedState = (TState)state;
+        typedState.PushString(value);
+        return typedState.CreateFunction(
+            (lua, _) =>
+            {
+                lua.PushString(lua.ToString(lua.GetUpvalueIndex(2)));
+                return 1;
+            },
+            upvalueCount: 1
         );
     }
 

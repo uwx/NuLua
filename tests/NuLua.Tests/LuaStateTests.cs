@@ -659,6 +659,20 @@ public class LuaStateTests
 
     [Test]
     [MethodDataSource(typeof(LuaStateCases), nameof(LuaStateCases.All))]
+    public async Task NewFunctionCapturesRequestedUpvalues(LuaStateCase lua)
+    {
+        using var state = lua.CreateState();
+        using var function = lua.CreateUpvalueReaderFunction(state, "captured");
+
+        var results = function.Invoke();
+
+        await Assert.That(results).Count().IsEqualTo(1);
+        await Assert.That(results[0].Read<string>()).IsEqualTo("captured");
+        await Assert.That(state.GetTop()).IsEqualTo(0);
+    }
+
+    [Test]
+    [MethodDataSource(typeof(LuaStateCases), nameof(LuaStateCases.All))]
     public async Task DotNetFunctionsCanBeCalledFromLua(LuaStateCase lua)
     {
         using var state = lua.CreateState();

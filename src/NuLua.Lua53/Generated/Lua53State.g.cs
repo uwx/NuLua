@@ -412,10 +412,17 @@ public sealed unsafe partial class Lua53State
 
         CheckDisposed();
 
+        var top = NativeMethods.lua_gettop(ptr);
+        if ((uint)upvalueCount > (uint)top || upvalueCount >= byte.MaxValue)
+        {
+            throw new ArgumentOutOfRangeException(nameof(upvalueCount));
+        }
+
         var funcIndex = funcs.Count;
         funcs.Add(func);
         NativeMethods.lua_pushinteger(ptr, funcIndex);
-        NativeMethods.lua_pushcclosure(ptr, Fn, 1);
+        NativeMethods.lua_rotate(ptr, -upvalueCount - 1, 1);
+        NativeMethods.lua_pushcclosure(ptr, Fn, upvalueCount + 1);
     }
 
     public void NewFunction(AsyncLuaFunc<Lua53State> func, int upvalueCount)
@@ -469,10 +476,17 @@ public sealed unsafe partial class Lua53State
 
         CheckDisposed();
 
+        var top = NativeMethods.lua_gettop(ptr);
+        if ((uint)upvalueCount > (uint)top || upvalueCount >= byte.MaxValue)
+        {
+            throw new ArgumentOutOfRangeException(nameof(upvalueCount));
+        }
+
         var funcIndex = asyncFuncs.Count;
         asyncFuncs.Add(func);
         NativeMethods.lua_pushinteger(ptr, funcIndex);
-        NativeMethods.lua_pushcclosure(ptr, AsyncCFn, 1);
+        NativeMethods.lua_rotate(ptr, -upvalueCount - 1, 1);
+        NativeMethods.lua_pushcclosure(ptr, AsyncCFn, upvalueCount + 1);
     }
 
     public void Arith(LuaArithmeticOperator op)

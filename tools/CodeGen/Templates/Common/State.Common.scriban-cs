@@ -69,6 +69,11 @@ public sealed unsafe partial class {{ name }}State : ILuaState<{{ name }}State>,
     public LuaReference Reference => reference;
 
     public int RegistryIndex => NativeMethods.LUA_REGISTRYINDEX;
+{{~ if version < 502 || name == "Luau" ~}}
+    public int UpvalueIndexBase => NativeMethods.LUA_GLOBALSINDEX;
+{{~ else ~}}
+    public int UpvalueIndexBase => NativeMethods.LUA_REGISTRYINDEX;
+{{~ end ~}}
 
     public LuaValue this[ReadOnlySpan<char> name]
     {

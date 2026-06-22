@@ -616,10 +616,17 @@ public sealed unsafe partial class LuauState
 
         CheckDisposed();
 
+        var top = NativeMethods.lua_gettop(ptr);
+        if ((uint)upvalueCount > (uint)top || upvalueCount >= byte.MaxValue)
+        {
+            throw new ArgumentOutOfRangeException(nameof(upvalueCount));
+        }
+
         var funcIndex = funcs.Count;
         funcs.Add(func);
         NativeMethods.lua_pushinteger(ptr, funcIndex);
-        NativeMethods.lua_pushcclosurek(ptr, Fn, null, 1, null!);
+        NativeMethods.lua_insert(ptr, -upvalueCount - 1);
+        NativeMethods.lua_pushcclosurek(ptr, Fn, null, upvalueCount + 1, null!);
     }
 
     public void NewFunction(AsyncLuaFunc<LuauState> func, int upvalueCount)
@@ -675,10 +682,17 @@ public sealed unsafe partial class LuauState
 
         CheckDisposed();
 
+        var top = NativeMethods.lua_gettop(ptr);
+        if ((uint)upvalueCount > (uint)top || upvalueCount >= byte.MaxValue)
+        {
+            throw new ArgumentOutOfRangeException(nameof(upvalueCount));
+        }
+
         var funcIndex = asyncFuncs.Count;
         asyncFuncs.Add(func);
         NativeMethods.lua_pushinteger(ptr, funcIndex);
-        NativeMethods.lua_pushcclosurek(ptr, AsyncCFn, null, 1, null!);
+        NativeMethods.lua_insert(ptr, -upvalueCount - 1);
+        NativeMethods.lua_pushcclosurek(ptr, AsyncCFn, null, upvalueCount + 1, null!);
     }
 
     static readonly byte[]?[] arithBytecodeCache = new byte[(int)LuaArithmeticOperator.Shr + 1][];
