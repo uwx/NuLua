@@ -7,6 +7,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
     <!-- NuGet Packaging -->
+    <IsPackable>true</IsPackable>
     <PackageTags>lua;luau;luajit</PackageTags>
     <Description>Unified Lua5.x/LuaJIT/Luau bindings for .NET and Unity</Description>
   </PropertyGroup>

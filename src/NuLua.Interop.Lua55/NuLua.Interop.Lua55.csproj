@@ -7,6 +7,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
     <!-- NuGet Packaging -->
+    <IsPackable>true</IsPackable>
     <PackageTags>lua;luau;luajit</PackageTags>
     <Description>NuLua Low-Level Bindings for Lua5.5</Description>
   </PropertyGroup>
