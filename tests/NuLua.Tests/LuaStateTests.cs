@@ -472,6 +472,29 @@ public class LuaStateTests
 
     [Test]
     [MethodDataSource(typeof(LuaStateCases), nameof(LuaStateCases.All))]
+    public async Task XMoveValidatesTargetStateAndCount(LuaStateCase lua)
+    {
+        using var state = lua.CreateState();
+        using var thread = state.CreateThread();
+        using var unrelatedState = lua.CreateState();
+
+        thread.PushInteger(1);
+        await Assert.That(() => thread.XMove(unrelatedState, 1)).Throws<ArgumentException>();
+        await Assert.That(thread.GetTop()).IsEqualTo(1);
+
+        await Assert.That(() => thread.XMove(state, -1)).Throws<ArgumentOutOfRangeException>();
+        await Assert.That(() => thread.XMove(state, 2)).Throws<ArgumentOutOfRangeException>();
+        await Assert.That(thread.GetTop()).IsEqualTo(1);
+
+        thread.XMove(thread, 1);
+        await Assert.That(thread.GetTop()).IsEqualTo(1);
+
+        unrelatedState.Dispose();
+        await Assert.That(() => thread.XMove(unrelatedState, 1)).Throws<ObjectDisposedException>();
+    }
+
+    [Test]
+    [MethodDataSource(typeof(LuaStateCases), nameof(LuaStateCases.All))]
     public async Task DisposedThreadStateIsRemovedFromCache(LuaStateCase lua)
     {
         using var state = lua.CreateState();

@@ -427,29 +427,27 @@ public sealed unsafe partial class LuauState
             {
                 PushValue(index);
                 var reference = this.Ref();
-                this.Pop(1);
                 return new LuaTable(this, reference);
             }
             case LuaValueType.Function:
             {
                 PushValue(index);
                 var reference = this.Ref();
-                this.Pop(1);
                 return new LuaFunction(this, reference);
             }
             case LuaValueType.Thread:
             {
                 PushValue(index);
                 var reference = this.Ref();
-                this.Pop(1);
                 PushValue(reference);
-                return LuaValue.FromThread(ToThread(-1));
+                var thread = ToThread(-1);
+                this.Pop(1);
+                return LuaValue.FromThread(thread);
             }
             case LuaValueType.UserData:
             {
                 PushValue(index);
                 var reference = this.Ref();
-                this.Pop(1);
                 return new LuaUserData(this, reference);
             }
             default:

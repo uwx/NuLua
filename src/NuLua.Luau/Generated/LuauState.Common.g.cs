@@ -248,12 +248,66 @@ public sealed unsafe partial class LuauState : ILuaState<LuauState>, ILuaDebug<L
     public void XMove(LuauState target, int count)
     {
         CheckDisposed();
+        if (target == null)
+        {
+            throw new ArgumentNullException(nameof(target));
+        }
+        target.CheckDisposed();
+
+        var sourceMainState = this;
+        while (sourceMainState.from != null)
+        {
+            sourceMainState = sourceMainState.from;
+        }
+
+        var targetMainState = target;
+        while (targetMainState.from != null)
+        {
+            targetMainState = targetMainState.from;
+        }
+
+        if (!ReferenceEquals(sourceMainState, targetMainState))
+        {
+            throw new ArgumentException(
+                "Source and target states must belong to the same main Lua state.",
+                nameof(target)
+            );
+        }
+
+        var top = NativeMethods.lua_gettop(ptr);
+        if ((uint)count > (uint)top)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(count),
+                count,
+                $"Move count must be between 0 and the current stack size ({top})."
+            );
+        }
+
+        if (count == 0 || ReferenceEquals(this, target))
+        {
+            return;
+        }
+
+        if (NativeMethods.lua_checkstack(target.ptr, count) == 0)
+        {
+            throw new LuaException(LUA_ERRMEM, "Failed to grow the target Lua stack.");
+        }
+
         NativeMethods.lua_xmove(ptr, target.ptr, count);
     }
 
     void ILuaState.XMove(ILuaState target, int count)
     {
-        XMove((LuauState)target, count);
+        if (target is not LuauState typedTarget)
+        {
+            throw new ArgumentException(
+                "Source and target states must use the same Lua runtime.",
+                nameof(target)
+            );
+        }
+
+        XMove(typedTarget, count);
     }
 
     public void NewTable(int initialArraySize = 0, int initialRecordsSize = 0)
