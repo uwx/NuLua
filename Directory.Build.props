@@ -1,5 +1,7 @@
 <Project>
   <PropertyGroup>
+    <UseArtifactsOutput>true</UseArtifactsOutput>
+
     <!-- NuGet Packaging -->
     <PackageVersion>0.0.2</PackageVersion>
     <Authors>nuskey</Authors>
