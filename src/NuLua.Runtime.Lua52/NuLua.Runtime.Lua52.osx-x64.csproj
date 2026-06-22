@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="README.md" />
+    <None Include="..\..\assets\icon.png" Pack="true" PackagePath="icon.png" />
     <EmbeddedResource Include="..\..\LICENSE" />
   </ItemGroup>
   <ItemGroup>
