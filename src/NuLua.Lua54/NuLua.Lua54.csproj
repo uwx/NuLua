@@ -41,7 +41,7 @@
     <CodeGenTemplate Include="$(CodeGenCommonTemplateDir)\*.scriban-cs" />
   </ItemGroup>
 
-  <Target Name="BuildCodeGen" BeforeTargets="RunCodeGen">
+  <Target Name="BuildCodeGen" BeforeTargets="RunCodeGen" Condition="'$(DesignTimeBuild)' != 'true'">
     <MSBuild
       Projects="$(CodeGenProject)"
       Targets="Build"
@@ -53,6 +53,7 @@
   <Target
     Name="RunCodeGen"
     BeforeTargets="CoreCompile"
+    Condition="'$(DesignTimeBuild)' != 'true'"
     Inputs="@(CodeGenTemplate)"
     Outputs="$(CodeGenOutputDir)\$(CodeGenName)State.g.cs;$(CodeGenOutputDir)\$(CodeGenName)State.Common.g.cs"
   >
@@ -60,9 +61,4 @@
     <Exec Command="dotnet run --project &quot;$(CodeGenProject)&quot; --configuration $(Configuration) --no-build -- --name $(CodeGenName) --version $(CodeGenVersion) --common-template-dir &quot;$(CodeGenCommonTemplateDir)&quot; --dialect-template-dir &quot;$(CodeGenTemplateDir)&quot; --output-dir &quot;$(CodeGenOutputDir)&quot;" />
   </Target>
 
-  <Target Name="IncludeCodeGenOutput" BeforeTargets="CoreCompile" DependsOnTargets="RunCodeGen">
-    <ItemGroup>
-      <Compile Include="$(CodeGenOutputDir)\*.g.cs" Exclude="@(Compile)" />
-    </ItemGroup>
-  </Target>
 </Project>
