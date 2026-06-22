@@ -175,7 +175,9 @@ public class LuaStateTests
         table[2] = "two";
         table["name"] = "table";
 
+        var topBeforeLength = state.GetTop();
         await Assert.That(table.Length).IsEqualTo(2);
+        await Assert.That(state.GetTop()).IsEqualTo(topBeforeLength);
         await Assert.That(table[1].Read<string>()).IsEqualTo("one");
         await Assert.That(table["name"].Read<string>()).IsEqualTo("table");
 

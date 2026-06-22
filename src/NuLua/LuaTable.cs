@@ -140,8 +140,7 @@ public sealed class LuaTable(ILuaState state, LuaReference reference) : ILuaObje
             state.PushValue(Reference);
             state.Len(-1);
             var length = (int)state.ToNumber(-1);
-            state.SetTop(state.GetTop() - 1);
-            state.Pop(1);
+            state.Pop(2);
             return length;
         }
     }
