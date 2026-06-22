@@ -127,17 +127,13 @@ public class LuaModuleLoaderTests
         using var state = lua.CreateState();
         state.OpenLibraries();
 
-        var beforeResults = state.DoString(
-            "return #(package.searchers or package.loaders)"
-        );
+        var beforeResults = state.DoString("return #(package.searchers or package.loaders)");
         var beforeCount = beforeResults[0].Read<double>();
 
         var requirer = new InMemoryModuleLoader(new Dictionary<string, string>());
         lua.UseModuleLoader(state, requirer);
 
-        var afterResults = state.DoString(
-            "return #(package.searchers or package.loaders)"
-        );
+        var afterResults = state.DoString("return #(package.searchers or package.loaders)");
         var afterCount = afterResults[0].Read<double>();
 
         await Assert.That(afterCount).IsEqualTo(beforeCount + 1);
@@ -160,9 +156,7 @@ public class LuaModuleLoaderTests
         );
         lua.UseModuleLoader(state, requirer);
 
-        var results = state.DoString(
-            "require('mod'); return (package.loaded['mod']).value"
-        );
+        var results = state.DoString("require('mod'); return (package.loaded['mod']).value");
 
         await Assert.That(results[0].Read<double>()).IsEqualTo(42);
     }

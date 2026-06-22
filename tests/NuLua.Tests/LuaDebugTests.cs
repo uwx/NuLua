@@ -172,9 +172,7 @@ public class LuaDebugTests
         using var state = LuauState.Create();
 
         await Assert
-            .That(
-                () => state.Debug.SetHook((s, ev, line) => { }, LuaHookMask.Line, 0)
-            )
+            .That(() => state.Debug.SetHook((s, ev, line) => { }, LuaHookMask.Line, 0))
             .Throws<NotSupportedException>();
     }
 
