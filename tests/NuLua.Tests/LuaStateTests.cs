@@ -51,6 +51,34 @@ public class LuaStateTests
 
     [Test]
     [MethodDataSource(typeof(LuaStateCases), nameof(LuaStateCases.All))]
+    public async Task PopValidatesCountAgainstStackSize(LuaStateCase lua)
+    {
+        using var state = lua.CreateState();
+        state.PushInteger(1);
+        state.PushInteger(2);
+
+        state.Pop(0);
+        await Assert.That(state.GetTop()).IsEqualTo(2);
+        await Assert.That(() => state.Pop(-1)).Throws<ArgumentOutOfRangeException>();
+        await Assert.That(() => state.Pop(3)).Throws<ArgumentOutOfRangeException>();
+        await Assert.That(state.GetTop()).IsEqualTo(2);
+
+        state.Pop(2);
+        await Assert.That(state.GetTop()).IsEqualTo(0);
+    }
+
+    [Test]
+    [MethodDataSource(typeof(LuaStateCases), nameof(LuaStateCases.All))]
+    public async Task PopValueThrowsWhenStackIsEmpty(LuaStateCase lua)
+    {
+        using var state = lua.CreateState();
+
+        await Assert.That(() => state.Pop()).Throws<InvalidOperationException>();
+        await Assert.That(state.GetTop()).IsEqualTo(0);
+    }
+
+    [Test]
+    [MethodDataSource(typeof(LuaStateCases), nameof(LuaStateCases.All))]
     public async Task DoStringReturnsValuesAndRestoresStack(LuaStateCase lua)
     {
         using var state = lua.CreateState();

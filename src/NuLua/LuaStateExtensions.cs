@@ -43,14 +43,31 @@ public static class LuaStateExtensions
 
     public static LuaValue Pop(this ILuaState state)
     {
+        var top = state.GetTop();
+
+        if (top == 0)
+        {
+            throw new InvalidOperationException("Stack is empty");
+        }
+
         var value = state.ToLuaValue(-1);
-        state.SetTop(state.GetTop() - 1);
+        state.SetTop(top - 1);
         return value;
     }
 
     public static void Pop(this ILuaState state, int count)
     {
-        state.SetTop(state.GetTop() - count);
+        var top = state.GetTop();
+        if ((uint)count > (uint)top)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(count),
+                count,
+                $"Pop count must be between 0 and the current stack size ({top})."
+            );
+        }
+
+        state.SetTop(top - count);
     }
 
     public static void Insert(this ILuaState state, int index)
