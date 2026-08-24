@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace NuLua;
 
@@ -54,12 +55,45 @@ public sealed class LuaUserData(ILuaState state, LuaReference reference) : ILuaO
         }
     }
 
-    public bool TryRead<T>([NotNullWhen(true)] out T? result)
+    public unsafe bool TryRead<T>([NotNullWhen(true)] out T? result)
     {
         if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
         {
             result = default;
-            return false;
+
+            state.PushValue(Reference);
+            try
+            {
+                if (state.RawLen(-1) < Unsafe.SizeOf<ManagedUserData>())
+                {
+                    return false;
+                }
+
+                var data = state.ToUserDataPointer(-1);
+                ref var header = ref Unsafe.AsRef<ManagedUserData>((void*)data);
+                if (header.Handle == 0)
+                {
+                    return false;
+                }
+
+                var handle = GCHandle.FromIntPtr(header.Handle);
+                if (!handle.IsAllocated)
+                {
+                    return false;
+                }
+
+                if (handle.Target is T typed)
+                {
+                    result = typed;
+                    return true;
+                }
+
+                return false;
+            }
+            finally
+            {
+                state.Pop(1);
+            }
         }
 
         if (Size != Unsafe.SizeOf<T>())

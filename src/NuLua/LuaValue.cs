@@ -50,7 +50,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>
     /// </summary>
     public const int PrimitiveIdLimit = 16;
 
-    public static readonly LuaValue Nil = default;
+    public static LuaValue Nil => default;
 
     public static LuaValue FromNumber(double value)
     {
@@ -265,10 +265,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                     result = Unsafe.As<object, T>(ref r)!;
                     return true;
                 }
-                if (
-                    !RuntimeHelpers.IsReferenceOrContainsReferences<T>()
-                    && reference is LuaUserData ud
-                )
+                if (reference is LuaUserData ud)
                 {
                     if (ud.TryRead(out result))
                         return true;
