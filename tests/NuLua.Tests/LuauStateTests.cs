@@ -183,6 +183,117 @@ public class LuauStateTests
         await Assert.That(LuaValue.FromObject(dummy).Type).IsEqualTo(LuaValueType.Object);
     }
 
+    [Test]
+    public async Task PushPrimitiveAndToPrimitiveRoundTripsIdAndPayload()
+    {
+        using var state = LuauState.Create();
+
+        byte[] payload = [1, 2, 3, 4, 5];
+        state.PushPrimitive(3, payload);
+
+        await Assert.That(state.GetType(-1)).IsEqualTo(LuaValueType.Primitive);
+
+        var read = state.ToPrimitive(-1, out var id);
+        // Materialize the span before any await (spans cannot cross await boundaries).
+        var bytes = read.ToArray();
+        await Assert.That(id).IsEqualTo(3);
+        // The native API zero-pads the payload to LUA_PRIMITIVE_SIZE; only the prefix is meaningful.
+        await Assert.That(bytes.Length).IsEqualTo(LuaValue.PrimitivePayloadSize);
+        await Assert.That(bytes.AsSpan(0, payload.Length).SequenceEqual(payload)).IsTrue();
+    }
+
+    [Test]
+    public async Task ToPrimitiveThrowsWhenValueIsNotAPrimitive()
+    {
+        using var state = LuauState.Create();
+        state.PushNumber(1.0);
+        await Assert.That(() => state.ToPrimitive(-1, out _)).Throws<InvalidOperationException>();
+    }
+
+    [Test]
+    public async Task LuaValueFromPrimitivePushAndPopRoundTrips()
+    {
+        using var state = LuauState.Create();
+
+        byte[] payload = [10, 20, 30, 40];
+        var value = LuaValue.FromPrimitive(5, payload);
+
+        await Assert.That(value.Type).IsEqualTo(LuaValueType.Primitive);
+        await Assert.That(value.Read<PrimitiveValue>().Id).IsEqualTo(5);
+        var primitiveValueValue = value.Read<PrimitiveValue>().Primitive;
+        await Assert.That(((ReadOnlySpan<byte>)primitiveValueValue)[..payload.Length].SequenceEqual(payload)).IsTrue();
+        await Assert.That(value.Read<ReadOnlyMemory<byte>>().Span[..payload.Length].SequenceEqual(payload)).IsTrue();
+
+        state.Push(value);
+        await Assert.That(state.GetType(-1)).IsEqualTo(LuaValueType.Primitive);
+
+        var popped = state.Pop();
+        await Assert.That(popped.Type).IsEqualTo(LuaValueType.Primitive);
+        await Assert.That(popped.Read<PrimitiveValue>().Id).IsEqualTo(5);
+        // Reading back from the VM returns the zero-padded 24-byte payload.
+        var read = popped.Read<PrimitiveValue>().Primitive;
+        var readSpan = (ReadOnlySpan<byte>)read;
+        await Assert.That(readSpan.Length).IsEqualTo(LuaValue.PrimitivePayloadSize);
+        var readSpan1 = (ReadOnlySpan<byte>)read;
+        await Assert.That(readSpan1[..payload.Length].SequenceEqual(payload)).IsTrue();
+    }
+
+    [Test]
+    public async Task PrimitiveIdThrowsForNonPrimitiveValue()
+    {
+        var value = LuaValue.FromNumber(1.0);
+        await Assert.That(() => value.Read<PrimitiveValue>().Id).Throws<InvalidOperationException>();
+    }
+
+    [Test]
+    public async Task FromPrimitiveRejectsOversizedPayload()
+    {
+        var payload = new byte[LuaValue.PrimitivePayloadSize + 1];
+        await Assert.That(() => LuaValue.FromPrimitive(0, payload))
+            .Throws<ArgumentOutOfRangeException>();
+    }
+
+    [Test]
+    public async Task FromPrimitiveRejectsInvalidId()
+    {
+        await Assert.That(() => LuaValue.FromPrimitive(-1, []))
+            .Throws<ArgumentOutOfRangeException>();
+        await Assert.That(() => LuaValue.FromPrimitive(LuaValue.PrimitiveIdLimit, []))
+            .Throws<ArgumentOutOfRangeException>();
+    }
+
+    [Test]
+    public async Task GetPrimitiveMetatableReturnsFalseWhenUnset()
+    {
+        using var state = LuauState.Create();
+        await Assert.That(state.GetPrimitiveMetatable(0, out _)).IsFalse();
+    }
+
+    [Test]
+    public async Task SetPrimitiveMetatableThenGetRoundTrips()
+    {
+        using var state = LuauState.Create();
+        using var metatable = state.CreateTable();
+        metatable["__index"] = 42;
+
+        state.SetPrimitiveMetatable(2, metatable);
+
+        await Assert.That(state.GetPrimitiveMetatable(2, out var retrieved)).IsTrue();
+        await Assert.That(retrieved).IsNotNull();
+        retrieved!.Dispose();
+    }
+
+    [Test]
+    public async Task SetPrimitiveMetatableThrowsWhenSetTwice()
+    {
+        using var state = LuauState.Create();
+        using var metatable = state.CreateTable();
+
+        state.SetPrimitiveMetatable(1, metatable);
+        await Assert.That(() => state.SetPrimitiveMetatable(1, metatable))
+            .Throws<InvalidOperationException>();
+    }
+
     sealed class DummyLuaObject : ILuaObject
     {
         public LuaReference Reference => default;
