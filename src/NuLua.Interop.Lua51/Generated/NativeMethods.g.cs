@@ -18,12 +18,11 @@ namespace NuLua.Interop.Lua51
         public static ReadOnlySpan<byte> LUA_PATH => new byte[] { 76, 85, 65, 95, 80, 65, 84, 72, 0 };
         public static ReadOnlySpan<byte> LUA_CPATH => new byte[] { 76, 85, 65, 95, 67, 80, 65, 84, 72, 0 };
         public static ReadOnlySpan<byte> LUA_INIT => new byte[] { 76, 85, 65, 95, 73, 78, 73, 84, 0 };
-        public static ReadOnlySpan<byte> LUA_ROOT => new byte[] { 47, 117, 115, 114, 47, 108, 111, 99, 97, 108, 47, 0 };
-        public static ReadOnlySpan<byte> LUA_LDIR => new byte[] { 47, 117, 115, 114, 47, 108, 111, 99, 97, 108, 47, 115, 104, 97, 114, 101, 47, 108, 117, 97, 47, 53, 46, 49, 47, 0 };
-        public static ReadOnlySpan<byte> LUA_CDIR => new byte[] { 47, 117, 115, 114, 47, 108, 111, 99, 97, 108, 47, 108, 105, 98, 47, 108, 117, 97, 47, 53, 46, 49, 47, 0 };
-        public static ReadOnlySpan<byte> LUA_PATH_DEFAULT => new byte[] { 46, 47, 63, 46, 108, 117, 97, 59, 47, 117, 115, 114, 47, 108, 111, 99, 97, 108, 47, 115, 104, 97, 114, 101, 47, 108, 117, 97, 47, 53, 46, 49, 47, 63, 46, 108, 117, 97, 59, 47, 117, 115, 114, 47, 108, 111, 99, 97, 108, 47, 115, 104, 97, 114, 101, 47, 108, 117, 97, 47, 53, 46, 49, 47, 63, 47, 105, 110, 105, 116, 46, 108, 117, 97, 59, 47, 117, 115, 114, 47, 108, 111, 99, 97, 108, 47, 108, 105, 98, 47, 108, 117, 97, 47, 53, 46, 49, 47, 63, 46, 108, 117, 97, 59, 47, 117, 115, 114, 47, 108, 111, 99, 97, 108, 47, 108, 105, 98, 47, 108, 117, 97, 47, 53, 46, 49, 47, 63, 47, 105, 110, 105, 116, 46, 108, 117, 97, 0 };
-        public static ReadOnlySpan<byte> LUA_CPATH_DEFAULT => new byte[] { 46, 47, 63, 46, 115, 111, 59, 47, 117, 115, 114, 47, 108, 111, 99, 97, 108, 47, 108, 105, 98, 47, 108, 117, 97, 47, 53, 46, 49, 47, 63, 46, 115, 111, 59, 47, 117, 115, 114, 47, 108, 111, 99, 97, 108, 47, 108, 105, 98, 47, 108, 117, 97, 47, 53, 46, 49, 47, 108, 111, 97, 100, 97, 108, 108, 46, 115, 111, 0 };
-        public static ReadOnlySpan<byte> LUA_DIRSEP => new byte[] { 47, 0 };
+        public static ReadOnlySpan<byte> LUA_LDIR => new byte[] { 33, 92, 108, 117, 97, 92, 0 };
+        public static ReadOnlySpan<byte> LUA_CDIR => new byte[] { 33, 92, 0 };
+        public static ReadOnlySpan<byte> LUA_PATH_DEFAULT => new byte[] { 46, 92, 63, 46, 108, 117, 97, 59, 33, 92, 108, 117, 97, 92, 63, 46, 108, 117, 97, 59, 33, 92, 108, 117, 97, 92, 63, 92, 105, 110, 105, 116, 46, 108, 117, 97, 59, 33, 92, 63, 46, 108, 117, 97, 59, 33, 92, 63, 92, 105, 110, 105, 116, 46, 108, 117, 97, 0 };
+        public static ReadOnlySpan<byte> LUA_CPATH_DEFAULT => new byte[] { 46, 92, 63, 46, 100, 108, 108, 59, 33, 92, 63, 46, 100, 108, 108, 59, 33, 92, 108, 111, 97, 100, 97, 108, 108, 46, 100, 108, 108, 0 };
+        public static ReadOnlySpan<byte> LUA_DIRSEP => new byte[] { 92, 0 };
         public static ReadOnlySpan<byte> LUA_PATHSEP => new byte[] { 59, 0 };
         public static ReadOnlySpan<byte> LUA_PATH_MARK => new byte[] { 63, 0 };
         public static ReadOnlySpan<byte> LUA_EXECDIR => new byte[] { 33, 0 };
@@ -566,7 +565,7 @@ namespace NuLua.Interop.Lua51
         public byte* p;
         public int lvl;
         public lua_State* L;
-        public fixed byte buffer[1024];
+        public fixed byte buffer[512];
     }
 
 

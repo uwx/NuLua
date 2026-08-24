@@ -64,7 +64,7 @@ fn generate_csharp_bindings(bindings_rs: &Path, ffi_rs: &Path, out_cs: &Path) {
         .csharp_dll_name(FLAVOR)
         .csharp_namespace(CSHARP_NAMESPACE)
         .csharp_class_name(CSHARP_CLASS)
-        .csharp_use_function_pointer(false)
+        .csharp_use_function_pointer(true)
         .csharp_entry_point_prefix("")
         .csharp_generate_const_filter(|name| name.starts_with("LUA_"))
         .generate_to_file(ffi_rs.to_str().unwrap(), out_cs.to_str().unwrap())

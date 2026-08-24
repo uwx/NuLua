@@ -15,12 +15,16 @@ namespace NuLua.Interop.Lua52
     {
         const string __DllName = "lua52";
 
-        public static ReadOnlySpan<byte> LUA_ROOT => new byte[] { 47, 117, 115, 114, 47, 108, 111, 99, 97, 108, 47, 0 };
-        public static ReadOnlySpan<byte> LUA_DIRSEP => new byte[] { 47, 0 };
+        public static ReadOnlySpan<byte> LUA_LDIR => new byte[] { 33, 92, 108, 117, 97, 92, 0 };
+        public static ReadOnlySpan<byte> LUA_CDIR => new byte[] { 33, 92, 0 };
+        public static ReadOnlySpan<byte> LUA_PATH_DEFAULT => new byte[] { 33, 92, 108, 117, 97, 92, 63, 46, 108, 117, 97, 59, 33, 92, 108, 117, 97, 92, 63, 92, 105, 110, 105, 116, 46, 108, 117, 97, 59, 33, 92, 63, 46, 108, 117, 97, 59, 33, 92, 63, 92, 105, 110, 105, 116, 46, 108, 117, 97, 59, 46, 92, 63, 46, 108, 117, 97, 0 };
+        public static ReadOnlySpan<byte> LUA_CPATH_DEFAULT => new byte[] { 33, 92, 63, 46, 100, 108, 108, 59, 33, 92, 108, 111, 97, 100, 97, 108, 108, 46, 100, 108, 108, 59, 46, 92, 63, 46, 100, 108, 108, 0 };
+        public static ReadOnlySpan<byte> LUA_DIRSEP => new byte[] { 92, 0 };
         public static ReadOnlySpan<byte> LUA_ENV => new byte[] { 95, 69, 78, 86, 0 };
         public const uint LUA_IDSIZE = 60;
         public static ReadOnlySpan<byte> LUA_NUMBER_SCAN => new byte[] { 37, 108, 102, 0 };
         public static ReadOnlySpan<byte> LUA_NUMBER_FMT => new byte[] { 37, 46, 49, 52, 103, 0 };
+        public const uint LUA_IEEEENDIAN = 0;
         public static ReadOnlySpan<byte> LUA_VERSION_MAJOR => new byte[] { 53, 0 };
         public static ReadOnlySpan<byte> LUA_VERSION_MINOR => new byte[] { 50, 0 };
         public const uint LUA_VERSION_NUM = 502;
@@ -663,7 +667,7 @@ namespace NuLua.Interop.Lua52
         public nuint size;
         public nuint n;
         public lua_State* L;
-        public fixed byte initb[1024];
+        public fixed byte initb[512];
     }
 
     [StructLayout(LayoutKind.Sequential)]
