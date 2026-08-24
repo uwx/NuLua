@@ -409,7 +409,24 @@ public sealed unsafe partial class Lua54State
             var func = main.funcs[(int)funcIndex];
 
             var numArgs = NativeMethods.lua_gettop(L);
-            return func(state, new LuaFuncArguments(state, numArgs));
+            var snapshot = numArgs == 0 ? [] : new LuaValue[numArgs];
+            for (int i = 0; i < numArgs; i++)
+            {
+                snapshot[i] = state.ToLuaValue(i + 1);
+            }
+            try
+            {
+                return func(state, new LuaFuncArguments(snapshot, numArgs));
+            }
+            finally
+            {
+                // Arguments are only valid for the duration of the call; release
+                // the registry references taken by the snapshot above.
+                for (int i = 0; i < numArgs; i++)
+                {
+                    snapshot[i].Dispose();
+                }
+            }
         }
 
         CheckDisposed();
@@ -458,7 +475,20 @@ public sealed unsafe partial class Lua54State
             var args = new LuaFuncArguments(snapshot, numArgs);
             var ct = state.asyncCancellationToken;
 
-            var task = func(state, args, ct);
+            ValueTask<int> task;
+            try
+            {
+                task = func(state, args, ct);
+            }
+            finally
+            {
+                // Arguments are only valid for the synchronous part of the call;
+                // release the registry references taken by the snapshot above.
+                for (int i = 0; i < numArgs; i++)
+                {
+                    snapshot[i].Dispose();
+                }
+            }
 
             if (task.IsCompletedSuccessfully)
             {

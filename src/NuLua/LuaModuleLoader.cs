@@ -27,6 +27,13 @@ public abstract class LuaModuleLoader
             state.SetTop(baseTop);
             throw;
         }
+        finally
+        {
+            // CreateThread() registered the coroutine in the registry and the
+            // state's child-state list; release that reference now that the
+            // module has been moved back onto `state`'s stack.
+            thread.Dispose();
+        }
     }
 
     internal string ResolveCacheKey(string argument) => GetCacheKey(AliasToPath(argument));

@@ -29,6 +29,10 @@ public sealed class LuaTable(ILuaState state, LuaReference reference) : ILuaObje
             }
             else
             {
+                // Each pair yielded by this enumerator holds registry references
+                // (see ToLuaValue); release the previous pair now that it has been
+                // consumed and is about to be overwritten.
+                ReleaseCurrent();
                 table.state.Pop(1);
             }
 
@@ -37,6 +41,9 @@ public sealed class LuaTable(ILuaState state, LuaReference reference) : ILuaObje
             {
                 table.state.Pop(1);
                 finished = true;
+                // The last yielded pair is no longer reachable once the enumeration
+                // completes; release its registry references too.
+                ReleaseCurrent();
                 return false;
             }
 
@@ -44,6 +51,13 @@ public sealed class LuaTable(ILuaState state, LuaReference reference) : ILuaObje
             var value = table.state.ToLuaValue(-1);
             current = new KeyValuePair<LuaValue, LuaValue>(key, value);
             return true;
+        }
+
+        void ReleaseCurrent()
+        {
+            current.Key.Dispose();
+            current.Value.Dispose();
+            current = default;
         }
     }
 

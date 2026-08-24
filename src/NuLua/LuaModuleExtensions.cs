@@ -61,6 +61,10 @@ public static class LuaModuleExtensions
                         (inner, _) =>
                         {
                             inner.Push(moduleValue);
+                            // The module is now on the stack (and will be cached in
+                            // package.loaded by require), so the registry reference
+                            // taken by ToLuaValue is no longer needed.
+                            moduleValue.Dispose();
                             return 1;
                         },
                         0
@@ -99,23 +103,40 @@ public static class LuaModuleExtensions
                     cacheTable = cacheValue.Read<LuaTable>();
                 }
 
-                var cacheKey = loader.ResolveCacheKey(name);
-                var cached = cacheTable[cacheKey];
-                if (!cached.IsNil)
+                try
                 {
-                    lua.Push(cached);
+                    var cacheKey = loader.ResolveCacheKey(name);
+                    var cached = cacheTable[cacheKey];
+                    if (!cached.IsNil)
+                    {
+                        lua.Push(cached);
+                        // The module is on the stack (and cached in the table), so
+                        // release the temporary registry reference from the getter.
+                        cached.Dispose();
+                        return 1;
+                    }
+
+                    if (!loader.TryLoad(lua, name))
+                    {
+                        throw new LuaException(2, $"module '{name}' not found");
+                    }
+
+                    var moduleValue = lua.ToLuaValue(-1);
+                    cacheTable[cacheKey] = moduleValue;
+                    lua.Push(moduleValue);
+                    // The module is now both cached in `cacheTable` and on the
+                    // stack, so the temporary registry reference can be released.
+                    moduleValue.Dispose();
                     return 1;
                 }
-
-                if (!loader.TryLoad(lua, name))
+                finally
                 {
-                    throw new LuaException(2, $"module '{name}' not found");
+                    // `cacheValue` is a per-call temporary wrapper around the
+                    // persistent `_NULUA_MODULES` table (which stays alive as a
+                    // global); release its registry reference. No-op when the
+                    // cache table was freshly created (cacheValue is nil).
+                    cacheValue.Dispose();
                 }
-
-                var moduleValue = lua.ToLuaValue(-1);
-                cacheTable[cacheKey] = moduleValue;
-                lua.Push(moduleValue);
-                return 1;
             }
         );
 

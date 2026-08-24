@@ -503,11 +503,10 @@ public sealed unsafe partial class LuauState
             }
             case LuaValueType.Thread:
             {
-                PushValue(index);
-                var reference = this.Ref();
-                PushValue(reference);
-                var thread = ToThread(-1);
-                this.Pop(1);
+                // ToThread() already keeps the coroutine alive via its own
+                // registry reference, so no extra Ref() is taken here (and none
+                // would ever be released).
+                var thread = ToThread(index);
                 return LuaValue.FromThread(thread);
             }
             case LuaValueType.UserData:
@@ -682,7 +681,24 @@ public sealed unsafe partial class LuauState
             var func = main.funcs[funcIndex];
 
             var numArgs = NativeMethods.lua_gettop(L);
-            return func(state, new LuaFuncArguments(state, numArgs));
+            var snapshot = numArgs == 0 ? [] : new LuaValue[numArgs];
+            for (int i = 0; i < numArgs; i++)
+            {
+                snapshot[i] = state.ToLuaValue(i + 1);
+            }
+            try
+            {
+                return func(state, new LuaFuncArguments(snapshot, numArgs));
+            }
+            finally
+            {
+                // Arguments are only valid for the duration of the call; release
+                // the registry references taken by the snapshot above.
+                for (int i = 0; i < numArgs; i++)
+                {
+                    snapshot[i].Dispose();
+                }
+            }
         }
 
         CheckDisposed();
@@ -734,7 +750,20 @@ public sealed unsafe partial class LuauState
             var args = new LuaFuncArguments(snapshot, numArgs);
             var ct = state.asyncCancellationToken;
 
-            var task = func(state, args, ct);
+            ValueTask<int> task;
+            try
+            {
+                task = func(state, args, ct);
+            }
+            finally
+            {
+                // Arguments are only valid for the synchronous part of the call;
+                // release the registry references taken by the snapshot above.
+                for (int i = 0; i < numArgs; i++)
+                {
+                    snapshot[i].Dispose();
+                }
+            }
 
             if (task.IsCompletedSuccessfully)
             {

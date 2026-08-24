@@ -253,11 +253,10 @@ public sealed unsafe partial class Lua55State : ILuaState<Lua55State>, ILuaDebug
             }
             case LuaValueType.Thread:
             {
-                PushValue(index);
-                var reference = this.Ref();
-                PushValue(reference);
-                var thread = ToThread(-1);
-                this.Pop(1);
+                // ToThread() already keeps the coroutine alive via its own
+                // registry reference, so no extra Ref() is taken here (and none
+                // would ever be released).
+                var thread = ToThread(index);
                 return LuaValue.FromThread(thread);
             }
             case LuaValueType.UserData:
