@@ -1,8 +1,8 @@
 namespace NuLua;
 
-public sealed class LuaFunction(ILuaState state, LuaReference reference) : ILuaObject
+public sealed class LuaFunction(ILuaState state, LuaReference reference) : LuaObject(state, reference)
 {
-    public LuaReference Reference => reference;
+    readonly ILuaState state = state;
 
     public LuaValue[] Invoke(params ReadOnlySpan<LuaValue> args)
     {
@@ -29,10 +29,5 @@ public sealed class LuaFunction(ILuaState state, LuaReference reference) : ILuaO
         }
         state.SetTop(-resultCount - 1);
         return results;
-    }
-
-    public void Dispose()
-    {
-        state.Unref(Reference);
     }
 }

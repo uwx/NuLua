@@ -1,10 +1,8 @@
 namespace NuLua.Luau;
 
-public sealed class LuauBuffer(LuauState state, LuaReference reference) : ILuaObject
+public sealed class LuauBuffer(LuauState state, LuaReference reference) : LuaObject(state, reference)
 {
     readonly LuauState state = state;
-
-    public LuaReference Reference => reference;
 
     // Luau buffers are not moved by the GC; the data pointer remains valid as long
     // as a reference keeps the buffer alive, so AsSpan can outlive the temporary
@@ -29,9 +27,4 @@ public sealed class LuauBuffer(LuauState state, LuaReference reference) : ILuaOb
     public void CopyFrom(ReadOnlySpan<byte> source) => source.CopyTo(AsSpan());
 
     public byte[] ToArray() => AsSpan().ToArray();
-
-    public void Dispose()
-    {
-        state.Unref(reference);
-    }
 }

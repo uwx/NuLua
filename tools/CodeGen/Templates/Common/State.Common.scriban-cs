@@ -115,6 +115,8 @@ public sealed unsafe partial class {{ name }}State : ILuaState<{{ name }}State>,
         }
     }
 
+    public bool IsDisposed => ptr == null;
+
     void CheckDisposed()
     {
         if (ptr == null)

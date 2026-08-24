@@ -111,6 +111,8 @@ public sealed unsafe partial class Lua54State : ILuaState<Lua54State>, ILuaDebug
         }
     }
 
+    public bool IsDisposed => ptr == null;
+
     void CheckDisposed()
     {
         if (ptr == null)

@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace NuLua;
 
-public sealed class LuaUserData(ILuaState state, LuaReference reference) : ILuaObject
+public sealed class LuaUserData(ILuaState state, LuaReference reference) : LuaObject(state, reference)
 {
     readonly ILuaState state = state;
 
@@ -42,7 +42,6 @@ public sealed class LuaUserData(ILuaState state, LuaReference reference) : ILuaO
         }
     }
 
-    public LuaReference Reference => reference;
     public UserValues UserValue => new(this);
     public int Size
     {
@@ -153,10 +152,5 @@ public sealed class LuaUserData(ILuaState state, LuaReference reference) : ILuaO
         var ptr = state.ToUserDataPointer(-1);
         Unsafe.Write((void*)ptr, value);
         state.Pop(1);
-    }
-
-    public void Dispose()
-    {
-        state.Unref(Reference);
     }
 }

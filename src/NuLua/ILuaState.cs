@@ -5,6 +5,13 @@ namespace NuLua;
 public interface ILuaState : ILuaObject
 {
     ILuaState? From { get; }
+
+    /// <summary>
+    /// Whether the native Lua state has been closed (<c>lua_close</c>). Once disposed, the
+    /// registry no longer exists and references can no longer be released through it.
+    /// </summary>
+    bool IsDisposed { get; }
+
     int RegistryIndex { get; }
     int UpvalueIndexBase { get; }
 

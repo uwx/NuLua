@@ -1,6 +1,6 @@
 namespace NuLua;
 
-public sealed class LuaTable(ILuaState state, LuaReference reference) : ILuaObject
+public sealed class LuaTable(ILuaState state, LuaReference reference) : LuaObject(state, reference)
 {
     readonly ILuaState state = state;
 
@@ -60,8 +60,6 @@ public sealed class LuaTable(ILuaState state, LuaReference reference) : ILuaObje
             current = default;
         }
     }
-
-    public LuaReference Reference => reference;
 
     public LuaValue this[int index]
     {
@@ -160,9 +158,4 @@ public sealed class LuaTable(ILuaState state, LuaReference reference) : ILuaObje
     }
 
     public Enumerator GetEnumerator() => new(this);
-
-    public void Dispose()
-    {
-        state.Unref(Reference);
-    }
 }

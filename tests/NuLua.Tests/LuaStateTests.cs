@@ -741,4 +741,46 @@ public class LuaStateTests
         // GetByteCount is a useful smoke test that the step left the state usable.
         await Assert.That(state.GarbageCollection.GetByteCount()).IsGreaterThan(0);
     }
+
+    [Test]
+    [MethodDataSource(typeof(LuaStateCases), nameof(LuaStateCases.All))]
+    public async Task Wrapper_DisposeAfterStateDisposed_IsSafeNoOp(LuaStateCase lua)
+    {
+        LuaTable table;
+        using (var state = lua.CreateState())
+        {
+            table = state.CreateTable();
+            await Assert.That(table.Reference.Id).IsNotEqualTo(0);
+        }
+
+        // The state has been closed (lua_close), so there is no registry left to release.
+        // Disposing the wrapper (and disposing it again) must be a safe no-op.
+        table.Dispose();
+        table.Dispose();
+    }
+
+    [Test]
+    [MethodDataSource(typeof(LuaStateCases), nameof(LuaStateCases.All))]
+    public async Task Wrapper_FinalizerReleasesLeakedTable(LuaStateCase lua)
+    {
+        using var state = lua.CreateState();
+
+        var weak = CreateLeakedTable(state);
+
+        // The wrapper is unreachable; force the GC so the LuaObject finalizer runs and
+        // releases the registry reference without throwing or resurrecting the wrapper.
+        for (int i = 0; i < 10 && weak.IsAlive; i++)
+        {
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+        }
+
+        await Assert.That(weak.IsAlive).IsFalse();
+    }
+
+    static WeakReference CreateLeakedTable(ILuaState state)
+    {
+        // Deliberately not disposed — relies on the LuaObject finalizer as a safety net.
+        return new WeakReference(state.CreateTable());
+    }
 }

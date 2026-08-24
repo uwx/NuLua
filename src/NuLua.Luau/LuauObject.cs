@@ -1,10 +1,5 @@
 namespace NuLua.Luau;
 
-public sealed class LuauObject(LuauState state, LuaReference reference) : ILuaObject
+public sealed class LuauObject(LuauState state, LuaReference reference) : LuaObject(state, reference)
 {
-    readonly LuauState state = state;
-
-    public LuaReference Reference => reference;
-
-    public void Dispose() => state.Unref(reference);
 }

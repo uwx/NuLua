@@ -250,7 +250,7 @@ public static class LuauStateUserDataExtensions
                 return 3;
             }
 
-            using var iterator = state.CreateFunction(
+            var iterator = state.CreateFunction(
                 (s, _) =>
                 {
                     if (!enumerator.MoveNext())
