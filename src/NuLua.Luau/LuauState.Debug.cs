@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using NuLua.Interop.Luau;
 
@@ -8,9 +9,9 @@ public sealed unsafe partial class LuauState : ILuauDebug
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     delegate void LuauDebugCallbackDelegate(lua_State* L, lua_Debug* ar);
 
-    LuauDebugCallbackDelegate? debugBreakDelegate;
-    LuauDebugCallbackDelegate? debugStepDelegate;
-    LuauDebugCallbackDelegate? debugInterruptDelegate;
+    delegate* unmanaged[Cdecl]<lua_State*, lua_Debug*, void> debugBreakDelegate;
+    delegate* unmanaged[Cdecl]<lua_State*, lua_Debug*, void> debugStepDelegate;
+    delegate* unmanaged[Cdecl]<lua_State*, lua_Debug*, void> debugInterruptDelegate;
 
     LuaHook<LuauState>? debugBreakHook;
     LuaHook<LuauState>? debugStepHook;
@@ -147,7 +148,7 @@ public sealed unsafe partial class LuauState : ILuauDebug
                 ptr,
                 funcIndex,
                 (void*)GCHandle.ToIntPtr(handle),
-                CoverageCallback
+                &CoverageCallback
             );
         }
         finally
@@ -156,6 +157,7 @@ public sealed unsafe partial class LuauState : ILuauDebug
         }
     }
 
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
     static void CoverageCallback(
         void* context,
         byte* function,
@@ -192,38 +194,39 @@ public sealed unsafe partial class LuauState : ILuauDebug
     {
         CheckDisposed();
         debugBreakHook = callback;
-        debugBreakDelegate = callback == null ? null : DebugBreakEntry;
+        debugBreakDelegate = callback == null ? null : &DebugBreakEntry;
         var callbacks = NativeMethods.lua_callbacks(ptr);
         callbacks->debugbreak =
             callback == null
                 ? null
-                : (void*)Marshal.GetFunctionPointerForDelegate(debugBreakDelegate!);
+                : debugBreakDelegate!;
     }
 
     void ILuauDebug.SetDebugStepCallback(LuaHook<LuauState>? callback)
     {
         CheckDisposed();
         debugStepHook = callback;
-        debugStepDelegate = callback == null ? null : DebugStepEntry;
+        debugStepDelegate = callback == null ? null : &DebugStepEntry;
         var callbacks = NativeMethods.lua_callbacks(ptr);
         callbacks->debugstep =
             callback == null
                 ? null
-                : (void*)Marshal.GetFunctionPointerForDelegate(debugStepDelegate!);
+                : debugStepDelegate!;
     }
 
     void ILuauDebug.SetDebugInterruptCallback(LuaHook<LuauState>? callback)
     {
         CheckDisposed();
         debugInterruptHook = callback;
-        debugInterruptDelegate = callback == null ? null : DebugInterruptEntry;
+        debugInterruptDelegate = callback == null ? null : &DebugInterruptEntry;
         var callbacks = NativeMethods.lua_callbacks(ptr);
         callbacks->debuginterrupt =
             callback == null
                 ? null
-                : (void*)Marshal.GetFunctionPointerForDelegate(debugInterruptDelegate!);
+                : debugInterruptDelegate!;
     }
 
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
     static void DebugBreakEntry(lua_State* L, lua_Debug* ar)
     {
         if (!ptrToState.TryGetValue((nint)L, out var state))
@@ -232,6 +235,7 @@ public sealed unsafe partial class LuauState : ILuauDebug
         hook?.Invoke(state, LuaHookEvent.Line, ar->currentline);
     }
 
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
     static void DebugStepEntry(lua_State* L, lua_Debug* ar)
     {
         if (!ptrToState.TryGetValue((nint)L, out var state))
@@ -240,6 +244,7 @@ public sealed unsafe partial class LuauState : ILuauDebug
         hook?.Invoke(state, LuaHookEvent.Line, ar->currentline);
     }
 
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
     static void DebugInterruptEntry(lua_State* L, lua_Debug* ar)
     {
         if (!ptrToState.TryGetValue((nint)L, out var state))

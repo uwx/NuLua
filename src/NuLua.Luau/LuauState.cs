@@ -91,7 +91,7 @@ public sealed unsafe partial class LuauState
         NativeMethods.luaL_openlibs(ptr);
     }
 
-    void OpenSingleLibrary(NativeMethods.lua_pushcclosurek_fn__delegate opener)
+    void OpenSingleLibrary(delegate* unmanaged[Cdecl]<lua_State*, int> opener)
     {
         NativeMethods.lua_pushcclosurek(ptr, opener, null, 0, null!);
         NativeMethods.lua_call(ptr, 0, 0);
@@ -100,79 +100,79 @@ public sealed unsafe partial class LuauState
     public void OpenBaseLibrary()
     {
         CheckDisposed();
-        OpenSingleLibrary(NativeMethods.luaopen_base);
+        OpenSingleLibrary(&NativeMethods.luaopen_base);
     }
 
     public void OpenCoroutineLibrary()
     {
         CheckDisposed();
-        OpenSingleLibrary(NativeMethods.luaopen_coroutine);
+        OpenSingleLibrary(&NativeMethods.luaopen_coroutine);
     }
 
     public void OpenTableLibrary()
     {
         CheckDisposed();
-        OpenSingleLibrary(NativeMethods.luaopen_table);
+        OpenSingleLibrary(&NativeMethods.luaopen_table);
     }
 
     public void OpenStringLibrary()
     {
         CheckDisposed();
-        OpenSingleLibrary(NativeMethods.luaopen_string);
+        OpenSingleLibrary(&NativeMethods.luaopen_string);
     }
 
     public void OpenMathLibrary()
     {
         CheckDisposed();
-        OpenSingleLibrary(NativeMethods.luaopen_math);
+        OpenSingleLibrary(&NativeMethods.luaopen_math);
     }
 
     public void OpenOsLibrary()
     {
         CheckDisposed();
-        OpenSingleLibrary(NativeMethods.luaopen_os);
+        OpenSingleLibrary(&NativeMethods.luaopen_os);
     }
 
     public void OpenDebugLibrary()
     {
         CheckDisposed();
-        OpenSingleLibrary(NativeMethods.luaopen_debug);
+        OpenSingleLibrary(&NativeMethods.luaopen_debug);
     }
 
     public void OpenBit32Library()
     {
         CheckDisposed();
-        OpenSingleLibrary(NativeMethods.luaopen_bit32);
+        OpenSingleLibrary(&NativeMethods.luaopen_bit32);
     }
 
     public void OpenBufferLibrary()
     {
         CheckDisposed();
-        OpenSingleLibrary(NativeMethods.luaopen_buffer);
+        OpenSingleLibrary(&NativeMethods.luaopen_buffer);
     }
 
     public void OpenUtf8Library()
     {
         CheckDisposed();
-        OpenSingleLibrary(NativeMethods.luaopen_utf8);
+        OpenSingleLibrary(&NativeMethods.luaopen_utf8);
     }
 
     public void OpenClassLibrary()
     {
         CheckDisposed();
-        OpenSingleLibrary(NativeMethods.luaopen_class);
+        OpenSingleLibrary(&NativeMethods.luaopen_class);
     }
 
     public void OpenVectorLibrary()
     {
         CheckDisposed();
-        OpenSingleLibrary(NativeMethods.luaopen_vector);
+        OpenSingleLibrary(&NativeMethods.luaopen_vector);
     }
 
     public void OpenIntegerLibrary()
     {
         CheckDisposed();
-        OpenSingleLibrary(NativeMethods.luaopen_integer);
+        OpenSingleLibrary(&NativeMethods.luaopen_integer);
     }
 
     public void LoadString(ReadOnlySpan<byte> utf8Code, ReadOnlySpan<byte> utf8ChunkName)
@@ -669,6 +669,7 @@ public sealed unsafe partial class LuauState
 
     public void NewFunction(LuaFunc<LuauState> func, int upvalueCount)
     {
+        [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
         static int Fn(lua_State* L)
         {
             var state = GetOrCreate(L, default);
@@ -696,11 +697,12 @@ public sealed unsafe partial class LuauState
         funcs.Add(func);
         NativeMethods.lua_pushinteger(ptr, funcIndex);
         NativeMethods.lua_insert(ptr, -upvalueCount - 1);
-        NativeMethods.lua_pushcclosurek(ptr, Fn, null, upvalueCount + 1, null!);
+        NativeMethods.lua_pushcclosurek(ptr, &Fn, null, upvalueCount + 1, null!);
     }
 
     public void NewFunction(AsyncLuaFunc<LuauState> func, int upvalueCount)
     {
+        [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
         static int AsyncCFn(lua_State* L)
         {
             var state = GetOrCreate(L, default);
@@ -762,7 +764,7 @@ public sealed unsafe partial class LuauState
         asyncFuncs.Add(func);
         NativeMethods.lua_pushinteger(ptr, funcIndex);
         NativeMethods.lua_insert(ptr, -upvalueCount - 1);
-        NativeMethods.lua_pushcclosurek(ptr, AsyncCFn, null, upvalueCount + 1, null!);
+        NativeMethods.lua_pushcclosurek(ptr, &AsyncCFn, null, upvalueCount + 1, null!);
     }
 
     static readonly byte[]?[] arithBytecodeCache = new byte[(int)LuaArithmeticOperator.Shr + 1][];
