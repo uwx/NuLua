@@ -18,7 +18,7 @@ public struct PrimitiveValueValue
 }
 
 [StructLayout(LayoutKind.Auto)]
-public readonly struct LuaValue : IEquatable<LuaValue>
+public readonly struct LuaValue : IEquatable<LuaValue>, IDisposable
 {
     [StructLayout(LayoutKind.Explicit)]
     struct ValueUnion
@@ -527,4 +527,12 @@ public readonly struct LuaValue : IEquatable<LuaValue>
     public static implicit operator LuaValue(LuaTable value) => FromTable(value);
 
     public static implicit operator LuaValue(LuaUserData value) => FromUserData(value);
+
+    public void Dispose()
+    {
+        if (reference is IDisposable disposable)
+        {
+            disposable.Dispose();
+        }
+    }
 }

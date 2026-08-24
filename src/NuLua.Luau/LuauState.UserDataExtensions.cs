@@ -195,10 +195,11 @@ public static class LuauStateUserDataExtensions
         static int IndexMetamethod(LuauState state, LuaFuncArguments args)
         {
             var self = GetSelf(state);
-            var key = state.ToLuaValue(2);
+            using var key = state.ToLuaValue(2);
             if (self.TryGetIndex(state, key, out var value))
             {
                 state.Push(value);
+                value.Dispose();
                 return 1;
             }
 
@@ -209,8 +210,8 @@ public static class LuauStateUserDataExtensions
         static int NewIndexMetamethod(LuauState state, LuaFuncArguments args)
         {
             var self = GetSelf(state);
-            var key = state.ToLuaValue(2);
-            var value = state.ToLuaValue(3);
+            using var key = state.ToLuaValue(2);
+            using var value = state.ToLuaValue(3);
             self.TrySetIndex(state, key, value);
             return 0;
         }
@@ -249,7 +250,7 @@ public static class LuauStateUserDataExtensions
                 return 3;
             }
 
-            var iterator = state.CreateFunction(
+            using var iterator = state.CreateFunction(
                 (s, _) =>
                 {
                     if (!enumerator.MoveNext())
@@ -300,7 +301,7 @@ public static class LuauStateUserDataExtensions
         static int UnaryMinusMetamethod(LuauState state, LuaFuncArguments args)
         {
             var self = GetSelf(state);
-            var result = T.UnaryMinus(state, self);
+            using var result = T.UnaryMinus(state, self);
             state.Push(result);
             return 1;
         }
@@ -309,7 +310,7 @@ public static class LuauStateUserDataExtensions
         {
             var self = GetSelf(state);
             var other = GetSelfAtPosition(state, 2);
-            var result = T.Add(state, self, other);
+            using var result = T.Add(state, self, other);
             state.Push(result);
             return 1;
         }
@@ -318,7 +319,7 @@ public static class LuauStateUserDataExtensions
         {
             var self = GetSelf(state);
             var other = GetSelfAtPosition(state, 2);
-            var result = T.Subtract(state, self, other);
+            using var result = T.Subtract(state, self, other);
             state.Push(result);
             return 1;
         }
@@ -327,7 +328,7 @@ public static class LuauStateUserDataExtensions
         {
             var self = GetSelf(state);
             var other = GetSelfAtPosition(state, 2);
-            var result = T.Multiply(state, self, other);
+            using var result = T.Multiply(state, self, other);
             state.Push(result);
             return 1;
         }
@@ -336,7 +337,7 @@ public static class LuauStateUserDataExtensions
         {
             var self = GetSelf(state);
             var other = GetSelfAtPosition(state, 2);
-            var result = T.Divide(state, self, other);
+            using var result = T.Divide(state, self, other);
             state.Push(result);
             return 1;
         }
@@ -345,7 +346,7 @@ public static class LuauStateUserDataExtensions
         {
             var self = GetSelf(state);
             var other = GetSelfAtPosition(state, 2);
-            var result = T.FloorDivide(state, self, other);
+            using var result = T.FloorDivide(state, self, other);
             state.Push(result);
             return 1;
         }
@@ -354,7 +355,7 @@ public static class LuauStateUserDataExtensions
         {
             var self = GetSelf(state);
             var other = GetSelfAtPosition(state, 2);
-            var result = T.Modulus(state, self, other);
+            using var result = T.Modulus(state, self, other);
             state.Push(result);
             return 1;
         }
@@ -363,7 +364,7 @@ public static class LuauStateUserDataExtensions
         {
             var self = GetSelf(state);
             var other = GetSelfAtPosition(state, 2);
-            var result = T.Power(state, self, other);
+            using var result = T.Power(state, self, other);
             state.Push(result);
             return 1;
         }
