@@ -1,4 +1,5 @@
 using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -25,14 +26,20 @@ public sealed unsafe partial class LuauState
     const uint LUA_TNUMBER = 3;
     const uint LUA_TINTEGER = 4;
     const uint LUA_TVECTOR = 5;
-    const uint LUA_TSTRING = 6;
-    const uint LUA_TTABLE = 7;
-    const uint LUA_TFUNCTION = 8;
-    const uint LUA_TUSERDATA = 9;
-    const uint LUA_TTHREAD = 10;
-    const uint LUA_TBUFFER = 11;
-    const uint LUA_TCLASS = 12;
-    const uint LUA_TOBJECT = 13;
+    const uint LUA_TPRIMITIVE = 6;
+    const uint LUA_TSTRING = 7;
+    const uint LUA_TTABLE = 8;
+    const uint LUA_TFUNCTION = 9;
+    const uint LUA_TUSERDATA = 10;
+    const uint LUA_TTHREAD = 11;
+    const uint LUA_TBUFFER = 12;
+    const uint LUA_TCLASS = 13;
+    const uint LUA_TOBJECT = 14;
+
+    // Tracks primitive ids whose metatable has been set in this state. Luau only allows
+    // setting a primitive metatable once per id (lua_setprimitivemetatable api_checks that
+    // the metatable is not already assigned), so we guard it on the managed side too.
+    readonly HashSet<int> primitiveMetatablesSet = new();
 
     public static LuauState CreateSandbox()
     {
@@ -324,6 +331,84 @@ public sealed unsafe partial class LuauState
         }
         return new Span<float>(p, 3);
     }
+    
+    public void PushPrimitive<T>(int id, T data) where T : unmanaged
+    {
+        if (sizeof(T) > NativeMethods.LUA_PRIMITIVE_SIZE)
+        {
+            throw new InvalidOperationException("Maximum primitive length is 24 bytes.");
+        }
+        
+        CheckDisposed();
+        NativeMethods.lua_pushprimitive(ptr, id, &data, (nuint)sizeof(T));
+    }
+
+    public void PushPrimitive(int id, Span<byte> data)
+    {
+        if (data.Length > NativeMethods.LUA_PRIMITIVE_SIZE)
+        {
+            throw new InvalidOperationException("Maximum primitive length is 24 bytes.");
+        }
+        
+        CheckDisposed();
+        fixed (byte* dataPtr = data)
+            NativeMethods.lua_pushprimitive(ptr, id, dataPtr, (nuint)data.Length);
+    }
+
+    public Span<byte> ToPrimitive(int index, out int id)
+    {
+        CheckDisposed();
+        if (GetType(index) != LuaValueType.Primitive)
+        {
+            id = default;
+            throw new InvalidOperationException("Value at the specified index is not a primitive.");
+        }
+        fixed (int* idPtr = &id)
+        {
+            var p = NativeMethods.lua_toprimitive(ptr, index, idPtr);
+            if (p == null)
+            {
+                throw new InvalidOperationException("Value at the specified index is not a primitive.");
+            }
+            return new Span<byte>(p, (int)NativeMethods.LUA_PRIMITIVE_SIZE);
+        }
+    }
+
+    public bool GetPrimitiveMetatable(int id, [NotNullWhen(true)] out LuaTable? metatable)
+    {
+        CheckDisposed();
+        if (id < 0 || (uint)id >= NativeMethods.LUA_PRIMITIVE_LIMIT)
+        {
+            metatable = default;
+            throw new ArgumentOutOfRangeException(nameof(id));
+        }
+        NativeMethods.lua_getprimitivemetatable(ptr, id);
+        if (GetType(-1) != LuaValueType.Table)
+        {
+            this.Pop(1);
+            metatable = default;
+            return false;
+        }
+        metatable = new LuaTable(this, this.Ref());
+        return true;
+    }
+
+    public void SetPrimitiveMetatable(int id, LuaTable metatable)
+    {
+        CheckDisposed();
+        if (id < 0 || (uint)id >= NativeMethods.LUA_PRIMITIVE_LIMIT)
+        {
+            throw new ArgumentOutOfRangeException(nameof(id));
+        }
+        if (!primitiveMetatablesSet.Add(id))
+        {
+            throw new InvalidOperationException(
+                $"A metatable for primitive id {id} has already been set; primitive metatables can only be set once."
+            );
+        }
+        PushValue(metatable.Reference);
+        NativeMethods.lua_setprimitivemetatable(ptr, id);
+    }
 
     public LuauBuffer NewBuffer(int size)
     {
@@ -393,6 +478,11 @@ public sealed unsafe partial class LuauState
                 return ToString(index);
             case LuaValueType.Vector:
                 return LuaValue.FromVector(ToVector(index));
+            case LuaValueType.Primitive:
+            {
+                var payload = ToPrimitive(index, out var primitiveId);
+                return LuaValue.FromPrimitive(primitiveId, payload);
+            }
             case LuaValueType.Buffer:
                 return LuaValue.FromBuffer(ToBuffer(index));
             case LuaValueType.Class:
@@ -438,6 +528,10 @@ public sealed unsafe partial class LuauState
         {
             case LuaValueType.Vector:
                 PushVector(value.UnsafeRead<Vector3>());
+                return;
+            case LuaValueType.Primitive:
+                var primitiveValue = value.UnsafeRead<PrimitiveValue>();
+                PushPrimitive(primitiveValue.Id, primitiveValue.Primitive);
                 return;
             case LuaValueType.Buffer:
             case LuaValueType.Class:
@@ -935,6 +1029,7 @@ public sealed unsafe partial class LuauState
             LUA_TLIGHTUSERDATA => LuaValueType.LightUserData,
             LUA_TNUMBER => LuaValueType.Number,
             LUA_TINTEGER => LuaValueType.Number,
+            LUA_TPRIMITIVE => LuaValueType.Primitive,
             LUA_TSTRING => LuaValueType.String,
             LUA_TTABLE => LuaValueType.Table,
             LUA_TFUNCTION => LuaValueType.Function,

@@ -7,6 +7,7 @@ public enum LuaValueType : byte
     LightUserData,
     Number,
     Vector,
+    Primitive,
     String,
     Table,
     Function,

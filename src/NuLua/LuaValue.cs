@@ -5,6 +5,18 @@ using System.Runtime.InteropServices;
 
 namespace NuLua;
 
+public struct PrimitiveValue
+{
+    public int Id;
+    public PrimitiveValueValue Primitive;
+}
+
+[InlineArray(24)]
+public struct PrimitiveValueValue
+{
+    public byte Value;
+}
+
 [StructLayout(LayoutKind.Auto)]
 public readonly struct LuaValue : IEquatable<LuaValue>
 {
@@ -22,7 +34,21 @@ public readonly struct LuaValue : IEquatable<LuaValue>
 
         [FieldOffset(0)]
         public Vector3 VectorValue;
+
+        [FieldOffset(0)]
+        public PrimitiveValue Primitive;
     }
+
+    /// <summary>
+    /// Maximum byte length of a primitive payload, mirroring Luau's LUA_PRIMITIVE_SIZE.
+    /// </summary>
+    public const int PrimitivePayloadSize = 24;
+
+    /// <summary>
+    /// Number of distinct primitive identifiers (0..PrimitiveIdLimit-1),
+    /// mirroring Luau's LUA_PRIMITIVE_LIMIT.
+    /// </summary>
+    public const int PrimitiveIdLimit = 16;
 
     public static readonly LuaValue Nil = default;
 
@@ -54,6 +80,50 @@ public readonly struct LuaValue : IEquatable<LuaValue>
     public static LuaValue FromVector(Vector3 value)
     {
         return new(LuaValueType.Vector, new() { VectorValue = value }, null);
+    }
+
+    public static unsafe LuaValue FromPrimitive<T>(int id, T payload) where T : unmanaged
+    {
+        if (id < 0 || id >= PrimitiveIdLimit)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(id),
+                $"Primitive id must be in the range 0..{PrimitiveIdLimit - 1}."
+            );
+        }
+        if (sizeof(T) > PrimitivePayloadSize)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(payload),
+                $"Primitive payload must be at most {PrimitivePayloadSize} bytes."
+            );
+        }
+        PrimitiveValueValue value = default;
+        Span<byte> valueSpan = value;
+        MemoryMarshal.Write(valueSpan, payload);
+        return new(LuaValueType.Primitive, new() { Primitive = new PrimitiveValue() { Id = id, Primitive = value } }, null);
+    }
+
+    public static LuaValue FromPrimitive(int id, ReadOnlySpan<byte> payload)
+    {
+        if (id < 0 || id >= PrimitiveIdLimit)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(id),
+                $"Primitive id must be in the range 0..{PrimitiveIdLimit - 1}."
+            );
+        }
+        if (payload.Length > PrimitivePayloadSize)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(payload),
+                $"Primitive payload must be at most {PrimitivePayloadSize} bytes."
+            );
+        }
+        PrimitiveValueValue value = default;
+        Span<byte> valueSpan = value;
+        payload.CopyTo(valueSpan);
+        return new(LuaValueType.Primitive, new() { Primitive = new PrimitiveValue() { Id = id, Primitive = value } }, null);
     }
 
     public static LuaValue FromTable(LuaTable value)
@@ -108,6 +178,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>
             LuaValueType.LightUserData => $"lightuserdata: 0x{value.PointerValue:X}",
             LuaValueType.Number => value.NumberValue.ToString(),
             LuaValueType.Vector => VectorToString(value.VectorValue),
+            LuaValueType.Primitive => $"primitive {value.Primitive.Id}",
             LuaValueType.String => ((string)reference!).ToString()!,
             LuaValueType.Table => ((LuaTable)reference!).ToString()!,
             LuaValueType.Function => ((LuaFunction)reference!).ToString()!,
@@ -283,6 +354,32 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                     return true;
                 }
                 break;
+            case LuaValueType.Primitive:
+                if (typeof(T) == typeof(PrimitiveValue))
+                {
+                    var r = value.Primitive;
+                    result = Unsafe.As<PrimitiveValue, T>(ref r)!;
+                    return true;
+                }
+                if (typeof(T) == typeof(byte[]))
+                {
+                    var r = ((ReadOnlySpan<byte>)value.Primitive.Primitive).ToArray();
+                    result = Unsafe.As<byte[], T>(ref r)!;
+                    return true;
+                }
+                if (typeof(T) == typeof(ReadOnlyMemory<byte>))
+                {
+                    ReadOnlyMemory<byte> r = ((ReadOnlySpan<byte>)value.Primitive.Primitive).ToArray();
+                    result = Unsafe.As<ReadOnlyMemory<byte>, T>(ref r)!;
+                    return true;
+                }
+                if (typeof(T) == typeof(object))
+                {
+                    var r = (object)((ReadOnlySpan<byte>)value.Primitive.Primitive).ToArray();
+                    result = Unsafe.As<object, T>(ref r)!;
+                    return true;
+                }
+                break;
             case LuaValueType.String:
                 if (typeof(T) == typeof(string))
                 {
@@ -392,6 +489,9 @@ public readonly struct LuaValue : IEquatable<LuaValue>
             LuaValueType.UserData => reference == other.reference,
             LuaValueType.Number => value.NumberValue == other.value.NumberValue,
             LuaValueType.Vector => value.VectorValue == other.value.VectorValue,
+            LuaValueType.Primitive =>
+                value.Primitive.Id == other.value.Primitive.Id
+                && ((ReadOnlySpan<byte>)value.Primitive.Primitive).SequenceEqual(other.value.Primitive.Primitive),
             LuaValueType.String => ((string)reference!).Equals((string)other.reference!),
             _ => reference == other.reference,
         };
