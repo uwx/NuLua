@@ -27,7 +27,9 @@ namespace NuLua.Interop.Luau
         public const uint LUA_MINSTRTABSIZE = 32;
         public const uint LUA_MAXCAPTURES = 32;
         public const uint LUA_VECTOR_SIZE = 3;
-        public const uint LUA_EXTRA_SIZE = 1;
+        public const uint LUA_VECTOR_DOUBLE = 0;
+        public const uint LUA_PRIMITIVE_LIMIT = 16;
+        public const uint LUA_PRIMITIVE_SIZE = 24;
         public const int LUA_MULTRET = -1;
         public const int LUA_REGISTRYINDEX = -10000;
         public const int LUA_ENVIRONINDEX = -10001;
@@ -49,58 +51,10 @@ namespace NuLua.Interop.Luau
         public static ReadOnlySpan<byte> LUA_INTLIBNAME => new byte[] { 105, 110, 116, 101, 103, 101, 114, 0 };
 
 
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate int lua_cpcall_func_delegate(lua_State* L);
-
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate int lua_pushcclosurek_cont_delegate(lua_State* L, int status);
-
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate int lua_pushcclosurek_fn__delegate(lua_State* L);
-
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate int lua_registeruserdatadirectaccess_namecall_delegate(lua_State* L, void* data, int atom, ushort* cachedslot, int utag);
-
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate int lua_tocfunction_return_delegate(lua_State* L);
-
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate void lua_getcounters_countervisit_delegate(void* context, int kind, int line, ulong hits);
-
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate void lua_getcounters_functionvisit_delegate(void* context, byte* function, int linedefined);
-
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate void lua_getcoverage_callback_delegate(void* context, byte* function, int linedefined, int depth, int* hits, nuint size);
-
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate void lua_getuserdatadtor_return_delegate(lua_State* L, void* userdata);
-
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate void lua_newuserdatadtor_dtor_delegate(void* arg1);
-
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate void lua_registeruserdatadirectaccess_get_delegate(lua_State* L, void* data, int atom, ushort* cachedslot, int utag);
-
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate void lua_registeruserdatadirectaccess_set_delegate(lua_State* L, void* data, int atom, ushort* cachedslot, int utag);
-
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate void lua_registeruserdatadirectfieldget_fn__delegate(void* ud, void* result);
-
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate void lua_setuserdatadtor_dtor_delegate(lua_State* L, void* userdata);
-
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate void* lua_getallocf_return_delegate(void* ud, void* ptr, nuint osize, nuint nsize);
-
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate void* lua_newstate_f_delegate(void* ud, void* ptr, nuint osize, nuint nsize);
-
 
 
         [DllImport(__DllName, EntryPoint = "lua_newstate", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern lua_State* lua_newstate(lua_newstate_f_delegate f, void* ud);
+        public static extern lua_State* lua_newstate(delegate* unmanaged[Cdecl]<void*, void*, nuint, nuint, void*> f, void* ud);
 
         [DllImport(__DllName, EntryPoint = "lua_close", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void lua_close(lua_State* L);
@@ -217,7 +171,7 @@ namespace NuLua.Interop.Luau
         public static extern int lua_objlen(lua_State* L, int idx);
 
         [DllImport(__DllName, EntryPoint = "lua_tocfunction", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern lua_tocfunction_return_delegate lua_tocfunction(lua_State* L, int idx);
+        public static extern delegate* unmanaged[Cdecl]<lua_State*, int> lua_tocfunction(lua_State* L, int idx);
 
         [DllImport(__DllName, EntryPoint = "lua_tolightuserdata", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void* lua_tolightuserdata(lua_State* L, int idx);
@@ -277,7 +231,7 @@ namespace NuLua.Interop.Luau
         public static extern byte* lua_pushfstringL(lua_State* L, byte* fmt);
 
         [DllImport(__DllName, EntryPoint = "lua_pushcclosurek", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern void lua_pushcclosurek(lua_State* L, lua_pushcclosurek_fn__delegate fn_, byte* debugname, int nup, lua_pushcclosurek_cont_delegate cont);
+        public static extern void lua_pushcclosurek(lua_State* L, delegate* unmanaged[Cdecl]<lua_State*, int> fn_, byte* debugname, int nup, delegate* unmanaged[Cdecl]<lua_State*, int, int> cont);
 
         [DllImport(__DllName, EntryPoint = "lua_pushboolean", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void lua_pushboolean(lua_State* L, int b);
@@ -295,7 +249,7 @@ namespace NuLua.Interop.Luau
         public static extern void* lua_newuserdatataggedwithmetatable(lua_State* L, nuint sz, int tag);
 
         [DllImport(__DllName, EntryPoint = "lua_newuserdatadtor", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern void* lua_newuserdatadtor(lua_State* L, nuint sz, lua_newuserdatadtor_dtor_delegate dtor);
+        public static extern void* lua_newuserdatadtor(lua_State* L, nuint sz, delegate* unmanaged[Cdecl]<void*, void> dtor);
 
         [DllImport(__DllName, EntryPoint = "lua_newbuffer", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void* lua_newbuffer(lua_State* L, nuint sz);
@@ -370,7 +324,13 @@ namespace NuLua.Interop.Luau
         public static extern int lua_pcall(lua_State* L, int nargs, int nresults, int errfunc);
 
         [DllImport(__DllName, EntryPoint = "lua_cpcall", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern int lua_cpcall(lua_State* L, lua_cpcall_func_delegate func, void* ud);
+        public static extern int lua_cpcall(lua_State* L, delegate* unmanaged[Cdecl]<lua_State*, int> func, void* ud);
+
+        [DllImport(__DllName, EntryPoint = "lua_callyieldable", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern int lua_callyieldable(lua_State* L, int nargs, int nresults);
+
+        [DllImport(__DllName, EntryPoint = "lua_pcallyieldable", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern int lua_pcallyieldable(lua_State* L, int nargs, int nresults, int errfunc);
 
         [DllImport(__DllName, EntryPoint = "lua_yield", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_yield(lua_State* L, int nresults);
@@ -402,11 +362,17 @@ namespace NuLua.Interop.Luau
         [DllImport(__DllName, EntryPoint = "lua_gc", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_gc(lua_State* L, int what, int data);
 
+        [DllImport(__DllName, EntryPoint = "lua_memorydump", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void lua_memorydump(lua_State* L, void* file, delegate* unmanaged[Cdecl]<lua_State*, byte, byte*> categoryName);
+
         [DllImport(__DllName, EntryPoint = "lua_setmemcat", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void lua_setmemcat(lua_State* L, int category);
 
         [DllImport(__DllName, EntryPoint = "lua_totalbytes", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern nuint lua_totalbytes(lua_State* L, int category);
+
+        [DllImport(__DllName, EntryPoint = "lua_allocationrate", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern long lua_allocationrate(lua_State* L);
 
         [DllImport(__DllName, EntryPoint = "lua_next", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_next(lua_State* L, int idx);
@@ -416,6 +382,9 @@ namespace NuLua.Interop.Luau
 
         [DllImport(__DllName, EntryPoint = "lua_concat", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void lua_concat(lua_State* L, int n);
+
+        [DllImport(__DllName, EntryPoint = "lua_setpointerencodekey", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void lua_setpointerencodekey(lua_State* L, ulong a, ulong b, ulong c, ulong d);
 
         [DllImport(__DllName, EntryPoint = "lua_encodepointer", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern nuint lua_encodepointer(lua_State* L, nuint p);
@@ -427,10 +396,25 @@ namespace NuLua.Interop.Luau
         public static extern void lua_setuserdatatag(lua_State* L, int idx, int tag);
 
         [DllImport(__DllName, EntryPoint = "lua_setuserdatadtor", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern void lua_setuserdatadtor(lua_State* L, int tag, lua_setuserdatadtor_dtor_delegate dtor);
+        public static extern void lua_setuserdatadtor(lua_State* L, int tag, delegate* unmanaged[Cdecl]<lua_State*, void*, void> dtor);
 
         [DllImport(__DllName, EntryPoint = "lua_getuserdatadtor", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern lua_getuserdatadtor_return_delegate lua_getuserdatadtor(lua_State* L, int tag);
+        public static extern delegate* unmanaged[Cdecl]<lua_State*, void*, void> lua_getuserdatadtor(lua_State* L, int tag);
+
+        [DllImport(__DllName, EntryPoint = "lua_setuserdatamark", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void lua_setuserdatamark(lua_State* L, int tag, delegate* unmanaged[Cdecl]<lua_State*, void*, void> markfn);
+
+        [DllImport(__DllName, EntryPoint = "lua_setembeddergc", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void lua_setembeddergc(lua_State* L, delegate* unmanaged[Cdecl]<lua_State*, delegate* unmanaged[Cdecl]<lua_State*, int, void>, void> fn_);
+
+        [DllImport(__DllName, EntryPoint = "lua_weakref", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern int lua_weakref(lua_State* L, int idx);
+
+        [DllImport(__DllName, EntryPoint = "lua_weakunref", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern int lua_weakunref(lua_State* L, int ref_);
+
+        [DllImport(__DllName, EntryPoint = "lua_getweakref", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern int lua_getweakref(lua_State* L, int ref_);
 
         [DllImport(__DllName, EntryPoint = "lua_setuserdatametatable", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void lua_setuserdatametatable(lua_State* L, int tag);
@@ -438,11 +422,26 @@ namespace NuLua.Interop.Luau
         [DllImport(__DllName, EntryPoint = "lua_getuserdatametatable", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void lua_getuserdatametatable(lua_State* L, int tag);
 
+        [DllImport(__DllName, EntryPoint = "lua_pushprimitive", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void lua_pushprimitive(lua_State* L, int id, void* data, nuint len);
+
+        [DllImport(__DllName, EntryPoint = "lua_toprimitive", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void* lua_toprimitive(lua_State* L, int idx, int* id);
+
+        [DllImport(__DllName, EntryPoint = "lua_setprimitivemetatable", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void lua_setprimitivemetatable(lua_State* L, int id);
+
+        [DllImport(__DllName, EntryPoint = "lua_getprimitivemetatable", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void lua_getprimitivemetatable(lua_State* L, int id);
+
+        [DllImport(__DllName, EntryPoint = "lua_getuserdataname", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern byte* lua_getuserdataname(lua_State* L, int tag);
+
         [DllImport(__DllName, EntryPoint = "lua_registeruserdatadirectaccess", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern int lua_registeruserdatadirectaccess(lua_State* L, int tag, lua_registeruserdatadirectaccess_get_delegate get, lua_registeruserdatadirectaccess_set_delegate set, lua_registeruserdatadirectaccess_namecall_delegate namecall);
+        public static extern int lua_registeruserdatadirectaccess(lua_State* L, int tag, delegate* unmanaged[Cdecl]<lua_State*, void*, int, ushort*, int, void> get, delegate* unmanaged[Cdecl]<lua_State*, void*, int, ushort*, int, void> set, delegate* unmanaged[Cdecl]<lua_State*, void*, int, ushort*, int, int> namecall);
 
         [DllImport(__DllName, EntryPoint = "lua_registeruserdatadirectfieldget", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern void lua_registeruserdatadirectfieldget(lua_State* L, int tag, byte* field, lua_registeruserdatadirectfieldget_fn__delegate fn_);
+        public static extern void lua_registeruserdatadirectfieldget(lua_State* L, int tag, byte* field, delegate* unmanaged[Cdecl]<void*, void*, void> fn_);
 
         [DllImport(__DllName, EntryPoint = "lua_userdatadirectfield_setnumber", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void lua_userdatadirectfield_setnumber(void* result, double n);
@@ -468,6 +467,9 @@ namespace NuLua.Interop.Luau
         [DllImport(__DllName, EntryPoint = "lua_clonefunction", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void lua_clonefunction(lua_State* L, int idx);
 
+        [DllImport(__DllName, EntryPoint = "lua_usesexport", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern int lua_usesexport(lua_State* L, int idx);
+
         [DllImport(__DllName, EntryPoint = "lua_cleartable", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void lua_cleartable(lua_State* L, int idx);
 
@@ -475,13 +477,16 @@ namespace NuLua.Interop.Luau
         public static extern void lua_clonetable(lua_State* L, int idx);
 
         [DllImport(__DllName, EntryPoint = "lua_getallocf", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern lua_getallocf_return_delegate lua_getallocf(lua_State* L, void** ud);
+        public static extern delegate* unmanaged[Cdecl]<void*, void*, nuint, nuint, void*> lua_getallocf(lua_State* L, void** ud);
 
         [DllImport(__DllName, EntryPoint = "lua_ref", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_ref(lua_State* L, int idx);
 
         [DllImport(__DllName, EntryPoint = "lua_unref", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern void lua_unref(lua_State* L, int ref_);
+        public static extern int lua_unref(lua_State* L, int ref_);
+
+        [DllImport(__DllName, EntryPoint = "lua_callhook", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void lua_callhook(lua_State* L, delegate* unmanaged[Cdecl]<lua_State*, lua_Debug*, void> hook, void* userdata);
 
         [DllImport(__DllName, EntryPoint = "lua_stackdepth", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_stackdepth(lua_State* L);
@@ -504,20 +509,29 @@ namespace NuLua.Interop.Luau
         [DllImport(__DllName, EntryPoint = "lua_setupvalue", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern byte* lua_setupvalue(lua_State* L, int funcindex, int n);
 
+        [DllImport(__DllName, EntryPoint = "lua_hascustomexecution", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern int lua_hascustomexecution(lua_State* L, int level);
+
+        [DllImport(__DllName, EntryPoint = "lua_incustomexecution", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern int lua_incustomexecution(lua_State* L, int level);
+
         [DllImport(__DllName, EntryPoint = "lua_singlestep", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void lua_singlestep(lua_State* L, int enabled);
 
         [DllImport(__DllName, EntryPoint = "lua_breakpoint", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern int lua_breakpoint(lua_State* L, int funcindex, int line, int enabled);
 
-        [DllImport(__DllName, EntryPoint = "lua_getcoverage", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern void lua_getcoverage(lua_State* L, int funcindex, void* context, lua_getcoverage_callback_delegate callback);
-
-        [DllImport(__DllName, EntryPoint = "lua_getcounters", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern void lua_getcounters(lua_State* L, int funcindex, void* context, lua_getcounters_functionvisit_delegate functionvisit, lua_getcounters_countervisit_delegate countervisit);
+        [DllImport(__DllName, EntryPoint = "lua_atbreakpoint", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern int lua_atbreakpoint(lua_State* L);
 
         [DllImport(__DllName, EntryPoint = "lua_debugtrace", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern byte* lua_debugtrace(lua_State* L);
+
+        [DllImport(__DllName, EntryPoint = "lua_getcoverage", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void lua_getcoverage(lua_State* L, int funcindex, void* context, delegate* unmanaged[Cdecl]<void*, byte*, int, int, int*, nuint, void> callback);
+
+        [DllImport(__DllName, EntryPoint = "lua_getcounters", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void lua_getcounters(lua_State* L, int funcindex, void* context, delegate* unmanaged[Cdecl]<void*, byte*, int, void> functionvisit, delegate* unmanaged[Cdecl]<void*, int, int, ulong, void> countervisit);
 
         [DllImport(__DllName, EntryPoint = "lua_callbacks", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern lua_Callbacks* lua_callbacks(lua_State* L);
@@ -588,6 +602,9 @@ namespace NuLua.Interop.Luau
         [DllImport(__DllName, EntryPoint = "luaL_checkudata", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void* luaL_checkudata(lua_State* L, int ud, byte* tname);
 
+        [DllImport(__DllName, EntryPoint = "luaL_checkudatatagged", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void* luaL_checkudatatagged(lua_State* L, int ud, int tag);
+
         [DllImport(__DllName, EntryPoint = "luaL_checkbuffer", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void* luaL_checkbuffer(lua_State* L, int narg, nuint* len);
 
@@ -608,12 +625,6 @@ namespace NuLua.Interop.Luau
 
         [DllImport(__DllName, EntryPoint = "luaL_typename", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern byte* luaL_typename(lua_State* L, int idx);
-
-        [DllImport(__DllName, EntryPoint = "luaL_callyieldable", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern int luaL_callyieldable(lua_State* L, int nargs, int nresults);
-
-        [DllImport(__DllName, EntryPoint = "luaL_pcallyieldable", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        public static extern int luaL_pcallyieldable(lua_State* L, int nargs, int nresults, int errfunc);
 
         [DllImport(__DllName, EntryPoint = "luaL_traceback", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void luaL_traceback(lua_State* L, lua_State* L1, byte* msg, int level);
@@ -708,6 +719,9 @@ namespace NuLua.Interop.Luau
         [DllImport(__DllName, EntryPoint = "luau_set_compile_constant_vector", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void luau_set_compile_constant_vector(void** constant, float x, float y, float z, float w);
 
+        [DllImport(__DllName, EntryPoint = "luau_set_compile_constant_vectord", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        public static extern void luau_set_compile_constant_vectord(void** constant, double x, double y, double z, double w);
+
         [DllImport(__DllName, EntryPoint = "luau_set_compile_constant_string", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         public static extern void luau_set_compile_constant_string(void** constant, byte* s, nuint l);
 
@@ -768,6 +782,8 @@ namespace NuLua.Interop.Luau
         public byte* short_src;
         public int linedefined;
         public int currentline;
+        public int protoid;
+        public int bytecodeid;
         public byte nupvals;
         public byte nparams;
         public byte isvararg;
@@ -779,22 +795,24 @@ namespace NuLua.Interop.Luau
     public unsafe partial struct lua_Callbacks
     {
         public void* userdata;
-        public void* interrupt;
-        public void* panic;
-        public void* userthread;
-        public void* useratom;
-        public void* debugbreak;
-        public void* debugstep;
-        public void* debuginterrupt;
-        public void* debugprotectederror;
-        public void* onallocate;
+        public delegate* unmanaged[Cdecl]<lua_State*, int, void> interrupt;
+        public delegate* unmanaged[Cdecl]<lua_State*, int, void> panic;
+        public delegate* unmanaged[Cdecl]<lua_State*, lua_State*, void> userthread;
+        public delegate* unmanaged[Cdecl]<lua_State*, byte*, nuint, short> useratom;
+        public delegate* unmanaged[Cdecl]<lua_State*, lua_Debug*, void> debugbreak;
+        public delegate* unmanaged[Cdecl]<lua_State*, lua_Debug*, void> debugstep;
+        public delegate* unmanaged[Cdecl]<lua_State*, lua_Debug*, void> debuginterrupt;
+        public delegate* unmanaged[Cdecl]<lua_State*, void> debugprotectederror;
+        public delegate* unmanaged[Cdecl]<lua_State*, nuint, nuint, void> onallocate;
+        public delegate* unmanaged[Cdecl]<lua_State*, void> preresume;
+        public delegate* unmanaged[Cdecl]<lua_State*, void> postresume;
     }
 
     [StructLayout(LayoutKind.Sequential)]
     public unsafe partial struct luaL_Reg
     {
         public byte* name;
-        public void* func;
+        public delegate* unmanaged[Cdecl]<lua_State*, int> func;
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -817,11 +835,12 @@ namespace NuLua.Interop.Luau
         public byte* vectorLib;
         public byte* vectorCtor;
         public byte* vectorType;
+        public int vectorPrecision;
         public byte** mutableGlobals;
         public byte** userdataTypes;
         public byte** librariesWithKnownMembers;
-        public void* libraryMemberTypeCb;
-        public void* libraryMemberConstantCb;
+        public delegate* unmanaged[Cdecl]<byte*, byte*, int> libraryMemberTypeCb;
+        public delegate* unmanaged[Cdecl]<byte*, byte*, void**, void> libraryMemberConstantCb;
         public byte** disabledBuiltins;
     }
 
