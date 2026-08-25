@@ -9,7 +9,7 @@ public sealed class LuauBuffer(LuauState state, LuaReference reference) : LuaObj
     // stack push it performs internally.
     public Span<byte> AsSpan()
     {
-        state.PushValue(reference);
+        state.PushValue(Reference);
         var span = state.ToBufferSpan(state.GetTop());
         state.Pop(1);
         return span;
