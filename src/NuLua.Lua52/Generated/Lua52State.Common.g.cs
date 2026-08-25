@@ -167,6 +167,13 @@ public sealed unsafe partial class Lua52State : ILuaState<Lua52State>, ILuaDebug
     public void PushString(ReadOnlySpan<byte> utf8Str)
     {
         CheckDisposed();
+        if (utf8Str.Length == 0)
+        {
+            // fixed() on an empty span yields a null pointer, which lua_pushlstring rejects.
+            byte empty = 0;
+            NativeMethods.lua_pushlstring(ptr, &empty, 0);
+            return;
+        }
         fixed (byte* strPtr = utf8Str)
         {
             NativeMethods.lua_pushlstring(ptr, strPtr, (nuint)utf8Str.Length);

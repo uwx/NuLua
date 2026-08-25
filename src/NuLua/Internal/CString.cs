@@ -12,9 +12,12 @@ public unsafe struct CString : IDisposable
     {
         var byteCount = Encoding.UTF8.GetByteCount(str);
         ptr = (byte*)Marshal.AllocHGlobal(byteCount + 1);
-        fixed (char* strPtr = str)
+        if (str.Length > 0)
         {
-            Encoding.UTF8.GetBytes(strPtr, str.Length, ptr, byteCount);
+            fixed (char* strPtr = str)
+            {
+                Encoding.UTF8.GetBytes(strPtr, str.Length, ptr, byteCount);
+            }
         }
         ptr[byteCount] = 0;
         this.byteCount = byteCount;
