@@ -82,6 +82,11 @@ public readonly struct LuaValue : IEquatable<LuaValue>, IDisposable
         return new(LuaValueType.Vector, new() { VectorValue = value }, null);
     }
 
+    public static LuaValue FromPrimitive<T>(T payload) where T : unmanaged, IPrimitive
+    {
+        return FromPrimitive(T.PrimitiveId, payload);
+    }
+
     public static unsafe LuaValue FromPrimitive<T>(int id, T payload) where T : unmanaged
     {
         if (id < 0 || id >= PrimitiveIdLimit)
@@ -212,6 +217,77 @@ public readonly struct LuaValue : IEquatable<LuaValue>, IDisposable
             return result;
         Unsafe.SkipInit(out result);
         return result!;
+    }
+
+    public bool TryReadPrimitive<T>(out T result) where T : unmanaged, IPrimitive
+    {
+        return TryReadPrimitive(T.PrimitiveId, out result);
+    }
+
+    public unsafe bool TryReadPrimitive<T>(int expectedId, out T result) where T : unmanaged
+    {
+        if (Type != LuaValueType.Primitive)
+        {
+            result = default;
+            return false;
+        }
+
+        if (sizeof(T) > PrimitivePayloadSize)
+        {
+            result = default;
+            return false;
+        }
+        
+        var r = value.Primitive;
+        if (r.Id != expectedId)
+        {
+            result = default;
+            return false;
+        }
+        
+        result = Unsafe.As<PrimitiveValueValue, T>(ref r.Primitive);
+        return true;
+    }
+
+    public unsafe bool TryReadPrimitive<T>(out T result, out int id) where T : unmanaged
+    {
+        if (Type != LuaValueType.Primitive)
+        {
+            result = default;
+            id = 0;
+            return false;
+        }
+
+        if (sizeof(T) > PrimitivePayloadSize)
+        {
+            result = default;
+            id = 0;
+            return false;
+        }
+        
+        var r = value.Primitive;
+        id = r.Id;
+        result = Unsafe.As<PrimitiveValueValue, T>(ref r.Primitive);
+        return true;
+    }
+
+    public T ReadPrimitive<T>() where T : unmanaged, IPrimitive
+    {
+        return ReadPrimitive<T>(T.PrimitiveId);
+    }
+
+    public T ReadPrimitive<T>(int expectedId) where T : unmanaged
+    {
+        if (TryReadPrimitive<T>(expectedId, out var result))
+            return result;
+        throw new InvalidOperationException($"Cannot convert {Type} to {typeof(T).Name}");
+    }
+
+    public T ReadPrimitive<T>(out int id) where T : unmanaged
+    {
+        if (TryReadPrimitive<T>(out var result, out id))
+            return result;
+        throw new InvalidOperationException($"Cannot convert {Type} to {typeof(T).Name}");
     }
 
     public bool TryRead<T>([NotNullWhen(true)] out T? result)

@@ -32,12 +32,12 @@ public enum LuaUserDataMetamethods
     /// so <c>__iter</c> is the only userdata iteration path.
     /// </summary>
     Iter = 1 << 4,
-    
+
     // Relational operators
     Eq = 1 << 5,
     Lt = 1 << 6,
     Le = 1 << 7,
-    
+
     // Arithmetic operators
     Unm = 1 << 8,
     Add = 1 << 9,
@@ -86,7 +86,7 @@ public interface ILuaUserData<T> where T : ILuaUserData<T>
     {
         return false;
     }
-    
+
     // you want to implement these usually
 
     static virtual bool operator ==(T? left, T? right) => false;
@@ -103,9 +103,9 @@ public interface ILuaUserData<T> where T : ILuaUserData<T>
     static virtual T operator %(T left, T right) => default!;
     static virtual T FloorDivide(T self, T other) => default!;
     static virtual T Power(T self, T other) => default!;
-    
+
     // you can implement these if you want access to the LuauState
-    
+
     static virtual bool Equals(LuauState state, T self, T other) => self == other;
 
     static virtual bool LessThan(LuauState state, T self, T other) => self < other;
@@ -139,7 +139,7 @@ public interface ILuaUserData<T> where T : ILuaUserData<T>
     /// <see cref="LuaUserDataMetamethods.ToString"/> is set; <see langword="null"/> falls back to
     /// <see cref="object.ToString"/>.
     /// </summary>
-    string? ToLuaString() => null;
+    string? ToLuaString(LuauState state) => null;
 
     /// <summary>
     /// Backs the <c>__iter</c> metamethod (generic <c>for .. in</c>). Only consulted when
@@ -151,7 +151,12 @@ public interface ILuaUserData<T> where T : ILuaUserData<T>
 
     /// <summary>
     /// Declares which metamethods should be installed into the per-type metatable for this type.
-    /// Used once per (state, type) to build the cached metatable.
+    /// Used once per (state, type) to build the cached metatable. Defaults to
+    /// <see cref="LuaUserDataMetamethods.None"/> so concrete implementations of a
+    /// <c>[LuaVisible]</c> interface (which are not themselves LuaVisible) do not have to declare it;
+    /// the interface's default interface member supplies the real flags.
     /// </summary>
-    LuaUserDataMetamethods SupportedMetamethods { get; }
+    static virtual LuaUserDataMetamethods SupportedMetamethods => LuaUserDataMetamethods.None;
 }
+
+public interface IPrimitiveUserData<T> : ILuaUserData<T>, IPrimitive where T : unmanaged, ILuaUserData<T>;

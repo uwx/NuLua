@@ -346,14 +346,19 @@ public sealed unsafe partial class LuauState
         }
         return new Span<float>(p, 3);
     }
-    
+
+    public void PushPrimitive<T>(T data) where T : unmanaged, IPrimitive
+    {
+        PushPrimitive(T.PrimitiveId, data);
+    }
+
     public void PushPrimitive<T>(int id, T data) where T : unmanaged
     {
         if (sizeof(T) > NativeMethods.LUA_PRIMITIVE_SIZE)
         {
             throw new InvalidOperationException("Maximum primitive length is 24 bytes.");
         }
-        
+
         CheckDisposed();
         NativeMethods.lua_pushprimitive(ptr, id, &data, (nuint)sizeof(T));
     }
@@ -364,7 +369,7 @@ public sealed unsafe partial class LuauState
         {
             throw new InvalidOperationException("Maximum primitive length is 24 bytes.");
         }
-        
+
         CheckDisposed();
         fixed (byte* dataPtr = data)
             NativeMethods.lua_pushprimitive(ptr, id, dataPtr, (nuint)data.Length);
@@ -406,6 +411,11 @@ public sealed unsafe partial class LuauState
         }
         metatable = new LuaTable(this, this.Ref());
         return true;
+    }
+
+    public void SetPrimitiveMetatable<T>(LuaTable metatable) where T : unmanaged, IPrimitive
+    {
+        SetPrimitiveMetatable(T.PrimitiveId, metatable);
     }
 
     public void SetPrimitiveMetatable(int id, LuaTable metatable)
