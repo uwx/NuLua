@@ -85,6 +85,21 @@ public sealed unsafe partial class LuauState
         }
     }
 
+    /// <summary>
+    /// Raises a Lua runtime error from a C closure. This longjmps to the nearest protected call
+    /// (e.g. <c>lua_pcall</c>) and does not return normally; the throw below is defensive.
+    /// </summary>
+    public void RaiseError(string message)
+    {
+        CheckDisposed();
+        var msg = Encoding.UTF8.GetBytes(message + "\0");
+        fixed (byte* p = msg)
+        {
+            NativeMethods.luau_error(ptr, p);
+        }
+        throw new InvalidOperationException("luau_error returned unexpectedly.");
+    }
+
     public void OpenLibraries()
     {
         CheckDisposed();
