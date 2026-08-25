@@ -137,7 +137,7 @@ public class LuaUserDataTests
             | LuaUserDataMetamethods.ToString
             | LuaUserDataMetamethods.Iter;
 
-        public bool TryGetIndex(ILuaState state, LuaValue key, out LuaValue value)
+        public bool TryGetIndex(LuauState state, LuaValue key, out LuaValue value)
         {
             if (
                 key.TryRead<double>(out var num)
@@ -154,7 +154,7 @@ public class LuaUserDataTests
             return false;
         }
 
-        public bool TrySetIndex(ILuaState state, LuaValue key, LuaValue value)
+        public bool TrySetIndex(LuauState state, LuaValue key, LuaValue value)
         {
             if (key.TryRead<double>(out var num) && num == Math.Floor(num) && num >= 1)
             {
@@ -175,7 +175,7 @@ public class LuaUserDataTests
 
         public string? ToLuaString() => $"TestArray[{items.Count}]";
 
-        public IEnumerator<KeyValuePair<LuaValue, LuaValue>>? GetIterator(ILuaState state)
+        public IEnumerator<KeyValuePair<LuaValue, LuaValue>>? GetIterator(LuauState state)
         {
             for (int i = 0; i < items.Count; i++)
             {
