@@ -707,15 +707,30 @@ public sealed unsafe partial class LuauState : ILuauValueState
             var func = main.funcs[funcIndex];
 
             var numArgs = NativeMethods.lua_gettop(L);
+
+            int result;
+            Exception? error = null;
             try
             {
-                return func(state, new LuaFuncArguments(state, numArgs));
+                result = func(state, new LuaFuncArguments(state, numArgs));
             }
             catch (Exception ex)
             {
-                state.RaiseError(ex.Message + "\n" + ex.StackTrace);
-                return 0;
+                // Defer the raise until after the catch completes: luau_error longjmps via an
+                // SEH exception, and throwing one from inside a catch of an
+                // [UnmanagedCallersOnly] method re-enters the catch on .NET 10
+                // (dotnet/runtime#123579, fixed in 10.0 servicing / #131467) -> infinite loop
+                // -> stack overflow.
+                error = ex;
+                result = 0;
             }
+
+            if (error is not null)
+            {
+                state.RaiseError(error.Message + "\n" + error.StackTrace);
+            }
+
+            return result;
         }
 
         CheckDisposed();
@@ -763,13 +778,22 @@ public sealed unsafe partial class LuauState : ILuauValueState
             var ct = state.asyncCancellationToken;
 
             ValueTask<int> task;
+            Exception? error = null;
             try
             {
                 task = func(state, args, ct);
             }
             catch (Exception ex)
             {
-                state.RaiseError(ex.Message + "\n" + ex.StackTrace);
+                // Defer the raise until after the catch completes; see the synchronous
+                // NewFunction bridge (dotnet/runtime#123579 workaround).
+                error = ex;
+                task = default;
+            }
+
+            if (error is not null)
+            {
+                state.RaiseError(error.Message + "\n" + error.StackTrace);
                 return 0;
             }
 
