@@ -1,4 +1,5 @@
 using System.Buffers;
+using System.Numerics;
 using NuLua.Internal;
 
 namespace NuLua;
@@ -30,6 +31,21 @@ public static class LuaStateExtensions
                 state.PushValue(obj.Reference);
                 break;
             }
+            case LuaValueType.Vector:
+                if (state is ILuauValueState vectorState)
+                {
+                    vectorState.PushVector(value.UnsafeRead<Vector3>());
+                    break;
+                }
+                goto default;
+            case LuaValueType.Primitive:
+                if (state is ILuauValueState primitiveState)
+                {
+                    var primitiveValue = value.UnsafeRead<PrimitiveValue>();
+                    primitiveState.PushPrimitive(primitiveValue.Id, primitiveValue.Primitive);
+                    break;
+                }
+                goto default;
             default:
                 throw new NotSupportedException($"Unsupported Lua value type: {value.Type}");
         }
@@ -354,7 +370,7 @@ public static class LuaStateExtensions
         CancellationToken cancellationToken = default
     )
     {
-        return CallAsync(state, function, args.AsMemory(), cancellationToken);
+        return state.CallAsync(function, args.AsMemory(), cancellationToken);
     }
 
     public static async ValueTask<int> CallAsync(

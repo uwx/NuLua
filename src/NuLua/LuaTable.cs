@@ -158,4 +158,10 @@ public sealed class LuaTable(ILuaState state, LuaReference reference) : LuaObjec
     }
 
     public Enumerator GetEnumerator() => new(this);
+
+    public bool TryGetValue(LuaValue key, out LuaValue value)
+    {
+        value = this[key];
+        return value.Type != LuaValueType.Nil;
+    }
 }

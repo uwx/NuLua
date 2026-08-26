@@ -44,7 +44,7 @@ public static class LuaAsyncStateExtensions
         CancellationToken cancellationToken = default
     )
     {
-        return ResumeAsync(state, args.AsMemory(), cancellationToken);
+        return state.ResumeAsync(args.AsMemory(), cancellationToken);
     }
 
     public static async ValueTask<LuaValue[]> ResumeAsync(

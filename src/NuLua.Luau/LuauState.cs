@@ -4,12 +4,13 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading.Tasks.Sources;
 using NuLua.Internal;
 using NuLua.Interop.Luau;
 
 namespace NuLua.Luau;
 
-public sealed unsafe partial class LuauState
+public sealed unsafe partial class LuauState : ILuauValueState
 {
     // Luau does not export LUA_OK / LUA_YIELD / LUA_ERR* / LUA_T* through bindgen,
     // so we mirror the values declared in submodules/luau/VM/include/lua.h here.
@@ -706,23 +707,14 @@ public sealed unsafe partial class LuauState
             var func = main.funcs[funcIndex];
 
             var numArgs = NativeMethods.lua_gettop(L);
-            var snapshot = numArgs == 0 ? [] : new LuaValue[numArgs];
-            for (int i = 0; i < numArgs; i++)
-            {
-                snapshot[i] = state.ToLuaValue(i + 1);
-            }
             try
             {
-                return func(state, new LuaFuncArguments(snapshot, numArgs));
+                return func(state, new LuaFuncArguments(state, numArgs));
             }
-            finally
+            catch (Exception ex)
             {
-                // Arguments are only valid for the duration of the call; release
-                // the registry references taken by the snapshot above.
-                for (int i = 0; i < numArgs; i++)
-                {
-                    snapshot[i].Dispose();
-                }
+                state.RaiseError(ex.Message + "\n" + ex.StackTrace);
+                return 0;
             }
         }
 
@@ -767,12 +759,7 @@ public sealed unsafe partial class LuauState
             var func = main.asyncFuncs[funcIndex];
 
             var numArgs = NativeMethods.lua_gettop(L);
-            var snapshot = numArgs == 0 ? [] : new LuaValue[numArgs];
-            for (int i = 0; i < numArgs; i++)
-            {
-                snapshot[i] = state.ToLuaValue(i + 1);
-            }
-            var args = new LuaFuncArguments(snapshot, numArgs);
+            var args = new LuaFuncArguments(state, numArgs);
             var ct = state.asyncCancellationToken;
 
             ValueTask<int> task;
@@ -780,14 +767,10 @@ public sealed unsafe partial class LuauState
             {
                 task = func(state, args, ct);
             }
-            finally
+            catch (Exception ex)
             {
-                // Arguments are only valid for the synchronous part of the call;
-                // release the registry references taken by the snapshot above.
-                for (int i = 0; i < numArgs; i++)
-                {
-                    snapshot[i].Dispose();
-                }
+                state.RaiseError(ex.Message + "\n" + ex.StackTrace);
+                return 0;
             }
 
             if (task.IsCompletedSuccessfully)
@@ -1097,5 +1080,20 @@ public sealed unsafe partial class LuauState
             LUA_TOBJECT => LuaValueType.Object,
             _ => throw new NotSupportedException($"Unsupported Lua type code: {code}"),
         };
+    }
+
+    public int Return()
+    {
+        return 0;
+    }
+
+    public int Return(params ReadOnlySpan<LuaValue> values)
+    {
+        foreach (var value in values)
+        {
+            Push(value);
+        }
+
+        return values.Length;
     }
 }

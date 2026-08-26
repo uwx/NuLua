@@ -204,6 +204,18 @@ public readonly struct LuaValue : IEquatable<LuaValue>, IDisposable
 
     public bool IsNil => Type == LuaValueType.Nil;
 
+    public bool TryGetPrimitiveId(out int primitiveId)
+    {
+        if (Type == LuaValueType.Primitive)
+        {
+            primitiveId = value.Primitive.Id;
+            return true;
+        }
+
+        primitiveId = 0;
+        return false;
+    }
+
     public T Read<T>()
     {
         if (TryRead<T>(out var result))
@@ -333,12 +345,6 @@ public readonly struct LuaValue : IEquatable<LuaValue>, IDisposable
                 {
                     var r = (ILuaObject)reference!;
                     result = Unsafe.As<ILuaObject, T>(ref r)!;
-                    return true;
-                }
-                if (typeof(T) == typeof(object))
-                {
-                    var r = (object)(LuaUserData)reference!;
-                    result = Unsafe.As<object, T>(ref r)!;
                     return true;
                 }
                 if (reference is LuaUserData ud)

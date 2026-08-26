@@ -28,28 +28,29 @@ public static class LuauStateUserDataExtensions
 
     extension(LuauState state)
     {
-        public unsafe LuaUserData CreateEnumUserData<T>(T value) where T : Enum
+        public unsafe LuaUserData CreateEnumUserData(object value)
         {
             ArgumentNullException.ThrowIfNull(value);
 
             var table = tagTables.GetValue(state, static _ => new UserDataTagTable());
-            var tag = table.Tags.GetOrAdd(typeof(T), static (type, t) =>
+            var tag = table.Tags.GetOrAdd(value.GetType(), static (type, t) =>
             {
-                var (table, state, value) = t;
+                var (table, state) = t;
                 var tag = AllocateTag(table);
 
                 using var metatable = BuildMetatable(state, type);
                 state.PushValue(metatable.Reference);
                 state.SetUserDataMetatable(tag);
-            
+                state.SetManagedUserDataDtor(tag);
+
                 return tag;
-            }, (table, state, value));
+            }, (table, state));
 
             var data = state.NewUserDataTaggedWithMetatable(
-                Unsafe.SizeOf<T>(),
+                sizeof(ManagedUserData),
                 tag
-            );
-            Unsafe.Write(data, value);
+            );  
+            Unsafe.Write(data, ManagedUserData.Create(value));
 
             return new LuaUserData(state, state.Ref());
 
@@ -66,15 +67,6 @@ public static class LuauStateUserDataExtensions
                 metatable["__eq"] = LuaValue.FromFunction(state.CreateFunction(EqualsMetamethod));
                 metatable["__lt"] = LuaValue.FromFunction(state.CreateFunction(LessThanMetamethod));
                 metatable["__le"] = LuaValue.FromFunction(state.CreateFunction(LessThanOrEqualMetamethod));
-    
-                // Arithmetic operators
-                metatable["__unm"] = LuaValue.FromFunction(state.CreateFunction(UnaryMinusMetamethod));
-                metatable["__add"] = LuaValue.FromFunction(state.CreateFunction(AddMetamethod));
-                metatable["__sub"] = LuaValue.FromFunction(state.CreateFunction(SubtractMetamethod));
-                metatable["__mul"] = LuaValue.FromFunction(state.CreateFunction(MultiplyMetamethod));
-                metatable["__div"] = LuaValue.FromFunction(state.CreateFunction(DivideMetamethod));
-                metatable["__idiv"] = LuaValue.FromFunction(state.CreateFunction(FloorDivideMetamethod));
-                metatable["__mod"] = LuaValue.FromFunction(state.CreateFunction(ModulusMetamethod));
 
                 // __type → nicer type()/error output via lua_getuserdataname.
                 metatable["__type"] = LuaValue.FromString(type.Name);
@@ -82,176 +74,27 @@ public static class LuauStateUserDataExtensions
                 return metatable;
             }
         
-            static T GetSelfAtPosition(LuauState state, int index)
-            {
-                var data = state.ToUserDataPointer(index);
-            
-                if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
-                {
-                    ref var header = ref Unsafe.AsRef<ManagedUserData>((void*)data);
-                    if (header.Handle == 0)
-                    {
-                        throw new InvalidOperationException("Value is not a managed userdata.");
-                    }
-
-                    if (GCHandle.FromIntPtr(header.Handle).Target is not T userData)
-                    {
-                        throw new InvalidOperationException(
-                            $"Managed userdata does not implement {typeof(T)}."
-                        );
-                    }
-                
-                    return userData;
-                }
-                else
-                {
-                    ref var @struct = ref Unsafe.AsRef<T>((void*)data);
-                    return @struct;
-                }
-            }
-
-            // Reads the managed object from the userdata at stack index 1 (metamethod self arg).
-            static T GetSelf(LuauState state)
-            {
-                return GetSelfAtPosition(state, 1);
-            }
-
             static int ToStringMetamethod(LuauState state, LuaFuncArguments args)
             {
-                var self = GetSelf(state);
+                var self = args[0].Read<object>();
                 state.PushString(self.ToString() ?? self.GetType().Name);
                 return 1;
             }
 
-            static bool Equals(T left, T right)
+            static bool LessThan(object left, object right)
             {
-                var underlyingType = Enum.GetUnderlyingType(typeof(T));
-                if (underlyingType == typeof(byte)) return (byte)(object)left == (byte)(object)right;
-                if (underlyingType == typeof(sbyte)) return (sbyte)(object)left == (sbyte)(object)right;
-                if (underlyingType == typeof(short)) return (short)(object)left == (short)(object)right;
-                if (underlyingType == typeof(ushort)) return (ushort)(object)left == (ushort)(object)right;
-                if (underlyingType == typeof(int)) return (int)(object)left == (int)(object)right;
-                if (underlyingType == typeof(uint)) return (uint)(object)left == (uint)(object)right;
-                if (underlyingType == typeof(long)) return (long)(object)left == (long)(object)right;
-                if (underlyingType == typeof(ulong)) return (ulong)(object)left == (ulong)(object)right;
-                return false;
+                return Convert.ToDouble(left) < Convert.ToDouble(right);
             }
 
-            static bool LessThan(T left, T right)
+            static bool LessThanOrEqual(object left, object right)
             {
-                var underlyingType = Enum.GetUnderlyingType(typeof(T));
-                if (underlyingType == typeof(byte)) return (byte)(object)left < (byte)(object)right;
-                if (underlyingType == typeof(sbyte)) return (sbyte)(object)left < (sbyte)(object)right;
-                if (underlyingType == typeof(short)) return (short)(object)left < (short)(object)right;
-                if (underlyingType == typeof(ushort)) return (ushort)(object)left < (ushort)(object)right;
-                if (underlyingType == typeof(int)) return (int)(object)left < (int)(object)right;
-                if (underlyingType == typeof(uint)) return (uint)(object)left < (uint)(object)right;
-                if (underlyingType == typeof(long)) return (long)(object)left < (long)(object)right;
-                if (underlyingType == typeof(ulong)) return (ulong)(object)left < (ulong)(object)right;
-                return false;
-            }
-
-            static bool LessThanOrEqual(T left, T right)
-            {
-                var underlyingType = Enum.GetUnderlyingType(typeof(T));
-                if (underlyingType == typeof(byte)) return (byte)(object)left <= (byte)(object)right;
-                if (underlyingType == typeof(sbyte)) return (sbyte)(object)left <= (sbyte)(object)right;
-                if (underlyingType == typeof(short)) return (short)(object)left <= (short)(object)right;
-                if (underlyingType == typeof(ushort)) return (ushort)(object)left <= (ushort)(object)right;
-                if (underlyingType == typeof(int)) return (int)(object)left <= (int)(object)right;
-                if (underlyingType == typeof(uint)) return (uint)(object)left <= (uint)(object)right;
-                if (underlyingType == typeof(long)) return (long)(object)left <= (long)(object)right;
-                if (underlyingType == typeof(ulong)) return (ulong)(object)left <= (ulong)(object)right;
-                return false;
-            }
-
-            static T UnaryMinus(T value)
-            {
-                var underlyingType = Enum.GetUnderlyingType(typeof(T));
-                if (underlyingType == typeof(byte)) return (T)(object)(-((byte)(object)value));
-                if (underlyingType == typeof(sbyte)) return (T)(object)(-((sbyte)(object)value));
-                if (underlyingType == typeof(short)) return (T)(object)(-((short)(object)value));
-                if (underlyingType == typeof(ushort)) return (T)(object)(-((ushort)(object)value));
-                if (underlyingType == typeof(int)) return (T)(object)(-((int)(object)value));
-                if (underlyingType == typeof(uint)) return (T)(object)(-((uint)(object)value));
-                if (underlyingType == typeof(long)) return (T)(object)(-((long)(object)value));
-                return value;
-            }
-
-            static T Add(T left, T right)
-            {
-                var underlyingType = Enum.GetUnderlyingType(typeof(T));
-                if (underlyingType == typeof(byte)) return (T)(object)((byte)(object)left + (byte)(object)right);
-                if (underlyingType == typeof(sbyte)) return (T)(object)((sbyte)(object)left + (sbyte)(object)right);
-                if (underlyingType == typeof(short)) return (T)(object)((short)(object)left + (short)(object)right);
-                if (underlyingType == typeof(ushort)) return (T)(object)((ushort)(object)left + (ushort)(object)right);
-                if (underlyingType == typeof(int)) return (T)(object)((int)(object)left + (int)(object)right);
-                if (underlyingType == typeof(uint)) return (T)(object)((uint)(object)left + (uint)(object)right);
-                if (underlyingType == typeof(long)) return (T)(object)((long)(object)left + (long)(object)right);
-                if (underlyingType == typeof(ulong)) return (T)(object)((ulong)(object)left + (ulong)(object)right);
-                return default!;
-            }
-
-            static T Subtract(T left, T right)
-            {
-                var underlyingType = Enum.GetUnderlyingType(typeof(T));
-                if (underlyingType == typeof(byte)) return (T)(object)((byte)(object)left - (byte)(object)right);
-                if (underlyingType == typeof(sbyte)) return (T)(object)((sbyte)(object)left - (sbyte)(object)right);
-                if (underlyingType == typeof(short)) return (T)(object)((short)(object)left - (short)(object)right);
-                if (underlyingType == typeof(ushort)) return (T)(object)((ushort)(object)left - (ushort)(object)right);
-                if (underlyingType == typeof(int)) return (T)(object)((int)(object)left - (int)(object)right);
-                if (underlyingType == typeof(uint)) return (T)(object)((uint)(object)left - (uint)(object)right);
-                if (underlyingType == typeof(long)) return (T)(object)((long)(object)left - (long)(object)right);
-                if (underlyingType == typeof(ulong)) return (T)(object)((ulong)(object)left - (ulong)(object)right);
-                return default!;
-            }
-
-            static T Multiply(T left, T right)
-            {
-                var underlyingType = Enum.GetUnderlyingType(typeof(T));
-                if (underlyingType == typeof(byte)) return (T)(object)((byte)(object)left * (byte)(object)right);
-                if (underlyingType == typeof(sbyte)) return (T)(object)((sbyte)(object)left * (sbyte)(object)right);
-                if (underlyingType == typeof(short)) return (T)(object)((short)(object)left * (short)(object)right);
-                if (underlyingType == typeof(ushort)) return (T)(object)((ushort)(object)left * (ushort)(object)right);
-                if (underlyingType == typeof(int)) return (T)(object)((int)(object)left * (int)(object)right);
-                if (underlyingType == typeof(uint)) return (T)(object)((uint)(object)left * (uint)(object)right);
-                if (underlyingType == typeof(long)) return (T)(object)((long)(object)left * (long)(object)right);
-                if (underlyingType == typeof(ulong)) return (T)(object)((ulong)(object)left * (ulong)(object)right);
-                return default!;
-            }
-
-            static T Divide(T left, T right)
-            {
-                var underlyingType = Enum.GetUnderlyingType(typeof(T));
-                if (underlyingType == typeof(byte)) return (T)(object)((byte)(object)left / (byte)(object)right);
-                if (underlyingType == typeof(sbyte)) return (T)(object)((sbyte)(object)left / (sbyte)(object)right);
-                if (underlyingType == typeof(short)) return (T)(object)((short)(object)left / (short)(object)right);
-                if (underlyingType == typeof(ushort)) return (T)(object)((ushort)(object)left / (ushort)(object)right);
-                if (underlyingType == typeof(int)) return (T)(object)((int)(object)left / (int)(object)right);
-                if (underlyingType == typeof(uint)) return (T)(object)((uint)(object)left / (uint)(object)right);
-                if (underlyingType == typeof(long)) return (T)(object)((long)(object)left / (long)(object)right);
-                if (underlyingType == typeof(ulong)) return (T)(object)((ulong)(object)left / (ulong)(object)right);
-                return default!;
-            }
-
-            static T Modulus(T left, T right)
-            {
-                var underlyingType = Enum.GetUnderlyingType(typeof(T));
-                if (underlyingType == typeof(byte)) return (T)(object)((byte)(object)left % (byte)(object)right);
-                if (underlyingType == typeof(sbyte)) return (T)(object)((sbyte)(object)left % (sbyte)(object)right);
-                if (underlyingType == typeof(short)) return (T)(object)((short)(object)left % (short)(object)right);
-                if (underlyingType == typeof(ushort)) return (T)(object)((ushort)(object)left % (ushort)(object)right);
-                if (underlyingType == typeof(int)) return (T)(object)((int)(object)left % (int)(object)right);
-                if (underlyingType == typeof(uint)) return (T)(object)((uint)(object)left % (uint)(object)right);
-                if (underlyingType == typeof(long)) return (T)(object)((long)(object)left % (long)(object)right);
-                if (underlyingType == typeof(ulong)) return (T)(object)((ulong)(object)left % (ulong)(object)right);
-                return default!;
+                return Convert.ToDouble(left) <= Convert.ToDouble(right);
             }
 
             static int EqualsMetamethod(LuauState state, LuaFuncArguments args)
             {
-                var self = GetSelf(state);
-                var other = GetSelfAtPosition(state, 2);
+                var self = args[0];
+                var other = args[1];
                 var result = Equals(self, other);
                 state.PushBoolean(result);
                 return 1;
@@ -259,8 +102,8 @@ public static class LuauStateUserDataExtensions
         
             static int LessThanMetamethod(LuauState state, LuaFuncArguments args)
             {
-                var self = GetSelf(state);
-                var other = GetSelfAtPosition(state, 2);
+                var self = args[0];
+                var other = args[1];
                 var result = LessThan(self, other);
                 state.PushBoolean(result);
                 return 1;
@@ -268,72 +111,10 @@ public static class LuauStateUserDataExtensions
         
             static int LessThanOrEqualMetamethod(LuauState state, LuaFuncArguments args)
             {
-                var self = GetSelf(state);
-                var other = GetSelfAtPosition(state, 2);
+                var self = args[0];
+                var other = args[1];
                 var result = LessThanOrEqual(self, other);
                 state.PushBoolean(result);
-                return 1;
-            }
-        
-            static int UnaryMinusMetamethod(LuauState state, LuaFuncArguments args)
-            {
-                var self = GetSelf(state);
-                var result = UnaryMinus(self);
-                state.Push(state.CreateEnumUserData(result));
-                return 1;
-            }
-        
-            static int AddMetamethod(LuauState state, LuaFuncArguments args)
-            {
-                var self = GetSelf(state);
-                var other = GetSelfAtPosition(state, 2);
-                var result = Add(self, other);
-                state.Push(state.CreateEnumUserData(result));
-                return 1;
-            }
-        
-            static int SubtractMetamethod(LuauState state, LuaFuncArguments args)
-            {
-                var self = GetSelf(state);
-                var other = GetSelfAtPosition(state, 2);
-                var result = Subtract( self, other);
-                state.Push(state.CreateEnumUserData(result));
-                return 1;
-            }
-        
-            static int MultiplyMetamethod(LuauState state, LuaFuncArguments args)
-            {
-                var self = GetSelf(state);
-                var other = GetSelfAtPosition(state, 2);
-                var result = Multiply(self, other);
-                state.Push(state.CreateEnumUserData(result));
-                return 1;
-            }
-        
-            static int DivideMetamethod(LuauState state, LuaFuncArguments args)
-            {
-                var self = GetSelf(state);
-                var other = GetSelfAtPosition(state, 2);
-                var result = Divide(self, other);
-                state.Push(state.CreateEnumUserData(result));
-                return 1;
-            }
-        
-            static int FloorDivideMetamethod(LuauState state, LuaFuncArguments args)
-            {
-                var self = GetSelf(state);
-                var other = GetSelfAtPosition(state, 2);
-                var result = Divide(self, other);
-                state.Push(state.CreateEnumUserData(result));
-                return 1;
-            }
-        
-            static int ModulusMetamethod(LuauState state, LuaFuncArguments args)
-            {
-                var self = GetSelf(state);
-                var other = GetSelfAtPosition(state, 2);
-                var result = Modulus(self, other);
-                state.Push(state.CreateEnumUserData(result));
                 return 1;
             }
         }
@@ -344,44 +125,29 @@ public static class LuauStateUserDataExtensions
         /// also left on top of the stack). The metatable + GC destructor are registered once per
         /// (state, type); the GCHandle is freed automatically when Luau collects the userdata.
         /// </summary>
-        public unsafe LuaUserData CreateUserData<T>(T value) where T : ILuaUserData<T>
+        public unsafe LuaUserData CreateUserData(ILuaUserData value)
         {
             ArgumentNullException.ThrowIfNull(value);
 
             var table = tagTables.GetValue(state, static _ => new UserDataTagTable());
-            var tag = table.Tags.GetOrAdd(typeof(T), static (type, t) =>
+            var tag = table.Tags.GetOrAdd(value.GetType(), static (type, t) =>
             {
                 var (table, state, value) = t;
                 var tag = AllocateTag(table);
 
-                using var metatable = BuildMetatable(state, type, T.SupportedMetamethods);
+                using var metatable = BuildMetatable(state, type, value.SupportedMetamethods);
                 state.PushValue(metatable.Reference);
                 state.SetUserDataMetatable(tag);
-
-                if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
-                {
-                    state.SetManagedUserDataDtor(tag);
-                }
+                state.SetManagedUserDataDtor(tag);
 
                 return tag;
             }, (table, state, value));
 
-            if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
-            {
-                var data = state.NewUserDataTaggedWithMetatable(
-                    sizeof(ManagedUserData),
-                    tag
-                );
-                Unsafe.Write(data, ManagedUserData.Create(value));
-            }
-            else
-            {
-                var data = state.NewUserDataTaggedWithMetatable(
-                    Unsafe.SizeOf<T>(),
-                    tag
-                );
-                Unsafe.Write(data, value);
-            }
+            var data = state.NewUserDataTaggedWithMetatable(
+                sizeof(ManagedUserData),
+                tag
+            );  
+            Unsafe.Write(data, ManagedUserData.Create(value));
 
             return new LuaUserData(state, state.Ref());
 
@@ -474,44 +240,10 @@ public static class LuauStateUserDataExtensions
                 return metatable;
             }
         
-            static T GetSelfAtPosition(LuauState state, int index)
-            {
-                var data = state.ToUserDataPointer(index);
-            
-                if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
-                {
-                    ref var header = ref Unsafe.AsRef<ManagedUserData>((void*)data);
-                    if (header.Handle == 0)
-                    {
-                        throw new InvalidOperationException("Value is not a managed userdata.");
-                    }
-
-                    if (GCHandle.FromIntPtr(header.Handle).Target is not T userData)
-                    {
-                        throw new InvalidOperationException(
-                            $"Managed userdata does not implement {typeof(T)}."
-                        );
-                    }
-                
-                    return userData;
-                }
-                else
-                {
-                    ref var @struct = ref Unsafe.AsRef<T>((void*)data);
-                    return @struct;
-                }
-            }
-
-            // Reads the managed object from the userdata at stack index 1 (metamethod self arg).
-            static T GetSelf(LuauState state)
-            {
-                return GetSelfAtPosition(state, 1);
-            }
-
             static int IndexMetamethod(LuauState state, LuaFuncArguments args)
             {
-                var self = GetSelf(state);
-                using var key = state.ToLuaValue(2);
+                var self = args[0].Read<ILuaUserData>();
+                using var key = args[1];
                 if (self.TryGetIndex(state, key, out var value))
                 {
                     state.Push(value);
@@ -525,16 +257,16 @@ public static class LuauStateUserDataExtensions
 
             static int NewIndexMetamethod(LuauState state, LuaFuncArguments args)
             {
-                var self = GetSelf(state);
-                using var key = state.ToLuaValue(2);
-                using var value = state.ToLuaValue(3);
+                var self = args[0].Read<ILuaUserData>();
+                using var key = args[1];
+                using var value = args[2];
                 self.TrySetIndex(state, key, value);
                 return 0;
             }
 
             static int LenMetamethod(LuauState state, LuaFuncArguments args)
             {
-                var self = GetSelf(state);
+                var self = args[0].Read<ILuaUserData>();
                 if (self.Length is { } len)
                 {
                     state.PushNumber(len);
@@ -546,7 +278,7 @@ public static class LuauStateUserDataExtensions
 
             static int ToStringMetamethod(LuauState state, LuaFuncArguments args)
             {
-                var self = GetSelf(state);
+                var self = args[0].Read<ILuaUserData>();
                 state.PushString(self.ToLuaString(state) ?? self.ToString() ?? self.GetType().Name);
                 return 1;
             }
@@ -556,7 +288,7 @@ public static class LuauStateUserDataExtensions
             // `for k, v in ud do`.
             static int IterMetamethod(LuauState state, LuaFuncArguments args)
             {
-                var self = GetSelf(state);
+                var self = args[0].Read<ILuaUserData>();
                 var enumerator = self.GetIterator(state);
                 if (enumerator is null)
                 {
@@ -589,109 +321,109 @@ public static class LuauStateUserDataExtensions
         
             static int EqualsMetamethod(LuauState state, LuaFuncArguments args)
             {
-                var self = GetSelf(state);
-                var other = GetSelfAtPosition(state, 2);
-                var result = T.Equals(state, self, other);
+                var self = args[0].Read<ILuaUserData>();
+                var other = args[1];
+                var result = self.Equals(state, other);
                 state.PushBoolean(result);
                 return 1;
             }
         
             static int LessThanMetamethod(LuauState state, LuaFuncArguments args)
             {
-                var self = GetSelf(state);
-                var other = GetSelfAtPosition(state, 2);
-                var result = T.LessThan(state, self, other);
+                var self = args[0].Read<ILuaUserData>();
+                var other = args[1];
+                var result = self.LessThan(state, other);
                 state.PushBoolean(result);
                 return 1;
             }
         
             static int LessThanOrEqualMetamethod(LuauState state, LuaFuncArguments args)
             {
-                var self = GetSelf(state);
-                var other = GetSelfAtPosition(state, 2);
-                var result = T.LessThanOrEqual(state, self, other);
+                var self = args[0].Read<ILuaUserData>();
+                var other = args[1];
+                var result = self.LessThanOrEqual(state, other);
                 state.PushBoolean(result);
                 return 1;
             }
         
             static int UnaryMinusMetamethod(LuauState state, LuaFuncArguments args)
             {
-                var self = GetSelf(state);
-                using var result = T.UnaryMinus(state, self);
+                var self = args[0].Read<ILuaUserData>();
+                using var result = self.UnaryMinus(state);
                 state.Push(result);
                 return 1;
             }
         
             static int AddMetamethod(LuauState state, LuaFuncArguments args)
             {
-                var self = GetSelf(state);
-                var other = GetSelfAtPosition(state, 2);
-                using var result = T.Add(state, self, other);
+                var self = args[0].Read<ILuaUserData>();
+                var other = args[1];
+                using var result = self.Add(state, other);
                 state.Push(result);
                 return 1;
             }
         
             static int SubtractMetamethod(LuauState state, LuaFuncArguments args)
             {
-                var self = GetSelf(state);
-                var other = GetSelfAtPosition(state, 2);
-                using var result = T.Subtract(state, self, other);
+                var self = args[0].Read<ILuaUserData>();
+                var other = args[1];
+                using var result = self.Subtract(state, other);
                 state.Push(result);
                 return 1;
             }
         
             static int MultiplyMetamethod(LuauState state, LuaFuncArguments args)
             {
-                var self = GetSelf(state);
-                var other = GetSelfAtPosition(state, 2);
-                using var result = T.Multiply(state, self, other);
+                var self = args[0].Read<ILuaUserData>();
+                var other = args[1];
+                using var result = self.Multiply(state, other);
                 state.Push(result);
                 return 1;
             }
         
             static int DivideMetamethod(LuauState state, LuaFuncArguments args)
             {
-                var self = GetSelf(state);
-                var other = GetSelfAtPosition(state, 2);
-                using var result = T.Divide(state, self, other);
+                var self = args[0].Read<ILuaUserData>();
+                var other = args[1];
+                using var result = self.Divide(state, other);
                 state.Push(result);
                 return 1;
             }
         
             static int FloorDivideMetamethod(LuauState state, LuaFuncArguments args)
             {
-                var self = GetSelf(state);
-                var other = GetSelfAtPosition(state, 2);
-                using var result = T.FloorDivide(state, self, other);
+                var self = args[0].Read<ILuaUserData>();
+                var other = args[1];
+                using var result = self.FloorDivide(state, other);
                 state.Push(result);
                 return 1;
             }
         
             static int ModulusMetamethod(LuauState state, LuaFuncArguments args)
             {
-                var self = GetSelf(state);
-                var other = GetSelfAtPosition(state, 2);
-                using var result = T.Modulus(state, self, other);
+                var self = args[0].Read<ILuaUserData>();
+                var other = args[1];
+                using var result = self.Modulus(state, other);
                 state.Push(result);
                 return 1;
             }
         
             static int PowerMetamethod(LuauState state, LuaFuncArguments args)
             {
-                var self = GetSelf(state);
-                var other = GetSelfAtPosition(state, 2);
-                using var result = T.Power(state, self, other);
+                var self = args[0].Read<ILuaUserData>();
+                var other = args[1];
+                using var result = self.Power(state, other);
                 state.Push(result);
                 return 1;
             }
         }
 
-        public unsafe LuaTable CreatePrimitiveMetaTable<T>() where T : unmanaged, IPrimitiveUserData<T>
+        public unsafe LuaTable CreatePrimitiveMetaTable<T>() where T : unmanaged, IPrimitive<T>
         {
             return state.CreatePrimitiveMetaTable<T>(T.PrimitiveId);
         }
 
-        public unsafe LuaTable CreatePrimitiveMetaTable<T>(int id) where T : unmanaged, ILuaUserData<T>
+        public unsafe LuaTable CreatePrimitiveMetaTable<T>(int id) where T : unmanaged, IPrimitive<T>
         {
             return BuildMetatable(state, typeof(T), T.SupportedMetamethods);
 
