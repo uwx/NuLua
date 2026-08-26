@@ -223,6 +223,15 @@ public readonly struct LuaValue : IEquatable<LuaValue>, IDisposable
         throw new InvalidOperationException($"Cannot convert {Type} to {typeof(T).Name}");
     }
 
+    [return: NotNullIfNotNull(nameof(@default))]
+    public T? ReadOrDefault<T>(T? @default = default)
+    {
+        if (!TryRead<T>(out var result))
+            return @default;
+
+        return result;
+    }
+
     public T UnsafeRead<T>()
     {
         if (TryRead<T>(out var result))
