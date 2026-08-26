@@ -1,11 +1,7 @@
-using System.Collections;
-using System.Numerics;
-using NuLua.Luau;
-
-namespace NuLua;
+namespace NuLua.Luau;
 
 /// <summary>
-/// Metamethods that an <see cref="ILuaUserData{T}"/> type opts into. The per-type metatable
+/// Metamethods that an <see cref="ILuaUserData"/> type opts into. The per-type metatable
 /// builder only installs the metamethods listed here.
 /// </summary>
 [Flags]
@@ -14,20 +10,20 @@ public enum LuaUserDataMetamethods
     /// <summary>No metamethods (opaque userdata).</summary>
     None = 0,
 
-    /// <summary><c>__index</c> — dispatched to <see cref="ILuaUserData{T}.TryGetIndex"/>.</summary>
+    /// <summary><c>__index</c> — dispatched to <see cref="ILuaUserData.TryGetIndex"/>.</summary>
     Index = 1 << 0,
 
-    /// <summary><c>__newindex</c> — dispatched to <see cref="ILuaUserData{T}.TrySetIndex"/>.</summary>
+    /// <summary><c>__newindex</c> — dispatched to <see cref="ILuaUserData.TrySetIndex"/>.</summary>
     NewIndex = 1 << 1,
 
-    /// <summary><c>__len</c> — dispatched to <see cref="ILuaUserData{T}.Length"/>.</summary>
+    /// <summary><c>__len</c> — dispatched to <see cref="ILuaUserData.Length"/>.</summary>
     Length = 1 << 2,
 
-    /// <summary><c>__tostring</c> — dispatched to <see cref="ILuaUserData{T}.ToLuaString"/>.</summary>
+    /// <summary><c>__tostring</c> — dispatched to <see cref="ILuaUserData.ToLuaString"/>.</summary>
     ToString = 1 << 3,
 
     /// <summary>
-    /// <c>__iter</c> (generic <c>for .. in</c> loop) — driven by <see cref="ILuaUserData{T}.GetIterator"/>.
+    /// <c>__iter</c> (generic <c>for .. in</c> loop) — driven by <see cref="ILuaUserData.GetIterator"/>.
     /// Luau has no <c>__pairs</c> metamethod and its base <c>pairs()</c>/<c>ipairs()</c> reject userdata,
     /// so <c>__iter</c> is the only userdata iteration path.
     /// </summary>
