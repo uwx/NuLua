@@ -1,4 +1,5 @@
 using System.Buffers;
+using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
@@ -41,6 +42,11 @@ public sealed unsafe partial class LuauState : ILuauValueState
     // setting a primitive metatable once per id (lua_setprimitivemetatable api_checks that
     // the metatable is not already assigned), so we guard it on the managed side too.
     readonly HashSet<int> primitiveMetatablesSet = new();
+
+    // Registry references awaiting unref, enqueued by LuaObject.Dispose() from any thread
+    // (finalizers run on the GC thread). Drained on the owning thread at safe points
+    // (Call/LoadString/LoadBuffer) so the native state is never touched from a foreign thread.
+    readonly ConcurrentQueue<LuaReference> _pendingUnrefs = new();
 
     public static LuauState CreateSandbox()
     {
@@ -215,6 +221,7 @@ public sealed unsafe partial class LuauState : ILuauValueState
     void LoadStringCore(ReadOnlySpan<byte> utf8Code, CString chunkName)
     {
         CheckDisposed();
+        ProcessPendingUnrefs();
         nuint bytecodeSize;
         byte* bytecode;
         fixed (byte* codePtr = utf8Code)
@@ -256,6 +263,7 @@ public sealed unsafe partial class LuauState : ILuauValueState
     void LoadBufferCore(ReadOnlySpan<byte> buffer, CString chunkName)
     {
         CheckDisposed();
+        ProcessPendingUnrefs();
         fixed (byte* bufferPtr = buffer)
         {
             var result = NativeMethods.luau_load(
@@ -1011,6 +1019,7 @@ public sealed unsafe partial class LuauState : ILuauValueState
     public void Call(int argCount, int returnCount)
     {
         CheckDisposed();
+        ProcessPendingUnrefs();
         var result = NativeMethods.lua_pcall(ptr, argCount, returnCount, 0);
         CheckResult(result);
     }
@@ -1060,6 +1069,10 @@ public sealed unsafe partial class LuauState : ILuauValueState
     public LuaReference Ref(int index)
     {
         CheckDisposed();
+        // Reclaim references deferred by finalizers (LuaObject.Dispose → EnqueueUnref) so the
+        // registry stays bounded even inside a single long Call that creates many userdata refs.
+        // This runs on the owning thread (Ref is only reached via marshalling on that thread).
+        ProcessPendingUnrefs();
         // Luau's `lua_ref` behaves differently than in standard Lua.
         // ref: https://github.com/luau-lang/luau/issues/247
         var refId = NativeMethods.lua_ref(
@@ -1081,6 +1094,36 @@ public sealed unsafe partial class LuauState : ILuauValueState
     {
         CheckDisposed();
         NativeMethods.lua_unref(ptr, reference.Id);
+    }
+
+    /// <summary>
+    /// Thread-safe: queues <paramref name="reference"/> for unref on the owning thread. Safe to
+    /// call from a finalizer (GC thread). No-op once the state is disposed.
+    /// </summary>
+    public void EnqueueUnref(LuaReference reference)
+    {
+        if (IsDisposed)
+        {
+            return;
+        }
+        _pendingUnrefs.Enqueue(reference);
+    }
+
+    /// <summary>
+    /// Releases any deferred references. MUST be called on the owning thread (the one running the
+    /// VM); done automatically at the start of Call/LoadString/LoadBuffer. Call explicitly after a
+    /// batch of work to reclaim the registry before the next script execution.
+    /// </summary>
+    public void ProcessPendingUnrefs()
+    {
+        if (IsDisposed)
+        {
+            return;
+        }
+        while (_pendingUnrefs.TryDequeue(out var reference))
+        {
+            NativeMethods.lua_unref(ptr, reference.Id);
+        }
     }
 
     static LuaValueType CodeToType(uint code)

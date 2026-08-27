@@ -87,6 +87,16 @@ public interface ILuaState : ILuaObject
     LuaReference Ref(int index);
     void Unref(LuaReference reference);
 
+    /// <summary>
+    /// Thread-safe request to release a registry reference. The default (for state flavors without a
+    /// deferred queue) unrefs inline; <see cref="NuLua.Luau.LuauState"/> overrides this to enqueue
+    /// and drain on the owning thread, so a finalizer running on the GC thread can't race the VM.
+    /// </summary>
+    void EnqueueUnref(LuaReference reference) => Unref(reference);
+
+    /// <summary>Drains any deferred unrefs. Default is a no-op for flavors without a deferred queue.</summary>
+    void ProcessPendingUnrefs() { }
+
     void LoadString(ReadOnlySpan<char> chunk, ReadOnlySpan<char> chunkName);
     void LoadString(ReadOnlySpan<byte> utf8Chunk, ReadOnlySpan<byte> utf8ChunkName);
     void LoadBuffer(ReadOnlySpan<byte> buffer, ReadOnlySpan<byte> utf8ChunkName);

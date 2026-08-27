@@ -38,12 +38,15 @@ public abstract class LuaObject : ILuaObject
             // disposed (ptr == null after lua_close), there is nothing left to unref.
             if (!state.IsDisposed)
             {
-                state.Unref(reference);
+                // Defer to the state's owning thread instead of touching the native state from
+                // whatever thread this runs on: a finalizer runs on the GC thread, and calling
+                // lua_unref from there races the owner's VM execution and corrupts the stack.
+                state.EnqueueUnref(reference);
             }
         }
         catch (ObjectDisposedException)
         {
-            // The state was closed (lua_close) between the IsDisposed check and the unref,
+            // The state was closed (lua_close) between the IsDisposed check and the enqueue,
             // so the registry is gone — there is nothing left to release.
         }
 
