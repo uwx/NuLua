@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using NuLua.Luau;
 
 namespace NuLua;
 
@@ -141,7 +142,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>, IDisposable
         return new(LuaValueType.Function, default, value);
     }
 
-    public static LuaValue FromThread(ILuaState value)
+    public static LuaValue FromThread(LuauState value)
     {
         return new(LuaValueType.Thread, default, value);
     }
@@ -188,7 +189,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>, IDisposable
             LuaValueType.Table => ((LuaTable)reference!).ToString()!,
             LuaValueType.Function => ((LuaFunction)reference!).ToString()!,
             LuaValueType.UserData => ((LuaUserData)reference!).ToString()!,
-            LuaValueType.Thread => ((ILuaState)reference!).ToString()!,
+            LuaValueType.Thread => ((LuauState)reference!).ToString()!,
             LuaValueType.Buffer => ((ILuaObject)reference!).ToString()!,
             LuaValueType.Class => ((ILuaObject)reference!).ToString()!,
             LuaValueType.Object => ((ILuaObject)reference!).ToString()!,
@@ -523,10 +524,10 @@ public readonly struct LuaValue : IEquatable<LuaValue>, IDisposable
                 }
                 break;
             case LuaValueType.Thread:
-                if (typeof(T) == typeof(ILuaState))
+                if (typeof(T) == typeof(LuauState))
                 {
-                    var r = (ILuaState)reference!;
-                    result = Unsafe.As<ILuaState, T>(ref r)!;
+                    var r = (LuauState)reference!;
+                    result = Unsafe.As<LuauState, T>(ref r)!;
                     return true;
                 }
                 if (typeof(ILuaObject).IsAssignableFrom(typeof(T)))
@@ -537,7 +538,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>, IDisposable
                 }
                 if (typeof(T) == typeof(object))
                 {
-                    var r = (object)(ILuaState)reference!;
+                    var r = (object)(LuauState)reference!;
                     result = Unsafe.As<object, T>(ref r)!;
                     return true;
                 }

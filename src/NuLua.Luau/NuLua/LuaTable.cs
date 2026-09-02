@@ -1,8 +1,10 @@
+using NuLua.Luau;
+
 namespace NuLua;
 
-public sealed class LuaTable(ILuaState state, LuaReference reference) : LuaObject(state, reference)
+public sealed class LuaTable(LuauState state, LuaReference reference) : LuaObject(state, reference)
 {
-    readonly ILuaState state = state;
+    readonly LuauState state = state;
 
     public struct Enumerator(LuaTable table)
     {

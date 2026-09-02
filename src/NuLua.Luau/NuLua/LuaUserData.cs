@@ -1,12 +1,13 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using NuLua.Luau;
 
 namespace NuLua;
 
-public sealed class LuaUserData(ILuaState state, LuaReference reference) : LuaObject(state, reference)
+public sealed class LuaUserData(LuauState state, LuaReference reference) : LuaObject(state, reference)
 {
-    readonly ILuaState state = state;
+    readonly LuauState state = state;
 
     public readonly struct UserValues(LuaUserData userData)
     {

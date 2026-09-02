@@ -10,12 +10,12 @@ using NuLua.Interop.Luau;
 
 namespace NuLua.Luau;
 
-public sealed unsafe partial class LuauState : ILuaState<LuauState>, ILuaDebug<LuauState>, ILuaGarbageCollection
+public sealed unsafe partial class LuauState
 {
     static readonly ConcurrentDictionary<nint, LuauState> ptrToState = new();
 
-    readonly List<LuaFunc<LuauState>> funcs = new(8);
-    readonly List<AsyncLuaFunc<LuauState>> asyncFuncs = new(8);
+    readonly List<LuaFunc> funcs = new(8);
+    readonly List<AsyncLuaFunc> asyncFuncs = new(8);
     readonly List<LuauState> childStates = new(4);
     readonly LuaReference reference;
     readonly LuauState? from;
@@ -25,8 +25,7 @@ public sealed unsafe partial class LuauState : ILuaState<LuauState>, ILuaDebug<L
     bool hasPendingTask;
     CancellationToken asyncCancellationToken;
 
-    LuauState? ILuaState<LuauState>.From => from;
-    ILuaState? ILuaState.From => from;
+    public LuauState? From => from;
 
     LuauState(lua_State* ptr, LuauState? from, LuaReference reference)
     {
@@ -63,8 +62,6 @@ public sealed unsafe partial class LuauState : ILuaState<LuauState>, ILuaDebug<L
     }
 
     public lua_State* AsPointer() => ptr;
-
-    nint ILuaState.AsPointer() => (nint)ptr;
 
     public LuaReference Reference => reference;
 
@@ -233,7 +230,6 @@ public sealed unsafe partial class LuauState : ILuaState<LuauState>, ILuaDebug<L
         }
     }
 
-    ILuaState ILuaState.ToThread(int index) => ToThread(index);
 
     public void* ToPointer(int index)
     {
@@ -305,19 +301,6 @@ public sealed unsafe partial class LuauState : ILuaState<LuauState>, ILuaDebug<L
         }
 
         NativeMethods.lua_xmove(ptr, target.ptr, count);
-    }
-
-    void ILuaState.XMove(ILuaState target, int count)
-    {
-        if (target is not LuauState typedTarget)
-        {
-            throw new ArgumentException(
-                "Source and target states must use the same Lua runtime.",
-                nameof(target)
-            );
-        }
-
-        XMove(typedTarget, count);
     }
 
     public void NewTable(int initialArraySize = 0, int initialRecordsSize = 0)
@@ -405,37 +388,32 @@ public sealed unsafe partial class LuauState : ILuaState<LuauState>, ILuaDebug<L
         return NativeMethods.luaL_newmetatable(ptr, cName.Pointer) != 0;
     }
 
-    public ILuauDebug Debug => this;
-    ILuaDebug<LuauState> ILuaState<LuauState>.Debug => this;
-    ILuaDebug ILuaState.Debug => this;
-    public ILuaGarbageCollection GarbageCollection => this;
-
-    void ILuaGarbageCollection.Stop()
+    public void GcStop()
     {
         CheckDisposed();
         // Luau's LUA_GCSTOP is the first member of an unnamed enum exposed only through the C header.
         _ = NativeMethods.lua_gc(ptr, 0 /* LUA_GCSTOP */, 0);
     }
 
-    void ILuaGarbageCollection.Restart()
+    public void GcRestart()
     {
         CheckDisposed();
         _ = NativeMethods.lua_gc(ptr, 1 /* LUA_GCRESTART */, 0);
     }
 
-    void ILuaGarbageCollection.Collect()
+    public void GcCollect()
     {
         CheckDisposed();
         _ = NativeMethods.lua_gc(ptr, 2 /* LUA_GCCOLLECT */, 0);
     }
 
-    int ILuaGarbageCollection.Step(int stepSize)
+    public int GcStep(int stepSize)
     {
         CheckDisposed();
         return NativeMethods.lua_gc(ptr, 6 /* LUA_GCSTEP */, stepSize);
     }
 
-    long ILuaGarbageCollection.GetByteCount()
+    public long GcGetByteCount()
     {
         CheckDisposed();
         var kb = NativeMethods.lua_gc(ptr, 3 /* LUA_GCCOUNT */, 0);
@@ -443,13 +421,13 @@ public sealed unsafe partial class LuauState : ILuaState<LuauState>, ILuaDebug<L
         return (long)kb * 1024L + b;
     }
 
-    bool ILuaGarbageCollection.IsRunning()
+    public bool GcIsRunning()
     {
         CheckDisposed();
         return NativeMethods.lua_gc(ptr, 5 /* LUA_GCISRUNNING */, 0) != 0;
     }
 
-    ValueTask ILuaState.ResumeAsync(int argCount, CancellationToken cancellationToken)
+    public ValueTask ResumeAsync(int argCount, CancellationToken cancellationToken)
     {
         CheckDisposed();
         return LuauAsyncDriver.ResumeAsync(this, argCount, cancellationToken);

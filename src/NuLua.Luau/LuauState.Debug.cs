@@ -4,7 +4,7 @@ using NuLua.Interop.Luau;
 
 namespace NuLua.Luau;
 
-public sealed unsafe partial class LuauState : ILuauDebug
+public sealed unsafe partial class LuauState
 {
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     delegate void LuauDebugCallbackDelegate(lua_State* L, lua_Debug* ar);
@@ -13,17 +13,17 @@ public sealed unsafe partial class LuauState : ILuauDebug
     delegate* unmanaged[Cdecl]<lua_State*, lua_Debug*, void> debugStepDelegate;
     delegate* unmanaged[Cdecl]<lua_State*, lua_Debug*, void> debugInterruptDelegate;
 
-    LuaHook<LuauState>? debugBreakHook;
-    LuaHook<LuauState>? debugStepHook;
-    LuaHook<LuauState>? debugInterruptHook;
+    LuaHook? debugBreakHook;
+    LuaHook? debugStepHook;
+    LuaHook? debugInterruptHook;
 
-    int ILuaDebug.GetStackDepth()
+    public int GetStackDepth()
     {
         CheckDisposed();
         return NativeMethods.lua_stackdepth(ptr);
     }
 
-    bool ILuaDebug.TryGetStackInfo(int level, LuaDebugInfoFields fields, out LuaDebugInfo info)
+    public bool TryGetStackInfo(int level, LuaDebugInfoFields fields, out LuaDebugInfo info)
     {
         CheckDisposed();
 
@@ -58,84 +58,66 @@ public sealed unsafe partial class LuauState : ILuauDebug
         return true;
     }
 
-    string? ILuaDebug.GetLocal(int level, int n)
+    public string? GetLocal(int level, int n)
     {
         CheckDisposed();
         var name = NativeMethods.lua_getlocal(ptr, level, n);
         return name == null ? null : Utf8NullTerminated(name);
     }
 
-    string? ILuaDebug.SetLocal(int level, int n)
+    public string? SetLocal(int level, int n)
     {
         CheckDisposed();
         var name = NativeMethods.lua_setlocal(ptr, level, n);
         return name == null ? null : Utf8NullTerminated(name);
     }
 
-    string? ILuaDebug.GetUpvalue(int funcIndex, int n)
+    public string? GetUpvalue(int funcIndex, int n)
     {
         CheckDisposed();
         var name = NativeMethods.lua_getupvalue(ptr, funcIndex, n);
         return name == null ? null : Utf8NullTerminated(name);
     }
 
-    string? ILuaDebug.SetUpvalue(int funcIndex, int n)
+    public string? SetUpvalue(int funcIndex, int n)
     {
         CheckDisposed();
         var name = NativeMethods.lua_setupvalue(ptr, funcIndex, n);
         return name == null ? null : Utf8NullTerminated(name);
     }
 
-    nint ILuaDebug.UpvalueId(int funcIndex, int n) =>
-        throw new NotSupportedException("Luau does not support UpvalueId()");
+    public LuaHook? GetHook() => null;
 
-    void ILuaDebug.UpvalueJoin(int fIdx1, int n1, int fIdx2, int n2) =>
-        throw new NotSupportedException("Luau does not support UpvalueJoin()");
+    public LuaHookMask GetHookMask() => LuaHookMask.None;
 
-    void ILuaDebug<LuauState>.SetHook(LuaHook<LuauState>? hook, LuaHookMask mask, int count) =>
-        throw new NotSupportedException(
-            "Luau does not support SetHook(). Use the Luauc debug callbacks instead."
-        );
+    public int GetHookCount() => 0;
 
-    void ILuaDebug.SetHook(LuaHook? hook, LuaHookMask mask, int count) =>
-        throw new NotSupportedException(
-            "Luau does not support SetHook(). Use the Luauc debug callbacks instead."
-        );
-
-    LuaHook<LuauState>? ILuaDebug<LuauState>.GetHook() => null;
-
-    LuaHook? ILuaDebug.GetHook() => null;
-
-    LuaHookMask ILuaDebug.GetHookMask() => LuaHookMask.None;
-
-    int ILuaDebug.GetHookCount() => 0;
-
-    int ILuauDebug.GetArgument(int level, int n)
+    public int GetArgument(int level, int n)
     {
         CheckDisposed();
         return NativeMethods.lua_getargument(ptr, level, n);
     }
 
-    void ILuauDebug.SetSingleStep(bool enabled)
+    public void SetSingleStep(bool enabled)
     {
         CheckDisposed();
         NativeMethods.lua_singlestep(ptr, enabled ? 1 : 0);
     }
 
-    int ILuauDebug.SetBreakpoint(int funcIndex, int line, bool enabled)
+    public int SetBreakpoint(int funcIndex, int line, bool enabled)
     {
         CheckDisposed();
         return NativeMethods.lua_breakpoint(ptr, funcIndex, line, enabled ? 1 : 0);
     }
 
-    string ILuauDebug.GetDebugTrace()
+    public string GetDebugTrace()
     {
         CheckDisposed();
         var p = NativeMethods.lua_debugtrace(ptr);
         return Utf8NullTerminated(p) ?? string.Empty;
     }
 
-    void ILuauDebug.GetCoverage(int funcIndex, Action<LuauCoverageEntry> visit)
+    public void GetCoverage(int funcIndex, Action<LuauCoverageEntry> visit)
     {
         CheckDisposed();
         if (visit == null)
@@ -190,7 +172,7 @@ public sealed unsafe partial class LuauState : ILuauDebug
         );
     }
 
-    void ILuauDebug.SetDebugBreakCallback(LuaHook<LuauState>? callback)
+    public void SetDebugBreakCallback(LuaHook? callback)
     {
         CheckDisposed();
         debugBreakHook = callback;
@@ -202,7 +184,7 @@ public sealed unsafe partial class LuauState : ILuauDebug
                 : debugBreakDelegate!;
     }
 
-    void ILuauDebug.SetDebugStepCallback(LuaHook<LuauState>? callback)
+    public void SetDebugStepCallback(LuaHook? callback)
     {
         CheckDisposed();
         debugStepHook = callback;
@@ -214,7 +196,7 @@ public sealed unsafe partial class LuauState : ILuauDebug
                 : debugStepDelegate!;
     }
 
-    void ILuauDebug.SetDebugInterruptCallback(LuaHook<LuauState>? callback)
+    public void SetDebugInterruptCallback(LuaHook? callback)
     {
         CheckDisposed();
         debugInterruptHook = callback;

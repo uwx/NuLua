@@ -1,8 +1,10 @@
+using NuLua.Luau;
+
 namespace NuLua;
 
-public sealed class LuaFunction(ILuaState state, LuaReference reference) : LuaObject(state, reference)
+public sealed class LuaFunction(LuauState state, LuaReference reference) : LuaObject(state, reference)
 {
-    readonly ILuaState state = state;
+    readonly LuauState state = state;
 
     public LuaValue[] Invoke(params ReadOnlySpan<LuaValue> args)
     {

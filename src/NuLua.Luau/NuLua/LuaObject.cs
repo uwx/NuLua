@@ -1,3 +1,5 @@
+using NuLua.Luau;
+
 namespace NuLua;
 
 /// <summary>
@@ -12,11 +14,11 @@ namespace NuLua;
 /// </remarks>
 public abstract class LuaObject : ILuaObject
 {
-    readonly ILuaState state;
+    readonly LuauState state;
     readonly LuaReference reference;
     bool disposed;
 
-    protected LuaObject(ILuaState state, LuaReference reference)
+    protected LuaObject(LuauState state, LuaReference reference)
     {
         this.state = state;
         this.reference = reference;

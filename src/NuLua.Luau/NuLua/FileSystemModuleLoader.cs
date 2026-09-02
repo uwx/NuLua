@@ -2,6 +2,7 @@ using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using NuLua.Internal;
+using NuLua.Luau;
 
 namespace NuLua;
 
@@ -19,7 +20,7 @@ public sealed class FileSystemModuleLoader : LuaModuleLoader
         return WorkingDirectory ?? Directory.GetCurrentDirectory();
     }
 
-    protected override bool TryLoadModule(ILuaState state, string fullPath, string requireArgument)
+    protected override bool TryLoadModule(LuauState state, string fullPath, string requireArgument)
     {
         var targetPath = Path.IsPathRooted(fullPath)
             ? fullPath

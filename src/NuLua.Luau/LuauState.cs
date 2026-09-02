@@ -11,7 +11,7 @@ using NuLua.Interop.Luau;
 
 namespace NuLua.Luau;
 
-public sealed unsafe partial class LuauState : ILuauValueState
+public sealed partial class LuauState
 {
     // Luau does not export LUA_OK / LUA_YIELD / LUA_ERR* / LUA_T* through bindgen,
     // so we mirror the values declared in submodules/luau/VM/include/lua.h here.
@@ -48,21 +48,21 @@ public sealed unsafe partial class LuauState : ILuauValueState
     // (Call/LoadString/LoadBuffer) so the native state is never touched from a foreign thread.
     readonly ConcurrentQueue<LuaReference> _pendingUnrefs = new();
 
-    public static LuauState CreateSandbox()
+    public static unsafe LuauState CreateSandbox()
     {
         var state = Create();
         NativeMethods.luaL_sandbox(state.ptr);
         return state;
     }
 
-    public void NewSandboxThread()
+    public unsafe void NewSandboxThread()
     {
         NewThread();
         var thread = ToThread(-1);
         NativeMethods.luaL_sandboxthread(thread.ptr);
     }
 
-    public LuauState CreateSandboxThread()
+    public unsafe LuauState CreateSandboxThread()
     {
         NewThread();
         var thread = ToThread(-1);
@@ -70,7 +70,7 @@ public sealed unsafe partial class LuauState : ILuauValueState
         return thread;
     }
 
-    static LuauState GetMainState(lua_State* L)
+    static unsafe LuauState GetMainState(lua_State* L)
     {
         var state = ptrToState[(nint)L];
         while (state.from != null)
@@ -80,7 +80,7 @@ public sealed unsafe partial class LuauState : ILuauValueState
         return state;
     }
 
-    void CheckResult(int code)
+    unsafe void CheckResult(int code)
     {
         if (code is not LUA_OK and not LUA_YIELD)
         {
@@ -96,7 +96,7 @@ public sealed unsafe partial class LuauState : ILuauValueState
     /// Raises a Lua runtime error from a C closure. This longjmps to the nearest protected call
     /// (e.g. <c>lua_pcall</c>) and does not return normally; the throw below is defensive.
     /// </summary>
-    public void RaiseError(string message)
+    public unsafe void RaiseError(string message)
     {
         CheckDisposed();
         var msg = Encoding.UTF8.GetBytes(message + "\0");
@@ -107,91 +107,91 @@ public sealed unsafe partial class LuauState : ILuauValueState
         throw new InvalidOperationException("luau_error returned unexpectedly.");
     }
 
-    public void OpenLibraries()
+    public unsafe void OpenLibraries()
     {
         CheckDisposed();
         NativeMethods.luaL_openlibs(ptr);
     }
 
-    void OpenSingleLibrary(delegate* unmanaged[Cdecl]<lua_State*, int> opener)
+    unsafe void OpenSingleLibrary(delegate* unmanaged[Cdecl]<lua_State*, int> opener)
     {
         NativeMethods.lua_pushcclosurek(ptr, opener, null, 0, null!);
         NativeMethods.lua_call(ptr, 0, 0);
     }
 
-    public void OpenBaseLibrary()
+    public unsafe void OpenBaseLibrary()
     {
         CheckDisposed();
         OpenSingleLibrary(&NativeMethods.luaopen_base);
     }
 
-    public void OpenCoroutineLibrary()
+    public unsafe void OpenCoroutineLibrary()
     {
         CheckDisposed();
         OpenSingleLibrary(&NativeMethods.luaopen_coroutine);
     }
 
-    public void OpenTableLibrary()
+    public unsafe void OpenTableLibrary()
     {
         CheckDisposed();
         OpenSingleLibrary(&NativeMethods.luaopen_table);
     }
 
-    public void OpenStringLibrary()
+    public unsafe void OpenStringLibrary()
     {
         CheckDisposed();
         OpenSingleLibrary(&NativeMethods.luaopen_string);
     }
 
-    public void OpenMathLibrary()
+    public unsafe void OpenMathLibrary()
     {
         CheckDisposed();
         OpenSingleLibrary(&NativeMethods.luaopen_math);
     }
 
-    public void OpenOsLibrary()
+    public unsafe void OpenOsLibrary()
     {
         CheckDisposed();
         OpenSingleLibrary(&NativeMethods.luaopen_os);
     }
 
-    public void OpenDebugLibrary()
+    public unsafe void OpenDebugLibrary()
     {
         CheckDisposed();
         OpenSingleLibrary(&NativeMethods.luaopen_debug);
     }
 
-    public void OpenBit32Library()
+    public unsafe void OpenBit32Library()
     {
         CheckDisposed();
         OpenSingleLibrary(&NativeMethods.luaopen_bit32);
     }
 
-    public void OpenBufferLibrary()
+    public unsafe void OpenBufferLibrary()
     {
         CheckDisposed();
         OpenSingleLibrary(&NativeMethods.luaopen_buffer);
     }
 
-    public void OpenUtf8Library()
+    public unsafe void OpenUtf8Library()
     {
         CheckDisposed();
         OpenSingleLibrary(&NativeMethods.luaopen_utf8);
     }
 
-    public void OpenClassLibrary()
+    public unsafe void OpenClassLibrary()
     {
         CheckDisposed();
         OpenSingleLibrary(&NativeMethods.luaopen_class);
     }
 
-    public void OpenVectorLibrary()
+    public unsafe void OpenVectorLibrary()
     {
         CheckDisposed();
         OpenSingleLibrary(&NativeMethods.luaopen_vector);
     }
 
-    public void OpenIntegerLibrary()
+    public unsafe void OpenIntegerLibrary()
     {
         CheckDisposed();
         OpenSingleLibrary(&NativeMethods.luaopen_integer);
@@ -218,7 +218,7 @@ public sealed unsafe partial class LuauState : ILuauValueState
         }
     }
 
-    void LoadStringCore(ReadOnlySpan<byte> utf8Code, CString chunkName)
+    unsafe void LoadStringCore(ReadOnlySpan<byte> utf8Code, CString chunkName)
     {
         CheckDisposed();
         ProcessPendingUnrefs();
@@ -260,7 +260,7 @@ public sealed unsafe partial class LuauState : ILuauValueState
         LoadBuffer(buffer, chunkNameBytes.AsSpan());
     }
 
-    void LoadBufferCore(ReadOnlySpan<byte> buffer, CString chunkName)
+    unsafe void LoadBufferCore(ReadOnlySpan<byte> buffer, CString chunkName)
     {
         CheckDisposed();
         ProcessPendingUnrefs();
@@ -287,13 +287,13 @@ public sealed unsafe partial class LuauState : ILuauValueState
         throw new NotSupportedException("Dumping functions is not supported on Luau.");
     }
 
-    public int GetAbsIndex(int index)
+    public unsafe int GetAbsIndex(int index)
     {
         CheckDisposed();
         return NativeMethods.lua_absindex(ptr, index);
     }
 
-    public void Copy(int fromIndex, int toIndex)
+    public unsafe void Copy(int fromIndex, int toIndex)
     {
         CheckDisposed();
         // Luau lacks lua_copy; emulate via push-then-replace.
@@ -302,7 +302,7 @@ public sealed unsafe partial class LuauState : ILuauValueState
         NativeMethods.lua_replace(ptr, absTo);
     }
 
-    public void Rotate(int index, int n)
+    public unsafe void Rotate(int index, int n)
     {
         CheckDisposed();
         // Luau lacks lua_rotate; fall back to insert/remove patterns matching Lua 5.1.
@@ -321,19 +321,19 @@ public sealed unsafe partial class LuauState : ILuauValueState
         }
     }
 
-    public void PushInteger(long value)
+    public unsafe void PushInteger(long value)
     {
         CheckDisposed();
         NativeMethods.lua_pushinteger(ptr, (int)value);
     }
 
-    public void PushLightUserData(nint data)
+    public unsafe void PushLightUserData(nint data)
     {
         CheckDisposed();
         NativeMethods.lua_pushlightuserdatatagged(ptr, (void*)data, 0);
     }
 
-    public void PushVector(Vector3 value)
+    public unsafe void PushVector(Vector3 value)
     {
         CheckDisposed();
         NativeMethods.lua_pushvector(ptr, value.X, value.Y, value.Z);
@@ -345,7 +345,7 @@ public sealed unsafe partial class LuauState : ILuauValueState
         return new Vector3(span[0], span[1], span[2]);
     }
 
-    public Span<float> ToVectorSpan(int index)
+    public unsafe Span<float> ToVectorSpan(int index)
     {
         CheckDisposed();
         var p = NativeMethods.lua_tovector(ptr, index);
@@ -361,7 +361,7 @@ public sealed unsafe partial class LuauState : ILuauValueState
         PushPrimitive(T.PrimitiveId, data);
     }
 
-    public void PushPrimitive<T>(int id, T data) where T : unmanaged
+    public unsafe void PushPrimitive<T>(int id, T data) where T : unmanaged
     {
         if (sizeof(T) > NativeMethods.LUA_PRIMITIVE_SIZE)
         {
@@ -372,7 +372,7 @@ public sealed unsafe partial class LuauState : ILuauValueState
         NativeMethods.lua_pushprimitive(ptr, id, &data, (nuint)sizeof(T));
     }
 
-    public void PushPrimitive(int id, Span<byte> data)
+    public unsafe void PushPrimitive(int id, Span<byte> data)
     {
         if (data.Length > NativeMethods.LUA_PRIMITIVE_SIZE)
         {
@@ -384,7 +384,7 @@ public sealed unsafe partial class LuauState : ILuauValueState
             NativeMethods.lua_pushprimitive(ptr, id, dataPtr, (nuint)data.Length);
     }
 
-    public Span<byte> ToPrimitive(int index, out int id)
+    public unsafe Span<byte> ToPrimitive(int index, out int id)
     {
         CheckDisposed();
         if (GetType(index) != LuaValueType.Primitive)
@@ -403,7 +403,7 @@ public sealed unsafe partial class LuauState : ILuauValueState
         }
     }
 
-    public bool GetPrimitiveMetatable(int id, [NotNullWhen(true)] out LuaTable? metatable)
+    public unsafe bool GetPrimitiveMetatable(int id, [NotNullWhen(true)] out LuaTable? metatable)
     {
         CheckDisposed();
         if (id < 0 || (uint)id >= NativeMethods.LUA_PRIMITIVE_LIMIT)
@@ -414,11 +414,11 @@ public sealed unsafe partial class LuauState : ILuauValueState
         NativeMethods.lua_getprimitivemetatable(ptr, id);
         if (GetType(-1) != LuaValueType.Table)
         {
-            this.Pop(1);
+            Pop(1);
             metatable = default;
             return false;
         }
-        metatable = new LuaTable(this, this.Ref());
+        metatable = new LuaTable(this, Ref());
         return true;
     }
 
@@ -427,7 +427,7 @@ public sealed unsafe partial class LuauState : ILuauValueState
         SetPrimitiveMetatable(T.PrimitiveId, metatable);
     }
 
-    public void SetPrimitiveMetatable(int id, LuaTable metatable)
+    public unsafe void SetPrimitiveMetatable(int id, LuaTable metatable)
     {
         CheckDisposed();
         if (id < 0 || (uint)id >= NativeMethods.LUA_PRIMITIVE_LIMIT)
@@ -444,14 +444,14 @@ public sealed unsafe partial class LuauState : ILuauValueState
         NativeMethods.lua_setprimitivemetatable(ptr, id);
     }
 
-    public LuauBuffer NewBuffer(int size)
+    public unsafe LuauBuffer NewBuffer(int size)
     {
         CheckDisposed();
         _ = NativeMethods.lua_newbuffer(ptr, (nuint)size);
-        return new LuauBuffer(this, this.Ref());
+        return new LuauBuffer(this, Ref());
     }
 
-    public LuauBuffer ToBuffer(int index)
+    public unsafe LuauBuffer ToBuffer(int index)
     {
         CheckDisposed();
         if (GetType(index) != LuaValueType.Buffer)
@@ -459,10 +459,10 @@ public sealed unsafe partial class LuauState : ILuauValueState
             throw new InvalidOperationException("Value at the specified index is not a buffer.");
         }
         NativeMethods.lua_pushvalue(ptr, index);
-        return new LuauBuffer(this, this.Ref());
+        return new LuauBuffer(this, Ref());
     }
 
-    public Span<byte> ToBufferSpan(int index)
+    public unsafe Span<byte> ToBufferSpan(int index)
     {
         CheckDisposed();
         nuint len;
@@ -474,7 +474,7 @@ public sealed unsafe partial class LuauState : ILuauValueState
         return new Span<byte>((byte*)p, (int)len);
     }
 
-    public LuauClass ToClass(int index)
+    public unsafe LuauClass ToClass(int index)
     {
         CheckDisposed();
         if (GetType(index) != LuaValueType.Class)
@@ -482,10 +482,10 @@ public sealed unsafe partial class LuauState : ILuauValueState
             throw new InvalidOperationException("Value at the specified index is not a class.");
         }
         NativeMethods.lua_pushvalue(ptr, index);
-        return new LuauClass(this, this.Ref());
+        return new LuauClass(this, Ref());
     }
 
-    public LuauObject ToObject(int index)
+    public unsafe LuauObject ToObject(int index)
     {
         CheckDisposed();
         if (GetType(index) != LuaValueType.Object)
@@ -493,7 +493,7 @@ public sealed unsafe partial class LuauState : ILuauValueState
             throw new InvalidOperationException("Value at the specified index is not an object.");
         }
         NativeMethods.lua_pushvalue(ptr, index);
-        return new LuauObject(this, this.Ref());
+        return new LuauObject(this, Ref());
     }
 
     public LuaValue ToLuaValue(int index)
@@ -526,13 +526,13 @@ public sealed unsafe partial class LuauState : ILuauValueState
             case LuaValueType.Table:
             {
                 PushValue(index);
-                var reference = this.Ref();
+                var reference = Ref();
                 return new LuaTable(this, reference);
             }
             case LuaValueType.Function:
             {
                 PushValue(index);
-                var reference = this.Ref();
+                var reference = Ref();
                 return new LuaFunction(this, reference);
             }
             case LuaValueType.Thread:
@@ -546,7 +546,7 @@ public sealed unsafe partial class LuauState : ILuauValueState
             case LuaValueType.UserData:
             {
                 PushValue(index);
-                var reference = this.Ref();
+                var reference = Ref();
                 return new LuaUserData(this, reference);
             }
             default:
@@ -571,31 +571,51 @@ public sealed unsafe partial class LuauState : ILuauValueState
             case LuaValueType.Object:
                 PushValue(value.UnsafeRead<ILuaObject>().Reference);
                 return;
+            case LuaValueType.Nil:
+                PushNil();
+                break;
+            case LuaValueType.Boolean:
+                PushBoolean(value.UnsafeRead<bool>());
+                break;
+            case LuaValueType.Number:
+                PushNumber(value.UnsafeRead<double>());
+                break;
+            case LuaValueType.String:
+                PushString(value.UnsafeRead<string>());
+                break;
+            case LuaValueType.Table:
+            case LuaValueType.Function:
+            case LuaValueType.UserData:
+            case LuaValueType.Thread:
+            {
+                var obj = value.UnsafeRead<ILuaObject>();
+                PushValue(obj.Reference);
+                break;
+            }
             default:
-                ((ILuaState)this).Push(value);
-                return;
+                throw new NotSupportedException($"Unsupported Lua value type: {value.Type}");
         }
     }
 
-    public void PushValue(LuaReference reference)
+    public unsafe void PushValue(LuaReference reference)
     {
         CheckDisposed();
         NativeMethods.lua_rawgeti(ptr, reference.TableIndex, reference.Id);
     }
 
-    public double ToNumber(int index)
+    public unsafe double ToNumber(int index)
     {
         CheckDisposed();
         return NativeMethods.lua_tonumberx(ptr, index, null);
     }
 
-    public long ToInteger(int index)
+    public unsafe long ToInteger(int index)
     {
         CheckDisposed();
         return NativeMethods.lua_tointegerx(ptr, index, null);
     }
 
-    public string ToString(int index)
+    public unsafe string ToString(int index)
     {
         CheckDisposed();
         nuint len;
@@ -607,41 +627,41 @@ public sealed unsafe partial class LuauState : ILuauValueState
         return new string((sbyte*)strPtr, 0, (int)len);
     }
 
-    public void GetGlobal(ReadOnlySpan<char> name)
+    public unsafe void GetGlobal(ReadOnlySpan<char> name)
     {
         CheckDisposed();
         using var nameBytes = new CString(name);
         CheckResult(NativeMethods.nulua_pgetglobal(ptr, nameBytes.Pointer));
     }
 
-    public void SetGlobal(ReadOnlySpan<char> name)
+    public unsafe void SetGlobal(ReadOnlySpan<char> name)
     {
         CheckDisposed();
         using var nameBytes = new CString(name);
         CheckResult(NativeMethods.nulua_psetglobal(ptr, nameBytes.Pointer));
     }
 
-    public void GetTable(int index)
+    public unsafe void GetTable(int index)
     {
         CheckDisposed();
         CheckResult(NativeMethods.nulua_pgettable(ptr, index));
     }
 
-    public void GetField(int index, ReadOnlySpan<char> name)
+    public unsafe void GetField(int index, ReadOnlySpan<char> name)
     {
         CheckDisposed();
         using var nameBytes = new CString(name);
         CheckResult(NativeMethods.nulua_pgetfield(ptr, index, nameBytes.Pointer));
     }
 
-    public void SetField(int index, ReadOnlySpan<char> name)
+    public unsafe void SetField(int index, ReadOnlySpan<char> name)
     {
         CheckDisposed();
         using var nameBytes = new CString(name);
         CheckResult(NativeMethods.nulua_psetfield(ptr, index, nameBytes.Pointer));
     }
 
-    public void GetI(int index, long n)
+    public unsafe void GetI(int index, long n)
     {
         CheckDisposed();
         var absIndex = NativeMethods.lua_absindex(ptr, index);
@@ -649,7 +669,7 @@ public sealed unsafe partial class LuauState : ILuauValueState
         CheckResult(NativeMethods.nulua_pgettable(ptr, absIndex));
     }
 
-    public void SetI(int index, long n)
+    public unsafe void SetI(int index, long n)
     {
         CheckDisposed();
         var absIndex = NativeMethods.lua_absindex(ptr, index);
@@ -658,7 +678,7 @@ public sealed unsafe partial class LuauState : ILuauValueState
         CheckResult(NativeMethods.nulua_psettable(ptr, absIndex));
     }
 
-    public void NewUserData(int size, int userValueCount)
+    public unsafe void NewUserData(int size, int userValueCount)
     {
         CheckDisposed();
         if (userValueCount > 1)
@@ -668,7 +688,7 @@ public sealed unsafe partial class LuauState : ILuauValueState
         NativeMethods.lua_newuserdatatagged(ptr, (nuint)size, 0);
     }
 
-    public bool TryGetUserValue(int index, int userValueIndex, out LuaValueType type)
+    public unsafe bool TryGetUserValue(int index, int userValueIndex, out LuaValueType type)
     {
         CheckDisposed();
         if (userValueIndex != 1)
@@ -681,7 +701,7 @@ public sealed unsafe partial class LuauState : ILuauValueState
         return true;
     }
 
-    public bool TrySetUserValue(int index, int userValueIndex, out LuaValueType type)
+    public unsafe bool TrySetUserValue(int index, int userValueIndex, out LuaValueType type)
     {
         CheckDisposed();
         if (userValueIndex != 1)
@@ -700,7 +720,7 @@ public sealed unsafe partial class LuauState : ILuauValueState
         return true;
     }
 
-    public void NewFunction(LuaFunc<LuauState> func, int upvalueCount)
+    public unsafe void NewFunction(LuaFunc func, int upvalueCount)
     {
         [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
         static int Fn(lua_State* L)
@@ -756,7 +776,7 @@ public sealed unsafe partial class LuauState : ILuauValueState
         NativeMethods.lua_pushcclosurek(ptr, &Fn, null, upvalueCount + 1, null!);
     }
 
-    public void NewFunction(AsyncLuaFunc<LuauState> func, int upvalueCount)
+    public unsafe void NewFunction(AsyncLuaFunc func, int upvalueCount)
     {
         [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
         static int AsyncCFn(lua_State* L)
@@ -838,7 +858,7 @@ public sealed unsafe partial class LuauState : ILuauValueState
 
     static readonly byte[]?[] arithBytecodeCache = new byte[(int)LuaArithmeticOperator.Shr + 1][];
 
-    public void Arith(LuaArithmeticOperator op)
+    public unsafe void Arith(LuaArithmeticOperator op)
     {
         CheckDisposed();
         if (TryArithBit32(op))
@@ -939,7 +959,7 @@ public sealed unsafe partial class LuauState : ILuauValueState
         CheckResult(callResult);
     }
 
-    bool TryArithBit32(LuaArithmeticOperator op)
+    unsafe bool TryArithBit32(LuaArithmeticOperator op)
     {
         static int NormalizeShiftCount(long value) => (int)(value & 31);
 
@@ -997,7 +1017,7 @@ public sealed unsafe partial class LuauState : ILuauValueState
         }
     }
 
-    public void Compare(LuaComparisonOperator op)
+    public unsafe void Compare(LuaComparisonOperator op)
     {
         CheckDisposed();
         var nativeOp = op switch
@@ -1010,13 +1030,13 @@ public sealed unsafe partial class LuauState : ILuauValueState
         CheckResult(NativeMethods.nulua_pcompare(ptr, nativeOp));
     }
 
-    public void Len(int index)
+    public unsafe void Len(int index)
     {
         CheckDisposed();
         CheckResult(NativeMethods.nulua_plen(ptr, index));
     }
 
-    public void Call(int argCount, int returnCount)
+    public unsafe void Call(int argCount, int returnCount)
     {
         CheckDisposed();
         ProcessPendingUnrefs();
@@ -1024,14 +1044,14 @@ public sealed unsafe partial class LuauState : ILuauValueState
         CheckResult(result);
     }
 
-    public void Next(int index)
+    public unsafe void Next(int index)
     {
         CheckDisposed();
         int hasNext;
         CheckResult(NativeMethods.nulua_pnext(ptr, index, &hasNext));
     }
 
-    public LuaValueType RawGet(int index)
+    public unsafe LuaValueType RawGet(int index)
     {
         CheckDisposed();
         NativeMethods.lua_rawget(ptr, index);
@@ -1039,20 +1059,20 @@ public sealed unsafe partial class LuauState : ILuauValueState
         return CodeToType(t);
     }
 
-    public int RawLen(int index)
+    public unsafe int RawLen(int index)
     {
         CheckDisposed();
         return NativeMethods.lua_objlen(ptr, index);
     }
 
-    public void Resume(int argCount)
+    public unsafe void Resume(int argCount)
     {
         CheckDisposed();
         var result = NativeMethods.lua_resume(ptr, from == null ? null : from.ptr, argCount);
         CheckResult(result);
     }
 
-    internal int RunResumeStep(int argCount)
+    internal unsafe int RunResumeStep(int argCount)
     {
         var status = NativeMethods.lua_resume(ptr, from == null ? null : from.ptr, argCount);
         if (status != LUA_OK && status != LUA_YIELD)
@@ -1066,7 +1086,7 @@ public sealed unsafe partial class LuauState : ILuauValueState
         return status;
     }
 
-    public LuaReference Ref(int index)
+    public unsafe LuaReference Ref(int index)
     {
         CheckDisposed();
         // Reclaim references deferred by finalizers (LuaObject.Dispose → EnqueueUnref) so the
@@ -1085,12 +1105,12 @@ public sealed unsafe partial class LuauState : ILuauValueState
         }
         if (index == NativeMethods.LUA_REGISTRYINDEX)
         {
-            this.Pop(1);
+            Pop(1);
         }
         return new LuaReference(refId, NativeMethods.LUA_REGISTRYINDEX);
     }
 
-    public void Unref(LuaReference reference)
+    public unsafe void Unref(LuaReference reference)
     {
         CheckDisposed();
         NativeMethods.lua_unref(ptr, reference.Id);
@@ -1114,7 +1134,7 @@ public sealed unsafe partial class LuauState : ILuauValueState
     /// VM); done automatically at the start of Call/LoadString/LoadBuffer. Call explicitly after a
     /// batch of work to reclaim the registry before the next script execution.
     /// </summary>
-    public void ProcessPendingUnrefs()
+    public unsafe void ProcessPendingUnrefs()
     {
         if (IsDisposed)
         {
@@ -1163,4 +1183,684 @@ public sealed unsafe partial class LuauState : ILuauValueState
 
         return values.Length;
     }
+
+    #region LuaModuleExtensions
+
+    
+    const string FallbackCacheKey = "_NULUA_MODULES";
+
+    public void UseModuleLoader(LuaModuleLoader loader)
+    {
+        if (TryRegisterSearcher(loader))
+        {
+            return;
+        }
+
+        UseRequireReplacement(loader);
+    }
+
+    bool TryRegisterSearcher(LuaModuleLoader loader)
+    {
+        var baseTop = GetTop();
+        GetGlobal("package");
+        if (GetType(-1) != LuaValueType.Table)
+        {
+            SetTop(baseTop);
+            return false;
+        }
+
+        GetField(-1, "searchers");
+        if (GetType(-1) != LuaValueType.Table)
+        {
+            SetTop(GetTop() - 1);
+            GetField(-1, "loaders");
+            if (GetType(-1) != LuaValueType.Table)
+            {
+                SetTop(baseTop);
+                return false;
+            }
+        }
+
+        PushValue(-1);
+        var searchersRef = Ref();
+        SetTop(baseTop);
+
+        var searchers = new LuaTable(this, searchersRef);
+
+        try
+        {
+            using var searcher = CreateFunction(
+                (lua, args) =>
+                {
+                    var name = args[0].Read<string>();
+                    if (!loader.TryLoad(lua, name))
+                    {
+                        lua.PushString($"\n\tno module '{name}' from custom loader");
+                        return 1;
+                    }
+
+                    var moduleValue = lua.ToLuaValue(-1);
+                    lua.NewFunction(
+                        (inner, _) =>
+                        {
+                            inner.Push(moduleValue);
+                            // The module is now on the stack (and will be cached in
+                            // package.loaded by require), so the registry reference
+                            // taken by ToLuaValue is no longer needed.
+                            moduleValue.Dispose();
+                            return 1;
+                        },
+                        0
+                    );
+                    return 1;
+                }
+            );
+
+            searchers[searchers.Length + 1] = LuaValue.FromFunction(searcher);
+        }
+        finally
+        {
+            searchers.Dispose();
+        }
+
+        return true;
+    }
+
+    void UseRequireReplacement(LuaModuleLoader loader)
+    {
+        var requireFn = CreateFunction(
+            (lua, args) =>
+            {
+                var name = args[0].Read<string>();
+
+                var cacheValue = lua[FallbackCacheKey];
+                LuaTable cacheTable;
+                if (cacheValue.IsNil)
+                {
+                    cacheTable = lua.CreateTable();
+                    lua[FallbackCacheKey] = cacheTable;
+                }
+                else
+                {
+                    cacheTable = cacheValue.Read<LuaTable>();
+                }
+
+                try
+                {
+                    var cacheKey = loader.ResolveCacheKey(name);
+                    var cached = cacheTable[cacheKey];
+                    if (!cached.IsNil)
+                    {
+                        lua.Push(cached);
+                        // The module is on the stack (and cached in the table), so
+                        // release the temporary registry reference from the getter.
+                        cached.Dispose();
+                        return 1;
+                    }
+
+                    if (!loader.TryLoad(lua, name))
+                    {
+                        throw new LuaException(2, $"module '{name}' not found");
+                    }
+
+                    var moduleValue = lua.ToLuaValue(-1);
+                    cacheTable[cacheKey] = moduleValue;
+                    lua.Push(moduleValue);
+                    // The module is now both cached in `cacheTable` and on the
+                    // stack, so the temporary registry reference can be released.
+                    moduleValue.Dispose();
+                    return 1;
+                }
+                finally
+                {
+                    // `cacheValue` is a per-call temporary wrapper around the
+                    // persistent `_NULUA_MODULES` table (which stays alive as a
+                    // global); release its registry reference. No-op when the
+                    // cache table was freshly created (cacheValue is nil).
+                    cacheValue.Dispose();
+                }
+            }
+        );
+
+        this["require"] = requireFn;
+    }
+
+    #endregion
+
+    #region LuaStateExtensions
+
+    public void PushString(ReadOnlySpan<char> str)
+    {
+        using var strBytes = new CString(str);
+        PushString(strBytes.AsSpan());
+    }
+
+    public LuaValue Pop()
+    {
+        var top = GetTop();
+
+        if (top == 0)
+        {
+            throw new InvalidOperationException("Stack is empty");
+        }
+
+        var value = ToLuaValue(-1);
+        SetTop(top - 1);
+        return value;
+    }
+
+    public void Pop(int count)
+    {
+        var top = GetTop();
+        if ((uint)count > (uint)top)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(count),
+                count,
+                $"Pop count must be between 0 and the current stack size ({top})."
+            );
+        }
+
+        SetTop(top - count);
+    }
+
+    public void Insert(int index)
+    {
+        Rotate(index, 1);
+    }
+
+    public void Remove(int index)
+    {
+        Rotate(index, -1);
+        SetTop(GetTop() - 1);
+    }
+
+    public void Replace(int index)
+    {
+        Copy(-1, index);
+        SetTop(GetTop() - 1);
+    }
+
+    public int GetUpvalueIndex(int index)
+    {
+        if (index <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(index));
+        }
+
+        return UpvalueIndexBase - index;
+    }
+
+    public LuaReference ToReference(int index)
+    {
+        PushValue(index);
+        var reference = Ref();
+        Pop(1);
+        return reference;
+    }
+
+    public LuaTable ToTable(int index)
+    {
+        if (GetType(index) != LuaValueType.Table)
+        {
+            throw new InvalidOperationException("Value at the specified index is not a table.");
+        }
+        return new LuaTable(this, ToReference(index));
+    }
+
+    public LuaUserData ToUserData(int index)
+    {
+        if (GetType(index) != LuaValueType.UserData)
+        {
+            throw new InvalidOperationException("Value at the specified index is not user data.");
+        }
+        return new LuaUserData(this, ToReference(index));
+    }
+
+    public LuaReference Ref()
+    {
+        return Ref(RegistryIndex);
+    }
+
+    public LuaValue Add(LuaValue a, LuaValue b)
+    {
+        Push(a);
+        Push(b);
+        Arith(LuaArithmeticOperator.Add);
+        return Pop();
+    }
+
+    public LuaValue Sub(LuaValue a, LuaValue b)
+    {
+        Push(a);
+        Push(b);
+        Arith(LuaArithmeticOperator.Sub);
+        return Pop();
+    }
+
+    public LuaValue Mul(LuaValue a, LuaValue b)
+    {
+        Push(a);
+        Push(b);
+        Arith(LuaArithmeticOperator.Mul);
+        return Pop();
+    }
+
+    public LuaValue Div(LuaValue a, LuaValue b)
+    {
+        Push(a);
+        Push(b);
+        Arith(LuaArithmeticOperator.Div);
+        return Pop();
+    }
+
+    public LuaValue IDiv(LuaValue a, LuaValue b)
+    {
+        Push(a);
+        Push(b);
+        Arith(LuaArithmeticOperator.IDiv);
+        return Pop();
+    }
+
+    public LuaValue Mod(LuaValue a, LuaValue b)
+    {
+        Push(a);
+        Push(b);
+        Arith(LuaArithmeticOperator.Mod);
+        return Pop();
+    }
+
+    public LuaValue Pow(LuaValue a, LuaValue b)
+    {
+        Push(a);
+        Push(b);
+        Arith(LuaArithmeticOperator.Pow);
+        return Pop();
+    }
+
+    public LuaValue Unm(LuaValue a)
+    {
+        Push(a);
+        Arith(LuaArithmeticOperator.Unm);
+        return Pop();
+    }
+
+    public LuaValue BNot(LuaValue a)
+    {
+        Push(a);
+        Arith(LuaArithmeticOperator.BNot);
+        return Pop();
+    }
+
+    public LuaValue BAnd(LuaValue a, LuaValue b)
+    {
+        Push(a);
+        Push(b);
+        Arith(LuaArithmeticOperator.BAnd);
+        return Pop();
+    }
+
+    public LuaValue BOr(LuaValue a, LuaValue b)
+    {
+        Push(a);
+        Push(b);
+        Arith(LuaArithmeticOperator.BOr);
+        return Pop();
+    }
+
+    public LuaValue BXor(LuaValue a, LuaValue b)
+    {
+        Push(a);
+        Push(b);
+        Arith(LuaArithmeticOperator.BXor);
+        return Pop();
+    }
+
+    public LuaValue Shl(LuaValue a, LuaValue b)
+    {
+        Push(a);
+        Push(b);
+        Arith(LuaArithmeticOperator.Shl);
+        return Pop();
+    }
+
+    public LuaValue Shr(LuaValue a, LuaValue b)
+    {
+        Push(a);
+        Push(b);
+        Arith(LuaArithmeticOperator.Shr);
+        return Pop();
+    }
+
+    public LuaValue Len(LuaValue a)
+    {
+        Push(a);
+        Len(-1);
+        return Pop();
+    }
+
+    public LuaValue Concat(params ReadOnlySpan<LuaValue> values)
+    {
+        foreach (var value in values)
+        {
+            Push(value);
+        }
+        Concat(values.Length);
+        return Pop();
+    }
+
+    public bool Equals(LuaValue a, LuaValue b)
+    {
+        Push(a);
+        Push(b);
+        Compare(LuaComparisonOperator.Equal);
+        return ToBoolean(-1);
+    }
+
+    public bool LessThan(LuaValue a, LuaValue b)
+    {
+        Push(a);
+        Push(b);
+        Compare(LuaComparisonOperator.Less);
+        return ToBoolean(-1);
+    }
+
+    public bool LessThanOrEqual(LuaValue a, LuaValue b)
+    {
+        Push(a);
+        Push(b);
+        Compare(LuaComparisonOperator.LessOrEqual);
+        return ToBoolean(-1);
+    }
+
+    public LuaTable CreateTable(int initialArraySize = 0,
+        int initialRecordsSize = 0
+    )
+    {
+        NewTable(initialArraySize, initialRecordsSize);
+        return new LuaTable(this, Ref());
+    }
+
+    public LuaUserData CreateUserData(int size, int userValueCount = 1)
+    {
+        NewUserData(size, userValueCount);
+        return new LuaUserData(this, Ref());
+    }
+
+    public LuaFunction CreateFunction(LuaFunc function,
+        int upvalueCount = 0
+    )
+    {
+        NewFunction(function, upvalueCount);
+        return new LuaFunction(this, Ref());
+    }
+
+    public void RegisterFunction(ReadOnlySpan<char> name,
+        LuaFunc function,
+        int upvalueCount = 0
+    )
+    {
+        NewFunction(function, upvalueCount);
+        SetGlobal(name);
+    }
+
+    public LuauState CreateThread()
+    {
+        NewThread();
+        return ToThread(-1);
+    }
+
+    public int Call(LuaFunction function,
+        params ReadOnlySpan<LuaValue> args
+    )
+    {
+        var baseTop = GetTop();
+        PushValue(function.Reference);
+        foreach (var arg in args)
+        {
+            Push(arg);
+        }
+        Call(args.Length, -1);
+        return GetTop() - baseTop;
+    }
+
+    public ValueTask<int> CallAsync(LuaFunction function,
+        LuaValue[] args,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return CallAsync(function, args.AsMemory(), cancellationToken);
+    }
+
+    public async ValueTask<int> CallAsync(LuaFunction function,
+        ReadOnlyMemory<LuaValue> args,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var baseTop = GetTop();
+        PushValue(function.Reference);
+        var span = args.Span;
+        for (int i = 0; i < span.Length; i++)
+        {
+            Push(span[i]);
+        }
+        await CallAsync(args.Length, -1, cancellationToken).ConfigureAwait(false);
+        return GetTop() - baseTop;
+    }
+
+    public LuaValue[] Resume(params ReadOnlySpan<LuaValue> args)
+    {
+        foreach (var arg in args)
+        {
+            Push(arg);
+        }
+        Resume(args.Length);
+
+        var resultCount = GetTop();
+        var results = new LuaValue[resultCount];
+        for (int i = 0; i < resultCount; i++)
+        {
+            results[i] = ToLuaValue(i + 1);
+        }
+        SetTop(0);
+        return results;
+    }
+
+    public LuaValue[] DoString(ReadOnlySpan<char> code,
+        ReadOnlySpan<LuaValue> args = default
+    )
+    {
+        var baseTop = GetTop();
+
+        LoadString(code, "chunk");
+        for (int i = 0; i < args.Length; i++)
+        {
+            Push(args[i]);
+        }
+        Call(args.Length, -1);
+
+        var currentTop = GetTop();
+        var returnCount = currentTop - baseTop;
+
+        var results = new LuaValue[returnCount];
+        for (int i = 0; i < returnCount; i++)
+        {
+            results[i] = ToLuaValue(baseTop + 1 + i);
+        }
+        SetTop(baseTop);
+
+        return results;
+    }
+
+    public byte[] Dump(int index, bool strip)
+    {
+        var buffer = ArrayPool<byte>.Shared.Rent(1024);
+        try
+        {
+            while (true)
+            {
+                if (TryDump(index, strip, buffer, out var bytesWritten))
+                {
+                    return buffer.AsSpan(0, bytesWritten).ToArray();
+                }
+                var newBuffer = ArrayPool<byte>.Shared.Rent(buffer.Length * 2);
+                Array.Copy(buffer, newBuffer, buffer.Length);
+                ArrayPool<byte>.Shared.Return(buffer);
+                buffer = newBuffer;
+            }
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
+        }
+    }
+
+    #endregion
+
+    #region LuaAsyncStateExtensions
+    
+    public LuaFunction CreateFunction(
+        AsyncLuaFunc function,
+        int upvalueCount = 0
+    )
+    {
+        NewFunction(function, upvalueCount);
+        return new LuaFunction(this, Ref());
+    }
+
+    public void RegisterFunction(
+        ReadOnlySpan<char> name,
+        AsyncLuaFunc function,
+        int upvalueCount = 0
+    )
+    {
+        NewFunction(function, upvalueCount);
+        SetGlobal(name);
+    }
+
+    public ValueTask CallAsync(
+        int argCount,
+        int resultCount,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var co = CreateThread();
+        Pop(1);
+        XMove(co, argCount + 1);
+        return RunAndPushAsync(co, argCount, resultCount, cancellationToken);
+    }
+
+    public ValueTask<LuaValue[]> ResumeAsync(
+        LuaValue[] args,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return ResumeAsync(args.AsMemory(), cancellationToken);
+    }
+
+    public async ValueTask<LuaValue[]> ResumeAsync(
+        ReadOnlyMemory<LuaValue> args,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var span = args.Span;
+        for (int i = 0; i < span.Length; i++)
+        {
+            Push(span[i]);
+        }
+        await ResumeAsync(args.Length, cancellationToken).ConfigureAwait(false);
+
+        var resultCount = GetTop();
+        var results = new LuaValue[resultCount];
+        for (int i = 0; i < resultCount; i++)
+        {
+            results[i] = ToLuaValue(i + 1);
+        }
+        SetTop(0);
+        return results;
+    }
+
+    public ValueTask<LuaValue[]> DoStringAsync(
+        ReadOnlySpan<char> code,
+        ReadOnlyMemory<LuaValue> args = default,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var co = CreateThread();
+        Pop(1);
+        co.LoadString(code, "chunk");
+        var span = args.Span;
+        for (int i = 0; i < span.Length; i++)
+        {
+            co.Push(span[i]);
+        }
+        return co.RunAndCollectAsync(args.Length, cancellationToken);
+    }
+
+    async ValueTask RunAndPushAsync(
+        LuauState co,
+        int argCount,
+        int resultCount,
+        CancellationToken cancellationToken
+    )
+    {
+        try
+        {
+            await co.ResumeAsync(argCount, cancellationToken).ConfigureAwait(false);
+            int actual = co.GetTop();
+            if (resultCount < 0)
+            {
+                if (actual > 0)
+                    co.XMove(this, actual);
+            }
+            else if (actual >= resultCount)
+            {
+                co.SetTop(resultCount);
+                if (resultCount > 0)
+                    co.XMove(this, resultCount);
+            }
+            else
+            {
+                if (actual > 0)
+                    co.XMove(this, actual);
+                for (int i = 0; i < resultCount - actual; i++)
+                {
+                    PushNil();
+                }
+            }
+        }
+        finally
+        {
+            co.Dispose();
+        }
+    }
+
+    async ValueTask<LuaValue[]> RunAndCollectAsync(
+        int initialArgCount,
+        CancellationToken cancellationToken
+    )
+    {
+        try
+        {
+            await ResumeAsync(initialArgCount, cancellationToken).ConfigureAwait(false);
+            int top = GetTop();
+            if (top == 0)
+            {
+                return [];
+            }
+            var results = new LuaValue[top];
+            for (int i = 0; i < top; i++)
+            {
+                results[i] = ToLuaValue(i + 1);
+            }
+            SetTop(0);
+            return results;
+        }
+        finally
+        {
+            Dispose();
+        }
+    }
+
+    #endregion
 }

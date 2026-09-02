@@ -1,14 +1,15 @@
+using NuLua.Luau;
+
 namespace NuLua;
 
-public delegate int LuaFunc<TState>(TState state, LuaFuncArguments args)
-    where TState : ILuaState;
+public delegate int LuaFunc(LuauState state, LuaFuncArguments args);
 
 public readonly struct LuaFuncArguments
 {
-    readonly ILuaState state;
+    readonly LuauState state;
     readonly int len;
 
-    public LuaFuncArguments(ILuaState state, int len)
+    public LuaFuncArguments(LuauState state, int len)
     {
         this.state = state;
         this.len = len;

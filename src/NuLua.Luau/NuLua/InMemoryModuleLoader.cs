@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using NuLua.Luau;
 
 namespace NuLua;
 
@@ -10,7 +11,7 @@ public sealed class InMemoryModuleLoader(
     readonly IReadOnlyDictionary<string, string> modules = modules;
     readonly IReadOnlyDictionary<string, string>? aliases = aliases;
 
-    protected override bool TryLoadModule(ILuaState state, string fullPath, string requireArgument)
+    protected override bool TryLoadModule(LuauState state, string fullPath, string requireArgument)
     {
         if (!modules.TryGetValue(fullPath, out var source))
         {

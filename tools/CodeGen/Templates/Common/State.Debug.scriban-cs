@@ -14,7 +14,7 @@ public sealed unsafe partial class {{ name }}State
     LuaHook? nonGenericHookDelegate;
     NativeMethods.lua_sethook_func_delegate? hookCallback;
 
-    int ILuaDebug.GetStackDepth()
+    public int GetStackDepth()
     {
         CheckDisposed();
         lua_Debug ar;
@@ -26,7 +26,7 @@ public sealed unsafe partial class {{ name }}State
         return depth;
     }
 
-    bool ILuaDebug.TryGetStackInfo(int level, LuaDebugInfoFields fields, out LuaDebugInfo info)
+    public bool TryGetStackInfo(int level, LuaDebugInfoFields fields, out LuaDebugInfo info)
     {
         CheckDisposed();
         lua_Debug ar;
@@ -39,7 +39,7 @@ public sealed unsafe partial class {{ name }}State
         return true;
     }
 
-    string? ILuaDebug.GetLocal(int level, int n)
+    public string? GetLocal(int level, int n)
     {
         CheckDisposed();
         lua_Debug ar;
@@ -51,7 +51,7 @@ public sealed unsafe partial class {{ name }}State
         return name == null ? null : Utf8NullTerminated(name);
     }
 
-    string? ILuaDebug.SetLocal(int level, int n)
+    public string? SetLocal(int level, int n)
     {
         CheckDisposed();
         lua_Debug ar;
@@ -63,14 +63,14 @@ public sealed unsafe partial class {{ name }}State
         return name == null ? null : Utf8NullTerminated(name);
     }
 
-    string? ILuaDebug.GetUpvalue(int funcIndex, int n)
+    public string? GetUpvalue(int funcIndex, int n)
     {
         CheckDisposed();
         var name = NativeMethods.lua_getupvalue(ptr, funcIndex, n);
         return name == null ? null : Utf8NullTerminated(name);
     }
 
-    string? ILuaDebug.SetUpvalue(int funcIndex, int n)
+    public string? SetUpvalue(int funcIndex, int n)
     {
         CheckDisposed();
         var name = NativeMethods.lua_setupvalue(ptr, funcIndex, n);
@@ -78,27 +78,27 @@ public sealed unsafe partial class {{ name }}State
     }
 {{~ if version >= 502 || is_jit ~}}
 
-    nint ILuaDebug.UpvalueId(int funcIndex, int n)
+    public nint UpvalueId(int funcIndex, int n)
     {
         CheckDisposed();
         return (nint)NativeMethods.lua_upvalueid(ptr, funcIndex, n);
     }
 
-    void ILuaDebug.UpvalueJoin(int fIdx1, int n1, int fIdx2, int n2)
+    public void UpvalueJoin(int fIdx1, int n1, int fIdx2, int n2)
     {
         CheckDisposed();
         NativeMethods.lua_upvaluejoin(ptr, fIdx1, n1, fIdx2, n2);
     }
 {{~ else ~}}
 
-    nint ILuaDebug.UpvalueId(int funcIndex, int n) =>
+    public nint UpvalueId(int funcIndex, int n) =>
         throw new NotSupportedException("lua_upvalueid is not available on this Lua version.");
 
-    void ILuaDebug.UpvalueJoin(int fIdx1, int n1, int fIdx2, int n2) =>
+    public void UpvalueJoin(int fIdx1, int n1, int fIdx2, int n2) =>
         throw new NotSupportedException("lua_upvaluejoin is not available on this Lua version.");
 {{~ end ~}}
 
-    void ILuaDebug<{{ name }}State>.SetHook(LuaHook<{{ name }}State>? hook, LuaHookMask mask, int count)
+    public void {{ name }}State>.SetHook(LuaHook<{{ name }}State>? hook, LuaHookMask mask, int count)
     {
         CheckDisposed();
         if (hook == null || mask == LuaHookMask.None)
@@ -129,7 +129,7 @@ public sealed unsafe partial class {{ name }}State
 {{~ end ~}}
     }
 
-    void ILuaDebug.SetHook(LuaHook? hook, LuaHookMask mask, int count)
+    public void SetHook(LuaHook? hook, LuaHookMask mask, int count)
     {
         CheckDisposed();
         if (hook == null || mask == LuaHookMask.None)
@@ -162,14 +162,14 @@ public sealed unsafe partial class {{ name }}State
 
     LuaHook<{{ name }}State>? ILuaDebug<{{ name }}State>.GetHook() => hookDelegate;
 
-    LuaHook? ILuaDebug.GetHook()
+    public LuaHook? GetHook()
     {
         if (nonGenericHookDelegate != null) return nonGenericHookDelegate;
         var typed = hookDelegate;
         return typed == null ? null : (s, ev, line) => typed(({{ name }}State)s, ev, line);
     }
 
-    LuaHookMask ILuaDebug.GetHookMask()
+    public LuaHookMask GetHookMask()
     {
         CheckDisposed();
         var mask = NativeMethods.lua_gethookmask(ptr);
@@ -181,7 +181,7 @@ public sealed unsafe partial class {{ name }}State
         return result;
     }
 
-    int ILuaDebug.GetHookCount()
+    public int GetHookCount()
     {
         CheckDisposed();
         return NativeMethods.lua_gethookcount(ptr);

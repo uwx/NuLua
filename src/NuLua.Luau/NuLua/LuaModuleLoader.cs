@@ -1,10 +1,11 @@
 using System.Diagnostics.CodeAnalysis;
+using NuLua.Luau;
 
 namespace NuLua;
 
 public abstract class LuaModuleLoader
 {
-    public bool TryLoad(ILuaState state, string argument)
+    public bool TryLoad(LuauState state, string argument)
     {
         var fullPath = AliasToPath(argument);
         var baseTop = state.GetTop();
@@ -38,7 +39,7 @@ public abstract class LuaModuleLoader
 
     internal string ResolveCacheKey(string argument) => GetCacheKey(AliasToPath(argument));
 
-    protected abstract bool TryLoadModule(ILuaState state, string fullPath, string requireArgument);
+    protected abstract bool TryLoadModule(LuauState state, string fullPath, string requireArgument);
 
     protected abstract bool TryGetAliasPath(string alias, [NotNullWhen(true)] out string? path);
 

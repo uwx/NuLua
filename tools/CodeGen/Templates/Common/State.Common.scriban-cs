@@ -10,12 +10,12 @@ using NuLua.Interop.{{ name }};
 
 namespace NuLua.{{ name }};
 
-public sealed unsafe partial class {{ name }}State : ILuaState<{{ name }}State>, ILuaDebug<{{ name }}State>, ILuaGarbageCollection
+public sealed unsafe partial class {{ name }}State
 {
     static readonly ConcurrentDictionary<nint, {{ name }}State> ptrToState = new();
 
-    readonly List<LuaFunc<{{ name }}State>> funcs = new(8);
-    readonly List<AsyncLuaFunc<{{ name }}State>> asyncFuncs = new(8);
+    readonly List<LuaFunc> funcs = new(8);
+    readonly List<AsyncLuaFunc> asyncFuncs = new(8);
     readonly List<{{ name }}State> childStates = new(4);
     readonly LuaReference reference;
     readonly {{ name }}State? from;
@@ -25,8 +25,7 @@ public sealed unsafe partial class {{ name }}State : ILuaState<{{ name }}State>,
     bool hasPendingTask;
     CancellationToken asyncCancellationToken;
 
-    {{ name }}State? ILuaState<{{ name }}State>.From => from;
-    ILuaState? ILuaState.From => from;
+    public {{ name }}State? From => from;
 
     {{ name }}State(lua_State* ptr, {{ name }}State? from, LuaReference reference)
     {
@@ -63,8 +62,6 @@ public sealed unsafe partial class {{ name }}State : ILuaState<{{ name }}State>,
     }
 
     public lua_State* AsPointer() => ptr;
-
-    nint ILuaState.AsPointer() => (nint)ptr;
 
     public LuaReference Reference => reference;
 
@@ -237,7 +234,6 @@ public sealed unsafe partial class {{ name }}State : ILuaState<{{ name }}State>,
         }
     }
 
-    ILuaState ILuaState.ToThread(int index) => ToThread(index);
 {{~ if name != "Luau" ~}}
 
     public LuaValue ToLuaValue(int index)
@@ -357,19 +353,6 @@ public sealed unsafe partial class {{ name }}State : ILuaState<{{ name }}State>,
         NativeMethods.lua_xmove(ptr, target.ptr, count);
     }
 
-    void ILuaState.XMove(ILuaState target, int count)
-    {
-        if (target is not {{ name }}State typedTarget)
-        {
-            throw new ArgumentException(
-                "Source and target states must use the same Lua runtime.",
-                nameof(target)
-            );
-        }
-
-        XMove(typedTarget, count);
-    }
-
     public void NewTable(int initialArraySize = 0, int initialRecordsSize = 0)
     {
         CheckDisposed();
@@ -455,16 +438,7 @@ public sealed unsafe partial class {{ name }}State : ILuaState<{{ name }}State>,
         return NativeMethods.luaL_newmetatable(ptr, cName.Pointer) != 0;
     }
 
-{{~ if name == "Luau" ~}}
-    public ILuauDebug Debug => this;
-    ILuaDebug<LuauState> ILuaState<LuauState>.Debug => this;
-{{~ else ~}}
-    public ILuaDebug<{{ name }}State> Debug => this;
-{{~ end ~}}
-    ILuaDebug ILuaState.Debug => this;
-    public ILuaGarbageCollection GarbageCollection => this;
-
-    void ILuaGarbageCollection.Stop()
+    public void GcStop()
     {
         CheckDisposed();
 {{~ if name == "Luau" ~}}
@@ -477,7 +451,7 @@ public sealed unsafe partial class {{ name }}State : ILuaState<{{ name }}State>,
 {{~ end ~}}
     }
 
-    void ILuaGarbageCollection.Restart()
+    public void GcRestart()
     {
         CheckDisposed();
 {{~ if name == "Luau" ~}}
@@ -489,7 +463,7 @@ public sealed unsafe partial class {{ name }}State : ILuaState<{{ name }}State>,
 {{~ end ~}}
     }
 
-    void ILuaGarbageCollection.Collect()
+    public void GcCollect()
     {
         CheckDisposed();
 {{~ if name == "Luau" ~}}
@@ -501,7 +475,7 @@ public sealed unsafe partial class {{ name }}State : ILuaState<{{ name }}State>,
 {{~ end ~}}
     }
 
-    int ILuaGarbageCollection.Step(int stepSize)
+    public int GcStep(int stepSize)
     {
         CheckDisposed();
 {{~ if name == "Luau" ~}}
@@ -511,7 +485,7 @@ public sealed unsafe partial class {{ name }}State : ILuaState<{{ name }}State>,
 {{~ end ~}}
     }
 
-    long ILuaGarbageCollection.GetByteCount()
+    public long GcGetByteCount()
     {
         CheckDisposed();
 {{~ if name == "Luau" ~}}
@@ -527,7 +501,7 @@ public sealed unsafe partial class {{ name }}State : ILuaState<{{ name }}State>,
         return (long)kb * 1024L + b;
     }
 
-    bool ILuaGarbageCollection.IsRunning()
+    public bool GcIsRunning()
     {
         CheckDisposed();
 {{~ if name == "Luau" ~}}
@@ -543,7 +517,7 @@ public sealed unsafe partial class {{ name }}State : ILuaState<{{ name }}State>,
 {{~ end ~}}
     }
 
-    ValueTask ILuaState.ResumeAsync(int argCount, CancellationToken cancellationToken)
+    public ValueTask ResumeAsync(int argCount, CancellationToken cancellationToken)
     {
         CheckDisposed();
         return {{ name }}AsyncDriver.ResumeAsync(this, argCount, cancellationToken);
