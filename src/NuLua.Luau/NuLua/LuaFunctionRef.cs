@@ -2,14 +2,14 @@ using NuLua.Luau;
 
 namespace NuLua;
 
-public sealed class LuaFunction(LuauState state, LuaReference reference) : LuaObject(state, reference)
+public sealed class LuaFunctionRef(LuauState state, LuaReference reference) : LuaObjectRef(state, reference)
 {
     readonly LuauState state = state;
 
-    public LuaValue[] Invoke(params ReadOnlySpan<LuaValue> args)
+    public LuaRefValue[] Invoke(params ReadOnlySpan<LuaRefValue> args)
     {
         var resultCount = state.Call(this, args);
-        var results = new LuaValue[resultCount];
+        var results = new LuaRefValue[resultCount];
         for (int i = 0; i < resultCount; i++)
         {
             results[i] = state.ToLuaValue(-resultCount + i);
@@ -18,13 +18,13 @@ public sealed class LuaFunction(LuauState state, LuaReference reference) : LuaOb
         return results;
     }
 
-    public async ValueTask<LuaValue[]> InvokeAsync(
-        ReadOnlyMemory<LuaValue> args,
+    public async ValueTask<LuaRefValue[]> InvokeAsync(
+        ReadOnlyMemory<LuaRefValue> args,
         CancellationToken cancellationToken = default
     )
     {
         var resultCount = await state.CallAsync(this, args, cancellationToken);
-        var results = new LuaValue[resultCount];
+        var results = new LuaRefValue[resultCount];
         for (int i = 0; i < resultCount; i++)
         {
             results[i] = state.ToLuaValue(-resultCount + i);

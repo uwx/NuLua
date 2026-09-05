@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -18,8 +19,11 @@ public struct PrimitiveValueValue
     public byte Value;
 }
 
+/// <summary>
+/// Represents a Lua primitive value or a Lua value tracked by <see cref="LuauState.Ref()"/>.
+/// </summary>
 [StructLayout(LayoutKind.Auto)]
-public readonly struct LuaValue : IEquatable<LuaValue>, IDisposable
+public readonly struct LuaRefValue : IEquatable<LuaRefValue>, IDisposable
 {
     [StructLayout(LayoutKind.Explicit)]
     struct ValueUnion
@@ -51,44 +55,44 @@ public readonly struct LuaValue : IEquatable<LuaValue>, IDisposable
     /// </summary>
     public const int PrimitiveIdLimit = 16;
 
-    public static LuaValue Nil => default;
+    public static LuaRefValue Nil => default;
 
-    public static LuaValue FromNumber(double value)
+    public static LuaRefValue FromNumber(double value)
     {
         return new(LuaValueType.Number, new() { NumberValue = value }, null);
     }
 
-    public static LuaValue FromBoolean(bool value)
+    public static LuaRefValue FromBoolean(bool value)
     {
         return new(LuaValueType.Boolean, new() { BooleanValue = value }, null);
     }
 
-    public static LuaValue FromString(string value)
+    public static LuaRefValue FromString(string value)
     {
         return new(LuaValueType.String, default, value);
     }
 
-    public static LuaValue FromLightUserData(IntPtr value)
+    public static LuaRefValue FromLightUserData(IntPtr value)
     {
         return new(LuaValueType.LightUserData, new() { PointerValue = value }, null);
     }
 
-    public static LuaValue FromUserData(LuaUserData value)
+    public static LuaRefValue FromUserData(LuaUserDataRef value)
     {
         return new(LuaValueType.UserData, default, value);
     }
 
-    public static LuaValue FromVector(Vector3 value)
+    public static LuaRefValue FromVector(Vector3 value)
     {
         return new(LuaValueType.Vector, new() { VectorValue = value }, null);
     }
 
-    public static LuaValue FromPrimitive<T>(T payload) where T : unmanaged, IPrimitive
+    public static LuaRefValue FromPrimitive<T>(T payload) where T : unmanaged, IPrimitive
     {
         return FromPrimitive(T.PrimitiveId, payload);
     }
 
-    public static unsafe LuaValue FromPrimitive<T>(int id, T payload) where T : unmanaged
+    public static unsafe LuaRefValue FromPrimitive<T>(int id, T payload) where T : unmanaged
     {
         if (id < 0 || id >= PrimitiveIdLimit)
         {
@@ -110,7 +114,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>, IDisposable
         return new(LuaValueType.Primitive, new() { Primitive = new PrimitiveValue() { Id = id, Primitive = value } }, null);
     }
 
-    public static LuaValue FromPrimitive(int id, ReadOnlySpan<byte> payload)
+    public static LuaRefValue FromPrimitive(int id, ReadOnlySpan<byte> payload)
     {
         if (id < 0 || id >= PrimitiveIdLimit)
         {
@@ -132,32 +136,32 @@ public readonly struct LuaValue : IEquatable<LuaValue>, IDisposable
         return new(LuaValueType.Primitive, new() { Primitive = new PrimitiveValue() { Id = id, Primitive = value } }, null);
     }
 
-    public static LuaValue FromTable(LuaTable value)
+    public static LuaRefValue FromTable(LuaTableRef value)
     {
         return new(LuaValueType.Table, default, value);
     }
 
-    public static LuaValue FromFunction(LuaFunction value)
+    public static LuaRefValue FromFunction(LuaFunctionRef value)
     {
         return new(LuaValueType.Function, default, value);
     }
 
-    public static LuaValue FromThread(LuauState value)
+    public static LuaRefValue FromThread(LuauState value)
     {
         return new(LuaValueType.Thread, default, value);
     }
 
-    public static LuaValue FromBuffer(ILuaObject value)
+    public static LuaRefValue FromBuffer(ILuaObjectRef value)
     {
         return new(LuaValueType.Buffer, default, value);
     }
 
-    public static LuaValue FromClass(ILuaObject value)
+    public static LuaRefValue FromClass(ILuaObjectRef value)
     {
         return new(LuaValueType.Class, default, value);
     }
 
-    public static LuaValue FromObject(ILuaObject value)
+    public static LuaRefValue FromObject(ILuaObjectRef value)
     {
         return new(LuaValueType.Object, default, value);
     }
@@ -168,7 +172,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>, IDisposable
 
     public LuaValueType Type => type;
 
-    LuaValue(LuaValueType type, ValueUnion value, object? reference)
+    LuaRefValue(LuaValueType type, ValueUnion value, object? reference)
     {
         this.type = type;
         this.value = value;
@@ -182,23 +186,23 @@ public readonly struct LuaValue : IEquatable<LuaValue>, IDisposable
             LuaValueType.Nil => "nil",
             LuaValueType.Boolean => value.BooleanValue ? "true" : "false",
             LuaValueType.LightUserData => $"lightuserdata: 0x{value.PointerValue:X}",
-            LuaValueType.Number => value.NumberValue.ToString(),
+            LuaValueType.Number => value.NumberValue.ToString(CultureInfo.InvariantCulture),
             LuaValueType.Vector => VectorToString(value.VectorValue),
             LuaValueType.Primitive => $"primitive {value.Primitive.Id}",
             LuaValueType.String => ((string)reference!).ToString()!,
-            LuaValueType.Table => ((LuaTable)reference!).ToString()!,
-            LuaValueType.Function => ((LuaFunction)reference!).ToString()!,
-            LuaValueType.UserData => ((LuaUserData)reference!).ToString()!,
+            LuaValueType.Table => ((LuaTableRef)reference!).ToString()!,
+            LuaValueType.Function => ((LuaFunctionRef)reference!).ToString()!,
+            LuaValueType.UserData => ((LuaUserDataRef)reference!).ToString()!,
             LuaValueType.Thread => ((LuauState)reference!).ToString()!,
-            LuaValueType.Buffer => ((ILuaObject)reference!).ToString()!,
-            LuaValueType.Class => ((ILuaObject)reference!).ToString()!,
-            LuaValueType.Object => ((ILuaObject)reference!).ToString()!,
+            LuaValueType.Buffer => ((ILuaObjectRef)reference!).ToString()!,
+            LuaValueType.Class => ((ILuaObjectRef)reference!).ToString()!,
+            LuaValueType.Object => ((ILuaObjectRef)reference!).ToString()!,
             _ => "",
         };
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    static string VectorToString(Vector3 vector)
+    internal static string VectorToString(Vector3 vector)
     {
         return $"{vector.X}, {vector.Y}, {vector.Z}";
     }
@@ -314,10 +318,10 @@ public readonly struct LuaValue : IEquatable<LuaValue>, IDisposable
 
     public bool TryRead<T>([NotNullWhen(true)] out T? result)
     {
-        if (typeof(T) == typeof(LuaValue))
+        if (typeof(T) == typeof(LuaRefValue))
         {
             var r = this;
-            result = Unsafe.As<LuaValue, T>(ref r)!;
+            result = Unsafe.As<LuaRefValue, T>(ref r)!;
             return true;
         }
 
@@ -345,21 +349,21 @@ public readonly struct LuaValue : IEquatable<LuaValue>, IDisposable
                 }
                 break;
             case LuaValueType.UserData:
-                if (typeof(T) == typeof(LuaUserData))
+                if (typeof(T) == typeof(LuaUserDataRef))
                 {
-                    var r = (LuaUserData)reference!;
-                    result = Unsafe.As<LuaUserData, T>(ref r)!;
+                    var r = (LuaUserDataRef)reference!;
+                    result = Unsafe.As<LuaUserDataRef, T>(ref r)!;
                     return true;
                 }
-                if (typeof(ILuaObject).IsAssignableFrom(typeof(T)))
+                if (typeof(ILuaObjectRef).IsAssignableFrom(typeof(T)))
                 {
-                    var r = (ILuaObject)reference!;
-                    result = Unsafe.As<ILuaObject, T>(ref r)!;
+                    var r = (ILuaObjectRef)reference!;
+                    result = Unsafe.As<ILuaObjectRef, T>(ref r)!;
                     return true;
                 }
-                if (reference is LuaUserData ud)
+                if (reference is LuaUserDataRef ud)
                 {
-                    if (ud.TryRead(out result))
+                    if (ud.TryReadManaged(out result))
                         return true;
                 }
                 break;
@@ -484,41 +488,41 @@ public readonly struct LuaValue : IEquatable<LuaValue>, IDisposable
                 }
                 break;
             case LuaValueType.Table:
-                if (typeof(T) == typeof(LuaTable))
+                if (typeof(T) == typeof(LuaTableRef))
                 {
-                    var r = (LuaTable)reference!;
-                    result = Unsafe.As<LuaTable, T>(ref r)!;
+                    var r = (LuaTableRef)reference!;
+                    result = Unsafe.As<LuaTableRef, T>(ref r)!;
                     return true;
                 }
-                if (typeof(ILuaObject).IsAssignableFrom(typeof(T)))
+                if (typeof(ILuaObjectRef).IsAssignableFrom(typeof(T)))
                 {
-                    var r = (ILuaObject)reference!;
-                    result = Unsafe.As<ILuaObject, T>(ref r)!;
+                    var r = (ILuaObjectRef)reference!;
+                    result = Unsafe.As<ILuaObjectRef, T>(ref r)!;
                     return true;
                 }
                 if (typeof(T) == typeof(object))
                 {
-                    var r = (object)(LuaTable)reference!;
+                    var r = (object)(LuaTableRef)reference!;
                     result = Unsafe.As<object, T>(ref r)!;
                     return true;
                 }
                 break;
             case LuaValueType.Function:
-                if (typeof(T) == typeof(LuaFunction))
+                if (typeof(T) == typeof(LuaFunctionRef))
                 {
-                    var r = (LuaFunction)reference!;
-                    result = Unsafe.As<LuaFunction, T>(ref r)!;
+                    var r = (LuaFunctionRef)reference!;
+                    result = Unsafe.As<LuaFunctionRef, T>(ref r)!;
                     return true;
                 }
-                if (typeof(ILuaObject).IsAssignableFrom(typeof(T)))
+                if (typeof(ILuaObjectRef).IsAssignableFrom(typeof(T)))
                 {
-                    var r = (ILuaObject)reference!;
-                    result = Unsafe.As<ILuaObject, T>(ref r)!;
+                    var r = (ILuaObjectRef)reference!;
+                    result = Unsafe.As<ILuaObjectRef, T>(ref r)!;
                     return true;
                 }
                 if (typeof(T) == typeof(object))
                 {
-                    var r = (object)(LuaFunction)reference!;
+                    var r = (object)(LuaFunctionRef)reference!;
                     result = Unsafe.As<object, T>(ref r)!;
                     return true;
                 }
@@ -530,10 +534,10 @@ public readonly struct LuaValue : IEquatable<LuaValue>, IDisposable
                     result = Unsafe.As<LuauState, T>(ref r)!;
                     return true;
                 }
-                if (typeof(ILuaObject).IsAssignableFrom(typeof(T)))
+                if (typeof(ILuaObjectRef).IsAssignableFrom(typeof(T)))
                 {
-                    var r = (ILuaObject)reference!;
-                    result = Unsafe.As<ILuaObject, T>(ref r)!;
+                    var r = (ILuaObjectRef)reference!;
+                    result = Unsafe.As<ILuaObjectRef, T>(ref r)!;
                     return true;
                 }
                 if (typeof(T) == typeof(object))
@@ -546,10 +550,10 @@ public readonly struct LuaValue : IEquatable<LuaValue>, IDisposable
             case LuaValueType.Buffer:
             case LuaValueType.Class:
             case LuaValueType.Object:
-                if (typeof(ILuaObject).IsAssignableFrom(typeof(T)))
+                if (typeof(ILuaObjectRef).IsAssignableFrom(typeof(T)))
                 {
-                    var r = (ILuaObject)reference!;
-                    result = Unsafe.As<ILuaObject, T>(ref r)!;
+                    var r = (ILuaObjectRef)reference!;
+                    result = Unsafe.As<ILuaObjectRef, T>(ref r)!;
                     return true;
                 }
                 if (typeof(T) == typeof(object))
@@ -565,7 +569,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>, IDisposable
         return false;
     }
 
-    public bool Equals(LuaValue other)
+    public bool Equals(LuaRefValue other)
     {
         if (type != other.type)
             return false;
@@ -588,7 +592,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>, IDisposable
 
     public override bool Equals([NotNullWhen(true)] object? obj)
     {
-        return obj is LuaValue other && Equals(other);
+        return obj is LuaRefValue other && Equals(other);
     }
 
     public override int GetHashCode()
@@ -596,35 +600,53 @@ public readonly struct LuaValue : IEquatable<LuaValue>, IDisposable
         return HashCode.Combine(type, value, reference);
     }
 
-    public static bool operator ==(LuaValue left, LuaValue right)
+    public static bool operator ==(LuaRefValue left, LuaRefValue right)
     {
         return left.Equals(right);
     }
 
-    public static bool operator !=(LuaValue left, LuaValue right)
+    public static bool operator !=(LuaRefValue left, LuaRefValue right)
     {
         return !(left == right);
     }
 
-    public static implicit operator LuaValue(double value) => FromNumber(value);
+    public static implicit operator LuaRefValue(double value) => FromNumber(value);
 
-    public static implicit operator LuaValue(bool value) => FromBoolean(value);
+    public static implicit operator LuaRefValue(bool value) => FromBoolean(value);
 
-    public static implicit operator LuaValue(string value) => FromString(value);
+    public static implicit operator LuaRefValue(string value) => FromString(value);
 
-    public static implicit operator LuaValue(Vector3 value) => FromVector(value);
+    public static implicit operator LuaRefValue(Vector3 value) => FromVector(value);
 
-    public static implicit operator LuaValue(LuaFunction value) => FromFunction(value);
+    public static implicit operator LuaRefValue(LuaFunctionRef value) => FromFunction(value);
 
-    public static implicit operator LuaValue(LuaTable value) => FromTable(value);
+    public static implicit operator LuaRefValue(LuaTableRef value) => FromTable(value);
 
-    public static implicit operator LuaValue(LuaUserData value) => FromUserData(value);
+    public static implicit operator LuaRefValue(LuaUserDataRef value) => FromUserData(value);
 
-    public void Dispose()
+    public LuaRefValue Borrow()
     {
-        if (reference is IDisposable disposable)
+        if (reference is LuaObjectRef referenced)
         {
-            disposable.Dispose();
+            referenced.Borrow();
+        }
+
+        return this;
+    }
+
+    public void Return()
+    {
+        if (reference is LuaObjectRef referenced)
+        {
+            referenced.Return();
+        }
+    }
+
+    void IDisposable.Dispose()
+    {
+        if (reference is LuaObjectRef referenced)
+        {
+            referenced.Return();
         }
     }
 }

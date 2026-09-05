@@ -55,7 +55,7 @@ public enum LuaUserDataMetamethods
 /// C closures that recover the managed object from the userdata's GCHandle and call back into
 /// these methods.
 ///
-/// Dispatch methods receive the <see cref="LuauState"/> and operate on <see cref="LuaValue"/>
+/// Dispatch methods receive the <see cref="LuauState"/> and operate on <see cref="LuaRefValue"/>
 /// directly, so it is up to each implementor how values are marshalled to/from Lua (including
 /// wrapping nested <see cref="ILuaUserData"/> objects as userdata).
 /// </summary>
@@ -67,7 +67,7 @@ public interface ILuaUserData
     /// <see langword="false"/> and Lua yields <c>nil</c>. Use <paramref name="state"/> to marshal
     /// the result (e.g. wrap a nested object as userdata).
     /// </summary>
-    bool TryGetIndex(LuauState state, LuaValue key, out LuaValue value)
+    bool TryGetIndex(LuauState state, LuaRefValue key, out LuaRefValue value)
     {
         value = default;
         return false;
@@ -78,22 +78,22 @@ public interface ILuaUserData
     /// <paramref name="key"/> was set; <see langword="false"/> for read-only or unknown keys.
     /// <paramref name="state"/> is provided for any marshalling the value requires.
     /// </summary>
-    bool TrySetIndex(LuauState state, LuaValue key, LuaValue value)
+    bool TrySetIndex(LuauState state, LuaRefValue key, LuaRefValue value)
     {
         return false;
     }
 
-    bool Equals(LuauState state, LuaValue other) => false;
-    bool LessThan(LuauState state, LuaValue other) => false;
-    bool LessThanOrEqual(LuauState state, LuaValue other) => false;
-    LuaValue UnaryMinus(LuauState state) => default;
-    LuaValue Add(LuauState state, LuaValue other) => default;
-    LuaValue Subtract(LuauState state, LuaValue other) => default;
-    LuaValue Multiply(LuauState state, LuaValue other) => default;
-    LuaValue Divide(LuauState state, LuaValue other) => default;
-    LuaValue FloorDivide(LuauState state, LuaValue other) => default;
-    LuaValue Modulus(LuauState state, LuaValue other) => default;
-    LuaValue Power(LuauState state, LuaValue other) => default;
+    bool Equals(LuauState state, LuaRefValue other) => false;
+    bool LessThan(LuauState state, LuaRefValue other) => false;
+    bool LessThanOrEqual(LuauState state, LuaRefValue other) => false;
+    LuaRefValue UnaryMinus(LuauState state) => default;
+    LuaRefValue Add(LuauState state, LuaRefValue other) => default;
+    LuaRefValue Subtract(LuauState state, LuaRefValue other) => default;
+    LuaRefValue Multiply(LuauState state, LuaRefValue other) => default;
+    LuaRefValue Divide(LuauState state, LuaRefValue other) => default;
+    LuaRefValue FloorDivide(LuauState state, LuaRefValue other) => default;
+    LuaRefValue Modulus(LuauState state, LuaRefValue other) => default;
+    LuaRefValue Power(LuauState state, LuaRefValue other) => default;
 
     /// <summary>
     /// Backs the <c>__len</c> metamethod. Only consulted when
@@ -111,10 +111,10 @@ public interface ILuaUserData
     /// <summary>
     /// Backs the <c>__iter</c> metamethod (generic <c>for .. in</c>). Only consulted when
     /// <see cref="LuaUserDataMetamethods.Iter"/> is set. Returns an enumerator of (key, value)
-    /// pairs already marshalled to <see cref="LuaValue"/>, or <see langword="null"/> to signal
+    /// pairs already marshalled to <see cref="LuaRefValue"/>, or <see langword="null"/> to signal
     /// "no iteration". Use <paramref name="state"/> for any marshalling needed.
     /// </summary>
-    IEnumerator<KeyValuePair<LuaValue, LuaValue>>? GetIterator(LuauState state) => null;
+    IEnumerator<KeyValuePair<LuaRefValue, LuaRefValue>>? GetIterator(LuauState state) => null;
 
     /// <summary>
     /// Declares which metamethods should be installed into the per-type metatable for this type.
@@ -134,7 +134,7 @@ public interface IPrimitive<T> : IPrimitive where T : unmanaged, IPrimitive<T>
     /// <see langword="false"/> and Lua yields <c>nil</c>. Use <paramref name="state"/> to marshal
     /// the result (e.g. wrap a nested object as userdata).
     /// </summary>
-    bool TryGetIndex(LuauState state, LuaValue key, out LuaValue value)
+    bool TryGetIndex(LuauState state, LuaRefValue key, out LuaRefValue value)
     {
         value = default;
         return false;
@@ -145,7 +145,7 @@ public interface IPrimitive<T> : IPrimitive where T : unmanaged, IPrimitive<T>
     /// <paramref name="key"/> was set; <see langword="false"/> for read-only or unknown keys.
     /// <paramref name="state"/> is provided for any marshalling the value requires.
     /// </summary>
-    bool TrySetIndex(LuauState state, LuaValue key, LuaValue value)
+    bool TrySetIndex(LuauState state, LuaRefValue key, LuaRefValue value)
     {
         return false;
     }
@@ -172,14 +172,14 @@ public interface IPrimitive<T> : IPrimitive where T : unmanaged, IPrimitive<T>
     static virtual bool Equals(LuauState state, T self, T other) => self == other;
     static virtual bool LessThan(LuauState state, T self, T other) => self < other;
     static virtual bool LessThanOrEqual(LuauState state, T self, T other) => self <= other;
-    static virtual LuaValue UnaryMinus(LuauState state, T self) => LuaValue.FromPrimitive(-self);
-    static virtual LuaValue Add(LuauState state, T self, T other) => LuaValue.FromPrimitive(self + other);
-    static virtual LuaValue Subtract(LuauState state, T self, T other) => LuaValue.FromPrimitive(self - other);
-    static virtual LuaValue Multiply(LuauState state, T self, T other) => LuaValue.FromPrimitive(self * other);
-    static virtual LuaValue Divide(LuauState state, T self, T other) => LuaValue.FromPrimitive(self / other);
-    static virtual LuaValue FloorDivide(LuauState state, T self, T other) => LuaValue.FromPrimitive(T.FloorDivide(self, other));
-    static virtual LuaValue Modulus(LuauState state, T self, T other) => LuaValue.FromPrimitive(self % other);
-    static virtual LuaValue Power(LuauState state, T self, T other) => LuaValue.FromPrimitive(T.Power(self, other));
+    static virtual LuaRefValue UnaryMinus(LuauState state, T self) => LuaRefValue.FromPrimitive(-self);
+    static virtual LuaRefValue Add(LuauState state, T self, T other) => LuaRefValue.FromPrimitive(self + other);
+    static virtual LuaRefValue Subtract(LuauState state, T self, T other) => LuaRefValue.FromPrimitive(self - other);
+    static virtual LuaRefValue Multiply(LuauState state, T self, T other) => LuaRefValue.FromPrimitive(self * other);
+    static virtual LuaRefValue Divide(LuauState state, T self, T other) => LuaRefValue.FromPrimitive(self / other);
+    static virtual LuaRefValue FloorDivide(LuauState state, T self, T other) => LuaRefValue.FromPrimitive(T.FloorDivide(self, other));
+    static virtual LuaRefValue Modulus(LuauState state, T self, T other) => LuaRefValue.FromPrimitive(self % other);
+    static virtual LuaRefValue Power(LuauState state, T self, T other) => LuaRefValue.FromPrimitive(T.Power(self, other));
 
     /// <summary>
     /// Backs the <c>__len</c> metamethod. Only consulted when
@@ -197,10 +197,10 @@ public interface IPrimitive<T> : IPrimitive where T : unmanaged, IPrimitive<T>
     /// <summary>
     /// Backs the <c>__iter</c> metamethod (generic <c>for .. in</c>). Only consulted when
     /// <see cref="LuaUserDataMetamethods.Iter"/> is set. Returns an enumerator of (key, value)
-    /// pairs already marshalled to <see cref="LuaValue"/>, or <see langword="null"/> to signal
+    /// pairs already marshalled to <see cref="LuaRefValue"/>, or <see langword="null"/> to signal
     /// "no iteration". Use <paramref name="state"/> for any marshalling needed.
     /// </summary>
-    IEnumerator<KeyValuePair<LuaValue, LuaValue>>? GetIterator(LuauState state) => null;
+    IEnumerator<KeyValuePair<LuaRefValue, LuaRefValue>>? GetIterator(LuauState state) => null;
 
     /// <summary>
     /// Declares which metamethods should be installed into the per-type metatable for this type.

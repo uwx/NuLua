@@ -28,7 +28,7 @@ public static class LuauStateUserDataExtensions
 
     extension(LuauState state)
     {
-        public unsafe LuaUserData CreateEnumUserData(object value)
+        public unsafe LuaUserDataRef CreateEnumUserData(object value)
         {
             ArgumentNullException.ThrowIfNull(value);
 
@@ -52,24 +52,24 @@ public static class LuauStateUserDataExtensions
             );  
             Unsafe.Write(data, ManagedUserData.Create(value));
 
-            return new LuaUserData(state, state.Ref());
+            return new LuaUserDataRef(state, state.Ref());
 
-            static LuaTable BuildMetatable(
+            static LuaTableRef BuildMetatable(
                 LuauState state,
                 Type type
             )
             {
                 var metatable = state.CreateTable(0, 12);
 
-                metatable["__tostring"] = LuaValue.FromFunction(state.CreateFunction(ToStringMetamethod));
+                metatable["__tostring"] = LuaRefValue.FromFunction(state.CreateFunction(ToStringMetamethod));
 
                 // Relational operators
-                metatable["__eq"] = LuaValue.FromFunction(state.CreateFunction(EqualsMetamethod));
-                metatable["__lt"] = LuaValue.FromFunction(state.CreateFunction(LessThanMetamethod));
-                metatable["__le"] = LuaValue.FromFunction(state.CreateFunction(LessThanOrEqualMetamethod));
+                metatable["__eq"] = LuaRefValue.FromFunction(state.CreateFunction(EqualsMetamethod));
+                metatable["__lt"] = LuaRefValue.FromFunction(state.CreateFunction(LessThanMetamethod));
+                metatable["__le"] = LuaRefValue.FromFunction(state.CreateFunction(LessThanOrEqualMetamethod));
 
                 // __type → nicer type()/error output via lua_getuserdataname.
-                metatable["__type"] = LuaValue.FromString(type.Name);
+                metatable["__type"] = LuaRefValue.FromString(type.Name);
 
                 return metatable;
             }
@@ -121,11 +121,11 @@ public static class LuauStateUserDataExtensions
 
         /// <summary>
         /// Wraps <paramref name="value"/> as a Luau userdata with the per-type metatable for
-        /// <c>value.GetType()</c>, and returns a <see cref="LuaUserData"/> wrapper (the userdata is
+        /// <c>value.GetType()</c>, and returns a <see cref="LuaUserDataRef"/> wrapper (the userdata is
         /// also left on top of the stack). The metatable + GC destructor are registered once per
         /// (state, type); the GCHandle is freed automatically when Luau collects the userdata.
         /// </summary>
-        public unsafe LuaUserData CreateUserData(ILuaUserData value)
+        public unsafe LuaUserDataRef CreateUserData(ILuaUserData value)
         {
             ArgumentNullException.ThrowIfNull(value);
 
@@ -149,9 +149,9 @@ public static class LuauStateUserDataExtensions
             );  
             Unsafe.Write(data, ManagedUserData.Create(value));
 
-            return new LuaUserData(state, state.Ref());
+            return new LuaUserDataRef(state, state.Ref());
 
-            static LuaTable BuildMetatable(
+            static LuaTableRef BuildMetatable(
                 LuauState state,
                 Type type,
                 LuaUserDataMetamethods methods
@@ -161,81 +161,81 @@ public static class LuauStateUserDataExtensions
 
                 if (methods.HasFlag(LuaUserDataMetamethods.Index))
                 {
-                    metatable["__index"] = LuaValue.FromFunction(state.CreateFunction(IndexMetamethod));
+                    metatable["__index"] = LuaRefValue.FromFunction(state.CreateFunction(IndexMetamethod));
                 }
 
                 if (methods.HasFlag(LuaUserDataMetamethods.NewIndex))
                 {
-                    metatable["__newindex"] = LuaValue.FromFunction(
+                    metatable["__newindex"] = LuaRefValue.FromFunction(
                         state.CreateFunction(NewIndexMetamethod)
                     );
                 }
 
                 if (methods.HasFlag(LuaUserDataMetamethods.Length))
                 {
-                    metatable["__len"] = LuaValue.FromFunction(state.CreateFunction(LenMetamethod));
+                    metatable["__len"] = LuaRefValue.FromFunction(state.CreateFunction(LenMetamethod));
                 }
 
                 if (methods.HasFlag(LuaUserDataMetamethods.ToString))
                 {
-                    metatable["__tostring"] = LuaValue.FromFunction(state.CreateFunction(ToStringMetamethod));
+                    metatable["__tostring"] = LuaRefValue.FromFunction(state.CreateFunction(ToStringMetamethod));
                 }
 
                 if (methods.HasFlag(LuaUserDataMetamethods.Iter))
                 {
-                    metatable["__iter"] = LuaValue.FromFunction(state.CreateFunction(IterMetamethod));
+                    metatable["__iter"] = LuaRefValue.FromFunction(state.CreateFunction(IterMetamethod));
                 }
             
                 // Relational operators
                 if (methods.HasFlag(LuaUserDataMetamethods.Eq))
                 {
-                    metatable["__eq"] = LuaValue.FromFunction(state.CreateFunction(EqualsMetamethod));
+                    metatable["__eq"] = LuaRefValue.FromFunction(state.CreateFunction(EqualsMetamethod));
                 }
                 if (methods.HasFlag(LuaUserDataMetamethods.Lt))
                 {
-                    metatable["__lt"] = LuaValue.FromFunction(state.CreateFunction(LessThanMetamethod));
+                    metatable["__lt"] = LuaRefValue.FromFunction(state.CreateFunction(LessThanMetamethod));
                 }
                 if (methods.HasFlag(LuaUserDataMetamethods.Le))
                 {
-                    metatable["__le"] = LuaValue.FromFunction(state.CreateFunction(LessThanOrEqualMetamethod));
+                    metatable["__le"] = LuaRefValue.FromFunction(state.CreateFunction(LessThanOrEqualMetamethod));
                 }
     
                 // Arithmetic operators
                 if (methods.HasFlag(LuaUserDataMetamethods.Unm))
                 {
-                    metatable["__unm"] = LuaValue.FromFunction(state.CreateFunction(UnaryMinusMetamethod));
+                    metatable["__unm"] = LuaRefValue.FromFunction(state.CreateFunction(UnaryMinusMetamethod));
                 }
                 if (methods.HasFlag(LuaUserDataMetamethods.Add))
                 {
-                    metatable["__add"] = LuaValue.FromFunction(state.CreateFunction(AddMetamethod));
+                    metatable["__add"] = LuaRefValue.FromFunction(state.CreateFunction(AddMetamethod));
                 }
                 if (methods.HasFlag(LuaUserDataMetamethods.Sub))
                 {
-                    metatable["__sub"] = LuaValue.FromFunction(state.CreateFunction(SubtractMetamethod));
+                    metatable["__sub"] = LuaRefValue.FromFunction(state.CreateFunction(SubtractMetamethod));
                 }
                 if (methods.HasFlag(LuaUserDataMetamethods.Mul))
                 {
-                    metatable["__mul"] = LuaValue.FromFunction(state.CreateFunction(MultiplyMetamethod));
+                    metatable["__mul"] = LuaRefValue.FromFunction(state.CreateFunction(MultiplyMetamethod));
                 }
                 if (methods.HasFlag(LuaUserDataMetamethods.Div))
                 {
-                    metatable["__div"] = LuaValue.FromFunction(state.CreateFunction(DivideMetamethod));
+                    metatable["__div"] = LuaRefValue.FromFunction(state.CreateFunction(DivideMetamethod));
                 }
                 if (methods.HasFlag(LuaUserDataMetamethods.Idiv))
                 {
-                    metatable["__idiv"] = LuaValue.FromFunction(state.CreateFunction(FloorDivideMetamethod));
+                    metatable["__idiv"] = LuaRefValue.FromFunction(state.CreateFunction(FloorDivideMetamethod));
                 }
                 if (methods.HasFlag(LuaUserDataMetamethods.Mod))
                 {
-                    metatable["__mod"] = LuaValue.FromFunction(state.CreateFunction(ModulusMetamethod));
+                    metatable["__mod"] = LuaRefValue.FromFunction(state.CreateFunction(ModulusMetamethod));
                 }
                 if (methods.HasFlag(LuaUserDataMetamethods.Pow))
                 {
-                    metatable["__pow"] = LuaValue.FromFunction(state.CreateFunction(PowerMetamethod));
+                    metatable["__pow"] = LuaRefValue.FromFunction(state.CreateFunction(PowerMetamethod));
                 }
 
                 // __type → nicer type()/error output via lua_getuserdataname.
-                metatable["__type"] = LuaValue.FromString(type.Name);
+                metatable["__type"] = LuaRefValue.FromString(type.Name);
 
                 return metatable;
             }
@@ -313,7 +313,7 @@ public static class LuauStateUserDataExtensions
                     }
                 );
 
-                state.Push(LuaValue.FromFunction(iterator));
+                state.Push(LuaRefValue.FromFunction(iterator));
                 state.PushNil();
                 state.PushNil();
                 return 3;
@@ -418,16 +418,16 @@ public static class LuauStateUserDataExtensions
             }
         }
 
-        public unsafe LuaTable CreatePrimitiveMetaTable<T>() where T : unmanaged, IPrimitive<T>
+        public unsafe LuaTableRef CreatePrimitiveMetaTable<T>() where T : unmanaged, IPrimitive<T>
         {
             return state.CreatePrimitiveMetaTable<T>(T.PrimitiveId);
         }
 
-        public unsafe LuaTable CreatePrimitiveMetaTable<T>(int id) where T : unmanaged, IPrimitive<T>
+        public unsafe LuaTableRef CreatePrimitiveMetaTable<T>(int id) where T : unmanaged, IPrimitive<T>
         {
             return BuildMetatable(state, typeof(T), T.SupportedMetamethods);
 
-            LuaTable BuildMetatable(
+            LuaTableRef BuildMetatable(
                 LuauState state,
                 Type type,
                 LuaUserDataMetamethods methods
@@ -437,81 +437,81 @@ public static class LuauStateUserDataExtensions
 
                 if (methods.HasFlag(LuaUserDataMetamethods.Index))
                 {
-                    metatable["__index"] = LuaValue.FromFunction(state.CreateFunction(IndexMetamethod));
+                    metatable["__index"] = LuaRefValue.FromFunction(state.CreateFunction(IndexMetamethod));
                 }
 
                 if (methods.HasFlag(LuaUserDataMetamethods.NewIndex))
                 {
-                    metatable["__newindex"] = LuaValue.FromFunction(
+                    metatable["__newindex"] = LuaRefValue.FromFunction(
                         state.CreateFunction(NewIndexMetamethod)
                     );
                 }
 
                 if (methods.HasFlag(LuaUserDataMetamethods.Length))
                 {
-                    metatable["__len"] = LuaValue.FromFunction(state.CreateFunction(LenMetamethod));
+                    metatable["__len"] = LuaRefValue.FromFunction(state.CreateFunction(LenMetamethod));
                 }
 
                 if (methods.HasFlag(LuaUserDataMetamethods.ToString))
                 {
-                    metatable["__tostring"] = LuaValue.FromFunction(state.CreateFunction(ToStringMetamethod));
+                    metatable["__tostring"] = LuaRefValue.FromFunction(state.CreateFunction(ToStringMetamethod));
                 }
 
                 if (methods.HasFlag(LuaUserDataMetamethods.Iter))
                 {
-                    metatable["__iter"] = LuaValue.FromFunction(state.CreateFunction(IterMetamethod));
+                    metatable["__iter"] = LuaRefValue.FromFunction(state.CreateFunction(IterMetamethod));
                 }
             
                 // Relational operators
                 if (methods.HasFlag(LuaUserDataMetamethods.Eq))
                 {
-                    metatable["__eq"] = LuaValue.FromFunction(state.CreateFunction(EqualsMetamethod));
+                    metatable["__eq"] = LuaRefValue.FromFunction(state.CreateFunction(EqualsMetamethod));
                 }
                 if (methods.HasFlag(LuaUserDataMetamethods.Lt))
                 {
-                    metatable["__lt"] = LuaValue.FromFunction(state.CreateFunction(LessThanMetamethod));
+                    metatable["__lt"] = LuaRefValue.FromFunction(state.CreateFunction(LessThanMetamethod));
                 }
                 if (methods.HasFlag(LuaUserDataMetamethods.Le))
                 {
-                    metatable["__le"] = LuaValue.FromFunction(state.CreateFunction(LessThanOrEqualMetamethod));
+                    metatable["__le"] = LuaRefValue.FromFunction(state.CreateFunction(LessThanOrEqualMetamethod));
                 }
     
                 // Arithmetic operators
                 if (methods.HasFlag(LuaUserDataMetamethods.Unm))
                 {
-                    metatable["__unm"] = LuaValue.FromFunction(state.CreateFunction(UnaryMinusMetamethod));
+                    metatable["__unm"] = LuaRefValue.FromFunction(state.CreateFunction(UnaryMinusMetamethod));
                 }
                 if (methods.HasFlag(LuaUserDataMetamethods.Add))
                 {
-                    metatable["__add"] = LuaValue.FromFunction(state.CreateFunction(AddMetamethod));
+                    metatable["__add"] = LuaRefValue.FromFunction(state.CreateFunction(AddMetamethod));
                 }
                 if (methods.HasFlag(LuaUserDataMetamethods.Sub))
                 {
-                    metatable["__sub"] = LuaValue.FromFunction(state.CreateFunction(SubtractMetamethod));
+                    metatable["__sub"] = LuaRefValue.FromFunction(state.CreateFunction(SubtractMetamethod));
                 }
                 if (methods.HasFlag(LuaUserDataMetamethods.Mul))
                 {
-                    metatable["__mul"] = LuaValue.FromFunction(state.CreateFunction(MultiplyMetamethod));
+                    metatable["__mul"] = LuaRefValue.FromFunction(state.CreateFunction(MultiplyMetamethod));
                 }
                 if (methods.HasFlag(LuaUserDataMetamethods.Div))
                 {
-                    metatable["__div"] = LuaValue.FromFunction(state.CreateFunction(DivideMetamethod));
+                    metatable["__div"] = LuaRefValue.FromFunction(state.CreateFunction(DivideMetamethod));
                 }
                 if (methods.HasFlag(LuaUserDataMetamethods.Idiv))
                 {
-                    metatable["__idiv"] = LuaValue.FromFunction(state.CreateFunction(FloorDivideMetamethod));
+                    metatable["__idiv"] = LuaRefValue.FromFunction(state.CreateFunction(FloorDivideMetamethod));
                 }
                 if (methods.HasFlag(LuaUserDataMetamethods.Mod))
                 {
-                    metatable["__mod"] = LuaValue.FromFunction(state.CreateFunction(ModulusMetamethod));
+                    metatable["__mod"] = LuaRefValue.FromFunction(state.CreateFunction(ModulusMetamethod));
                 }
                 if (methods.HasFlag(LuaUserDataMetamethods.Pow))
                 {
-                    metatable["__pow"] = LuaValue.FromFunction(state.CreateFunction(PowerMetamethod));
+                    metatable["__pow"] = LuaRefValue.FromFunction(state.CreateFunction(PowerMetamethod));
                 }
 
                 // __type → nicer type()/error output via lua_getuserdataname.
-                metatable["__type"] = LuaValue.FromString(type.Name);
+                metatable["__type"] = LuaRefValue.FromString(type.Name);
 
                 return metatable;
             }
@@ -607,7 +607,7 @@ public static class LuauStateUserDataExtensions
                     }
                 );
 
-                state.Push(LuaValue.FromFunction(iterator));
+                state.Push(LuaRefValue.FromFunction(iterator));
                 state.PushNil();
                 state.PushNil();
                 return 3;

@@ -68,7 +68,7 @@ public sealed unsafe partial class LuauState
     public int RegistryIndex => NativeMethods.LUA_REGISTRYINDEX;
     public int UpvalueIndexBase => NativeMethods.LUA_GLOBALSINDEX;
 
-    public LuaValue this[ReadOnlySpan<char> name]
+    public LuaRefValue this[ReadOnlySpan<char> name]
     {
         get
         {
@@ -242,13 +242,13 @@ public sealed unsafe partial class LuauState
         return NativeMethods.lua_topointer(ptr, index);
     }
 
-    public LuaFunction ToFunction(int index)
+    public LuaFunctionRef ToFunction(int index)
     {
         if (GetType(index) != LuaValueType.Function)
         {
             throw new InvalidOperationException("Value at the specified index is not a function.");
         }
-        return new LuaFunction(this, this.Ref());
+        return new LuaFunctionRef(this, this.Ref());
     }
 
     public void XMove(LuauState target, int count)
@@ -343,7 +343,7 @@ public sealed unsafe partial class LuauState
         NativeMethods.lua_rawset(ptr, index);
     }
 
-    public bool TryGetMetatable(int index, [NotNullWhen(true)] out LuaTable? metatable)
+    public bool TryGetMetatable(int index, [NotNullWhen(true)] out LuaTableRef? metatable)
     {
         CheckDisposed();
         if (NativeMethods.lua_getmetatable(ptr, index) == 0)
@@ -353,12 +353,12 @@ public sealed unsafe partial class LuauState
         }
         else
         {
-            metatable = new LuaTable(this, this.Ref());
+            metatable = new LuaTableRef(this, this.Ref());
             return true;
         }
     }
 
-    public void SetMetatable(int index, LuaTable? metatable)
+    public void SetMetatable(int index, LuaTableRef? metatable)
     {
         CheckDisposed();
         var absIndex = GetAbsIndex(index);

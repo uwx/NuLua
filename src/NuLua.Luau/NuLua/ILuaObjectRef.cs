@@ -1,6 +1,6 @@
 namespace NuLua;
 
-public interface ILuaObject : IDisposable
+public interface ILuaObjectRef : IDisposable
 {
     LuaReference Reference { get; }
 }

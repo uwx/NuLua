@@ -403,7 +403,7 @@ public sealed partial class LuauState
         }
     }
 
-    public unsafe bool GetPrimitiveMetatable(int id, [NotNullWhen(true)] out LuaTable? metatable)
+    public unsafe bool GetPrimitiveMetatable(int id, [NotNullWhen(true)] out LuaTableRef? metatable)
     {
         CheckDisposed();
         if (id < 0 || (uint)id >= NativeMethods.LUA_PRIMITIVE_LIMIT)
@@ -418,16 +418,16 @@ public sealed partial class LuauState
             metatable = default;
             return false;
         }
-        metatable = new LuaTable(this, Ref());
+        metatable = new LuaTableRef(this, Ref());
         return true;
     }
 
-    public void SetPrimitiveMetatable<T>(LuaTable metatable) where T : unmanaged, IPrimitive
+    public void SetPrimitiveMetatable<T>(LuaTableRef metatable) where T : unmanaged, IPrimitive
     {
         SetPrimitiveMetatable(T.PrimitiveId, metatable);
     }
 
-    public unsafe void SetPrimitiveMetatable(int id, LuaTable metatable)
+    public unsafe void SetPrimitiveMetatable(int id, LuaTableRef metatable)
     {
         CheckDisposed();
         if (id < 0 || (uint)id >= NativeMethods.LUA_PRIMITIVE_LIMIT)
@@ -444,14 +444,14 @@ public sealed partial class LuauState
         NativeMethods.lua_setprimitivemetatable(ptr, id);
     }
 
-    public unsafe LuauBuffer NewBuffer(int size)
+    public unsafe LuauBufferRef NewBuffer(int size)
     {
         CheckDisposed();
         _ = NativeMethods.lua_newbuffer(ptr, (nuint)size);
-        return new LuauBuffer(this, Ref());
+        return new LuauBufferRef(this, Ref());
     }
 
-    public unsafe LuauBuffer ToBuffer(int index)
+    public unsafe LuauBufferRef ToBuffer(int index)
     {
         CheckDisposed();
         if (GetType(index) != LuaValueType.Buffer)
@@ -459,7 +459,7 @@ public sealed partial class LuauState
             throw new InvalidOperationException("Value at the specified index is not a buffer.");
         }
         NativeMethods.lua_pushvalue(ptr, index);
-        return new LuauBuffer(this, Ref());
+        return new LuauBufferRef(this, Ref());
     }
 
     public unsafe Span<byte> ToBufferSpan(int index)
@@ -474,7 +474,7 @@ public sealed partial class LuauState
         return new Span<byte>((byte*)p, (int)len);
     }
 
-    public unsafe LuauClass ToClass(int index)
+    public unsafe LuauClassRef ToClassRef(int index)
     {
         CheckDisposed();
         if (GetType(index) != LuaValueType.Class)
@@ -482,10 +482,10 @@ public sealed partial class LuauState
             throw new InvalidOperationException("Value at the specified index is not a class.");
         }
         NativeMethods.lua_pushvalue(ptr, index);
-        return new LuauClass(this, Ref());
+        return new LuauClassRef(this, Ref());
     }
 
-    public unsafe LuauObject ToObject(int index)
+    public unsafe LuauObjectRef ToObjectRef(int index)
     {
         CheckDisposed();
         if (GetType(index) != LuaValueType.Object)
@@ -493,17 +493,17 @@ public sealed partial class LuauState
             throw new InvalidOperationException("Value at the specified index is not an object.");
         }
         NativeMethods.lua_pushvalue(ptr, index);
-        return new LuauObject(this, Ref());
+        return new LuauObjectRef(this, Ref());
     }
 
-    public LuaValue ToLuaValue(int index)
+    public LuaRefValue ToLuaValue(int index)
     {
         CheckDisposed();
         var type = GetType(index);
         switch (type)
         {
             case LuaValueType.Nil:
-                return LuaValue.Nil;
+                return LuaRefValue.Nil;
             case LuaValueType.Boolean:
                 return ToBoolean(index);
             case LuaValueType.Number:
@@ -511,29 +511,29 @@ public sealed partial class LuauState
             case LuaValueType.String:
                 return ToString(index);
             case LuaValueType.Vector:
-                return LuaValue.FromVector(ToVector(index));
+                return LuaRefValue.FromVector(ToVector(index));
             case LuaValueType.Primitive:
             {
                 var payload = ToPrimitive(index, out var primitiveId);
-                return LuaValue.FromPrimitive(primitiveId, payload);
+                return LuaRefValue.FromPrimitive(primitiveId, payload);
             }
             case LuaValueType.Buffer:
-                return LuaValue.FromBuffer(ToBuffer(index));
+                return LuaRefValue.FromBuffer(ToBuffer(index));
             case LuaValueType.Class:
-                return LuaValue.FromClass(ToClass(index));
+                return LuaRefValue.FromClass(ToClassRef(index));
             case LuaValueType.Object:
-                return LuaValue.FromObject(ToObject(index));
+                return LuaRefValue.FromObject(ToObjectRef(index));
             case LuaValueType.Table:
             {
                 PushValue(index);
                 var reference = Ref();
-                return new LuaTable(this, reference);
+                return new LuaTableRef(this, reference);
             }
             case LuaValueType.Function:
             {
                 PushValue(index);
                 var reference = Ref();
-                return new LuaFunction(this, reference);
+                return new LuaFunctionRef(this, reference);
             }
             case LuaValueType.Thread:
             {
@@ -541,20 +541,20 @@ public sealed partial class LuauState
                 // registry reference, so no extra Ref() is taken here (and none
                 // would ever be released).
                 var thread = ToThread(index);
-                return LuaValue.FromThread(thread);
+                return LuaRefValue.FromThread(thread);
             }
             case LuaValueType.UserData:
             {
                 PushValue(index);
                 var reference = Ref();
-                return new LuaUserData(this, reference);
+                return new LuaUserDataRef(this, reference);
             }
             default:
                 throw new NotSupportedException($"Unsupported Lua value type: {type}");
         }
     }
 
-    public void Push(LuaValue value)
+    public void Push(LuaRefValue value)
     {
         CheckDisposed();
         switch (value.Type)
@@ -569,7 +569,7 @@ public sealed partial class LuauState
             case LuaValueType.Buffer:
             case LuaValueType.Class:
             case LuaValueType.Object:
-                PushValue(value.UnsafeRead<ILuaObject>().Reference);
+                PushValue(value.UnsafeRead<ILuaObjectRef>().Reference);
                 return;
             case LuaValueType.Nil:
                 PushNil();
@@ -588,7 +588,7 @@ public sealed partial class LuauState
             case LuaValueType.UserData:
             case LuaValueType.Thread:
             {
-                var obj = value.UnsafeRead<ILuaObject>();
+                var obj = value.UnsafeRead<ILuaObjectRef>();
                 PushValue(obj.Reference);
                 break;
             }
@@ -1174,7 +1174,7 @@ public sealed partial class LuauState
         return 0;
     }
 
-    public int Return(params ReadOnlySpan<LuaValue> values)
+    public int Return(params ReadOnlySpan<LuaRefValue> values)
     {
         foreach (var value in values)
         {
@@ -1225,7 +1225,7 @@ public sealed partial class LuauState
         var searchersRef = Ref();
         SetTop(baseTop);
 
-        var searchers = new LuaTable(this, searchersRef);
+        var searchers = new LuaTableRef(this, searchersRef);
 
         try
         {
@@ -1247,7 +1247,7 @@ public sealed partial class LuauState
                             // The module is now on the stack (and will be cached in
                             // package.loaded by require), so the registry reference
                             // taken by ToLuaValue is no longer needed.
-                            moduleValue.Dispose();
+                            moduleValue.Return();
                             return 1;
                         },
                         0
@@ -1256,11 +1256,11 @@ public sealed partial class LuauState
                 }
             );
 
-            searchers[searchers.Length + 1] = LuaValue.FromFunction(searcher);
+            searchers[searchers.Length + 1] = LuaRefValue.FromFunction(searcher);
         }
         finally
         {
-            searchers.Dispose();
+            searchers.Return();
         }
 
         return true;
@@ -1274,7 +1274,7 @@ public sealed partial class LuauState
                 var name = args[0].Read<string>();
 
                 var cacheValue = lua[FallbackCacheKey];
-                LuaTable cacheTable;
+                LuaTableRef cacheTable;
                 if (cacheValue.IsNil)
                 {
                     cacheTable = lua.CreateTable();
@@ -1282,7 +1282,7 @@ public sealed partial class LuauState
                 }
                 else
                 {
-                    cacheTable = cacheValue.Read<LuaTable>();
+                    cacheTable = cacheValue.Read<LuaTableRef>();
                 }
 
                 try
@@ -1294,7 +1294,7 @@ public sealed partial class LuauState
                         lua.Push(cached);
                         // The module is on the stack (and cached in the table), so
                         // release the temporary registry reference from the getter.
-                        cached.Dispose();
+                        cached.Return();
                         return 1;
                     }
 
@@ -1308,7 +1308,7 @@ public sealed partial class LuauState
                     lua.Push(moduleValue);
                     // The module is now both cached in `cacheTable` and on the
                     // stack, so the temporary registry reference can be released.
-                    moduleValue.Dispose();
+                    moduleValue.Return();
                     return 1;
                 }
                 finally
@@ -1317,7 +1317,7 @@ public sealed partial class LuauState
                     // persistent `_NULUA_MODULES` table (which stays alive as a
                     // global); release its registry reference. No-op when the
                     // cache table was freshly created (cacheValue is nil).
-                    cacheValue.Dispose();
+                    cacheValue.Return();
                 }
             }
         );
@@ -1335,7 +1335,7 @@ public sealed partial class LuauState
         PushString(strBytes.AsSpan());
     }
 
-    public LuaValue Pop()
+    public LuaRefValue Pop()
     {
         var top = GetTop();
 
@@ -1399,22 +1399,22 @@ public sealed partial class LuauState
         return reference;
     }
 
-    public LuaTable ToTable(int index)
+    public LuaTableRef ToTable(int index)
     {
         if (GetType(index) != LuaValueType.Table)
         {
             throw new InvalidOperationException("Value at the specified index is not a table.");
         }
-        return new LuaTable(this, ToReference(index));
+        return new LuaTableRef(this, ToReference(index));
     }
 
-    public LuaUserData ToUserData(int index)
+    public LuaUserDataRef ToUserData(int index)
     {
         if (GetType(index) != LuaValueType.UserData)
         {
             throw new InvalidOperationException("Value at the specified index is not user data.");
         }
-        return new LuaUserData(this, ToReference(index));
+        return new LuaUserDataRef(this, ToReference(index));
     }
 
     public LuaReference Ref()
@@ -1422,7 +1422,7 @@ public sealed partial class LuauState
         return Ref(RegistryIndex);
     }
 
-    public LuaValue Add(LuaValue a, LuaValue b)
+    public LuaRefValue Add(LuaRefValue a, LuaRefValue b)
     {
         Push(a);
         Push(b);
@@ -1430,7 +1430,7 @@ public sealed partial class LuauState
         return Pop();
     }
 
-    public LuaValue Sub(LuaValue a, LuaValue b)
+    public LuaRefValue Sub(LuaRefValue a, LuaRefValue b)
     {
         Push(a);
         Push(b);
@@ -1438,7 +1438,7 @@ public sealed partial class LuauState
         return Pop();
     }
 
-    public LuaValue Mul(LuaValue a, LuaValue b)
+    public LuaRefValue Mul(LuaRefValue a, LuaRefValue b)
     {
         Push(a);
         Push(b);
@@ -1446,7 +1446,7 @@ public sealed partial class LuauState
         return Pop();
     }
 
-    public LuaValue Div(LuaValue a, LuaValue b)
+    public LuaRefValue Div(LuaRefValue a, LuaRefValue b)
     {
         Push(a);
         Push(b);
@@ -1454,7 +1454,7 @@ public sealed partial class LuauState
         return Pop();
     }
 
-    public LuaValue IDiv(LuaValue a, LuaValue b)
+    public LuaRefValue IDiv(LuaRefValue a, LuaRefValue b)
     {
         Push(a);
         Push(b);
@@ -1462,7 +1462,7 @@ public sealed partial class LuauState
         return Pop();
     }
 
-    public LuaValue Mod(LuaValue a, LuaValue b)
+    public LuaRefValue Mod(LuaRefValue a, LuaRefValue b)
     {
         Push(a);
         Push(b);
@@ -1470,7 +1470,7 @@ public sealed partial class LuauState
         return Pop();
     }
 
-    public LuaValue Pow(LuaValue a, LuaValue b)
+    public LuaRefValue Pow(LuaRefValue a, LuaRefValue b)
     {
         Push(a);
         Push(b);
@@ -1478,21 +1478,21 @@ public sealed partial class LuauState
         return Pop();
     }
 
-    public LuaValue Unm(LuaValue a)
+    public LuaRefValue Unm(LuaRefValue a)
     {
         Push(a);
         Arith(LuaArithmeticOperator.Unm);
         return Pop();
     }
 
-    public LuaValue BNot(LuaValue a)
+    public LuaRefValue BNot(LuaRefValue a)
     {
         Push(a);
         Arith(LuaArithmeticOperator.BNot);
         return Pop();
     }
 
-    public LuaValue BAnd(LuaValue a, LuaValue b)
+    public LuaRefValue BAnd(LuaRefValue a, LuaRefValue b)
     {
         Push(a);
         Push(b);
@@ -1500,7 +1500,7 @@ public sealed partial class LuauState
         return Pop();
     }
 
-    public LuaValue BOr(LuaValue a, LuaValue b)
+    public LuaRefValue BOr(LuaRefValue a, LuaRefValue b)
     {
         Push(a);
         Push(b);
@@ -1508,7 +1508,7 @@ public sealed partial class LuauState
         return Pop();
     }
 
-    public LuaValue BXor(LuaValue a, LuaValue b)
+    public LuaRefValue BXor(LuaRefValue a, LuaRefValue b)
     {
         Push(a);
         Push(b);
@@ -1516,7 +1516,7 @@ public sealed partial class LuauState
         return Pop();
     }
 
-    public LuaValue Shl(LuaValue a, LuaValue b)
+    public LuaRefValue Shl(LuaRefValue a, LuaRefValue b)
     {
         Push(a);
         Push(b);
@@ -1524,7 +1524,7 @@ public sealed partial class LuauState
         return Pop();
     }
 
-    public LuaValue Shr(LuaValue a, LuaValue b)
+    public LuaRefValue Shr(LuaRefValue a, LuaRefValue b)
     {
         Push(a);
         Push(b);
@@ -1532,14 +1532,14 @@ public sealed partial class LuauState
         return Pop();
     }
 
-    public LuaValue Len(LuaValue a)
+    public LuaRefValue Len(LuaRefValue a)
     {
         Push(a);
         Len(-1);
         return Pop();
     }
 
-    public LuaValue Concat(params ReadOnlySpan<LuaValue> values)
+    public LuaRefValue Concat(params ReadOnlySpan<LuaRefValue> values)
     {
         foreach (var value in values)
         {
@@ -1549,7 +1549,7 @@ public sealed partial class LuauState
         return Pop();
     }
 
-    public bool Equals(LuaValue a, LuaValue b)
+    public bool Equals(LuaRefValue a, LuaRefValue b)
     {
         Push(a);
         Push(b);
@@ -1557,7 +1557,7 @@ public sealed partial class LuauState
         return ToBoolean(-1);
     }
 
-    public bool LessThan(LuaValue a, LuaValue b)
+    public bool LessThan(LuaRefValue a, LuaRefValue b)
     {
         Push(a);
         Push(b);
@@ -1565,7 +1565,7 @@ public sealed partial class LuauState
         return ToBoolean(-1);
     }
 
-    public bool LessThanOrEqual(LuaValue a, LuaValue b)
+    public bool LessThanOrEqual(LuaRefValue a, LuaRefValue b)
     {
         Push(a);
         Push(b);
@@ -1573,26 +1573,26 @@ public sealed partial class LuauState
         return ToBoolean(-1);
     }
 
-    public LuaTable CreateTable(int initialArraySize = 0,
+    public LuaTableRef CreateTable(int initialArraySize = 0,
         int initialRecordsSize = 0
     )
     {
         NewTable(initialArraySize, initialRecordsSize);
-        return new LuaTable(this, Ref());
+        return new LuaTableRef(this, Ref());
     }
 
-    public LuaUserData CreateUserData(int size, int userValueCount = 1)
+    public LuaUserDataRef CreateUserData(int size, int userValueCount = 1)
     {
         NewUserData(size, userValueCount);
-        return new LuaUserData(this, Ref());
+        return new LuaUserDataRef(this, Ref());
     }
 
-    public LuaFunction CreateFunction(LuaFunc function,
+    public LuaFunctionRef CreateFunction(LuaFunc function,
         int upvalueCount = 0
     )
     {
         NewFunction(function, upvalueCount);
-        return new LuaFunction(this, Ref());
+        return new LuaFunctionRef(this, Ref());
     }
 
     public void RegisterFunction(ReadOnlySpan<char> name,
@@ -1610,8 +1610,8 @@ public sealed partial class LuauState
         return ToThread(-1);
     }
 
-    public int Call(LuaFunction function,
-        params ReadOnlySpan<LuaValue> args
+    public int Call(LuaFunctionRef function,
+        params ReadOnlySpan<LuaRefValue> args
     )
     {
         var baseTop = GetTop();
@@ -1624,16 +1624,16 @@ public sealed partial class LuauState
         return GetTop() - baseTop;
     }
 
-    public ValueTask<int> CallAsync(LuaFunction function,
-        LuaValue[] args,
+    public ValueTask<int> CallAsync(LuaFunctionRef function,
+        LuaRefValue[] args,
         CancellationToken cancellationToken = default
     )
     {
         return CallAsync(function, args.AsMemory(), cancellationToken);
     }
 
-    public async ValueTask<int> CallAsync(LuaFunction function,
-        ReadOnlyMemory<LuaValue> args,
+    public async ValueTask<int> CallAsync(LuaFunctionRef function,
+        ReadOnlyMemory<LuaRefValue> args,
         CancellationToken cancellationToken = default
     )
     {
@@ -1648,7 +1648,7 @@ public sealed partial class LuauState
         return GetTop() - baseTop;
     }
 
-    public LuaValue[] Resume(params ReadOnlySpan<LuaValue> args)
+    public LuaRefValue[] Resume(params ReadOnlySpan<LuaRefValue> args)
     {
         foreach (var arg in args)
         {
@@ -1657,7 +1657,7 @@ public sealed partial class LuauState
         Resume(args.Length);
 
         var resultCount = GetTop();
-        var results = new LuaValue[resultCount];
+        var results = new LuaRefValue[resultCount];
         for (int i = 0; i < resultCount; i++)
         {
             results[i] = ToLuaValue(i + 1);
@@ -1666,8 +1666,8 @@ public sealed partial class LuauState
         return results;
     }
 
-    public LuaValue[] DoString(ReadOnlySpan<char> code,
-        ReadOnlySpan<LuaValue> args = default
+    public LuaRefValue[] DoString(ReadOnlySpan<char> code,
+        ReadOnlySpan<LuaRefValue> args = default
     )
     {
         var baseTop = GetTop();
@@ -1682,7 +1682,7 @@ public sealed partial class LuauState
         var currentTop = GetTop();
         var returnCount = currentTop - baseTop;
 
-        var results = new LuaValue[returnCount];
+        var results = new LuaRefValue[returnCount];
         for (int i = 0; i < returnCount; i++)
         {
             results[i] = ToLuaValue(baseTop + 1 + i);
@@ -1719,13 +1719,13 @@ public sealed partial class LuauState
 
     #region LuaAsyncStateExtensions
     
-    public LuaFunction CreateFunction(
+    public LuaFunctionRef CreateFunction(
         AsyncLuaFunc function,
         int upvalueCount = 0
     )
     {
         NewFunction(function, upvalueCount);
-        return new LuaFunction(this, Ref());
+        return new LuaFunctionRef(this, Ref());
     }
 
     public void RegisterFunction(
@@ -1750,16 +1750,16 @@ public sealed partial class LuauState
         return RunAndPushAsync(co, argCount, resultCount, cancellationToken);
     }
 
-    public ValueTask<LuaValue[]> ResumeAsync(
-        LuaValue[] args,
+    public ValueTask<LuaRefValue[]> ResumeAsync(
+        LuaRefValue[] args,
         CancellationToken cancellationToken = default
     )
     {
         return ResumeAsync(args.AsMemory(), cancellationToken);
     }
 
-    public async ValueTask<LuaValue[]> ResumeAsync(
-        ReadOnlyMemory<LuaValue> args,
+    public async ValueTask<LuaRefValue[]> ResumeAsync(
+        ReadOnlyMemory<LuaRefValue> args,
         CancellationToken cancellationToken = default
     )
     {
@@ -1771,7 +1771,7 @@ public sealed partial class LuauState
         await ResumeAsync(args.Length, cancellationToken).ConfigureAwait(false);
 
         var resultCount = GetTop();
-        var results = new LuaValue[resultCount];
+        var results = new LuaRefValue[resultCount];
         for (int i = 0; i < resultCount; i++)
         {
             results[i] = ToLuaValue(i + 1);
@@ -1780,9 +1780,9 @@ public sealed partial class LuauState
         return results;
     }
 
-    public ValueTask<LuaValue[]> DoStringAsync(
+    public ValueTask<LuaRefValue[]> DoStringAsync(
         ReadOnlySpan<char> code,
-        ReadOnlyMemory<LuaValue> args = default,
+        ReadOnlyMemory<LuaRefValue> args = default,
         CancellationToken cancellationToken = default
     )
     {
@@ -1835,7 +1835,7 @@ public sealed partial class LuauState
         }
     }
 
-    async ValueTask<LuaValue[]> RunAndCollectAsync(
+    async ValueTask<LuaRefValue[]> RunAndCollectAsync(
         int initialArgCount,
         CancellationToken cancellationToken
     )
@@ -1848,7 +1848,7 @@ public sealed partial class LuauState
             {
                 return [];
             }
-            var results = new LuaValue[top];
+            var results = new LuaRefValue[top];
             for (int i = 0; i < top; i++)
             {
                 results[i] = ToLuaValue(i + 1);
@@ -1863,4 +1863,67 @@ public sealed partial class LuauState
     }
 
     #endregion
+
+    public LuaArgumentValue ToArgumentValue(int index)
+    {
+        if (index <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(index), index, "Argument must be >= 1");
+        }
+        
+        CheckDisposed();
+        var type = GetType(index);
+        switch (type)
+        {
+            case LuaValueType.Nil:
+                return LuaArgumentValue.Nil;
+            case LuaValueType.Boolean:
+                return ToBoolean(index);
+            case LuaValueType.Number:
+                return ToNumber(index);
+            case LuaValueType.String:
+                return ToString(index);
+            case LuaValueType.Vector:
+                return LuaRefValue.FromVector(ToVector(index));
+            case LuaValueType.Primitive:
+            {
+                var payload = ToPrimitive(index, out var primitiveId);
+                return LuaRefValue.FromPrimitive(primitiveId, payload);
+            }
+            case LuaValueType.Buffer:
+                return LuaRefValue.FromBuffer(ToBuffer(index));
+            case LuaValueType.Class:
+                return LuaRefValue.FromClass(ToClassRef(index));
+            case LuaValueType.Object:
+                return LuaRefValue.FromObject(ToObjectRef(index));
+            case LuaValueType.Table:
+            {
+                PushValue(index);
+                var reference = Ref();
+                return new LuaTableRef(this, reference);
+            }
+            case LuaValueType.Function:
+            {
+                PushValue(index);
+                var reference = Ref();
+                return new LuaFunctionRef(this, reference);
+            }
+            case LuaValueType.Thread:
+            {
+                // ToThread() already keeps the coroutine alive via its own
+                // registry reference, so no extra Ref() is taken here (and none
+                // would ever be released).
+                var thread = ToThread(index);
+                return LuaRefValue.FromThread(thread);
+            }
+            case LuaValueType.UserData:
+            {
+                PushValue(index);
+                var reference = Ref();
+                return new LuaUserDataRef(this, reference);
+            }
+            default:
+                throw new NotSupportedException($"Unsupported Lua value type: {type}");
+        }
+    }
 }

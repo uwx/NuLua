@@ -5,13 +5,13 @@ using NuLua.Luau;
 
 namespace NuLua;
 
-public sealed class LuaUserData(LuauState state, LuaReference reference) : LuaObject(state, reference)
+public sealed class LuaUserDataRef(LuauState state, LuaReference reference) : LuaObjectRef(state, reference)
 {
     readonly LuauState state = state;
 
-    public readonly struct UserValues(LuaUserData userData)
+    public readonly struct UserValues(LuaUserDataRef userData)
     {
-        public LuaValue this[int index]
+        public LuaRefValue this[int index]
         {
             get
             {
@@ -55,67 +55,65 @@ public sealed class LuaUserData(LuauState state, LuaReference reference) : LuaOb
         }
     }
 
-    public unsafe bool TryRead<T>([NotNullWhen(true)] out T? result)
+    public unsafe bool TryReadManaged<T>([NotNullWhen(true)] out T? result)
     {
-        if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+        result = default;
+
+        state.PushValue(Reference);
+        try
         {
-            result = default;
-
-            state.PushValue(Reference);
-            try
+            if (state.RawLen(-1) < Unsafe.SizeOf<ManagedUserData>())
             {
-                if (state.RawLen(-1) < Unsafe.SizeOf<ManagedUserData>())
-                {
-                    return false;
-                }
-
-                var data = state.ToUserDataPointer(-1);
-                ref var header = ref Unsafe.AsRef<ManagedUserData>((void*)data);
-                if (header.Handle == 0)
-                {
-                    return false;
-                }
-
-                var handle = GCHandle.FromIntPtr(header.Handle);
-                if (!handle.IsAllocated)
-                {
-                    return false;
-                }
-
-                if (handle.Target is T typed)
-                {
-                    result = typed;
-                    return true;
-                }
-
                 return false;
             }
-            finally
-            {
-                state.Pop(1);
-            }
-        }
 
-        if (Size != Unsafe.SizeOf<T>())
-        {
-            state.Pop(1);
-            result = default;
+            var data = state.ToUserDataPointer(-1);
+            ref var header = ref Unsafe.AsRef<ManagedUserData>((void*)data);
+            if (header.Handle == 0)
+            {
+                return false;
+            }
+
+            var handle = GCHandle.FromIntPtr(header.Handle);
+            if (!handle.IsAllocated)
+            {
+                return false;
+            }
+
+            if (handle.Target is T typed)
+            {
+                result = typed;
+                return true;
+            }
+
             return false;
         }
-        result = UnsafeRead<T>()!;
-        return true;
+        finally
+        {
+            state.Pop(1);
+        }
     }
 
-    public T Read<T>()
+    public T ReadManaged<T>()
     {
-        if (!TryRead<T>(out var result))
+        if (!TryReadManaged<T>(out var result))
         {
             throw new InvalidOperationException($"Cannot convert user data to {typeof(T).Name}");
         }
         return result;
     }
 
-    public unsafe T UnsafeRead<T>()
+    public unsafe T ReadUnmanaged<T>()
+    {
+        if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+        {
+            return default!;
+        }
+
+        return ReadUnsafe<T>();
+    }
+
+    public unsafe T ReadUnsafe<T>()
     {
         state.PushValue(Reference);
         var ptr = state.ToUserDataPointer(-1);
@@ -124,7 +122,7 @@ public sealed class LuaUserData(LuauState state, LuaReference reference) : LuaOb
         return result;
     }
 
-    public bool TryWrite<T>(in T value)
+    public bool TryWriteUnmanaged<T>(in T value)
     {
         if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
         {
@@ -135,19 +133,19 @@ public sealed class LuaUserData(LuauState state, LuaReference reference) : LuaOb
         {
             return false;
         }
-        UnsafeWrite(value);
+        WriteUnsafe(value);
         return true;
     }
 
-    public void Write<T>(in T value)
+    public void WriteUnmanaged<T>(in T value)
     {
-        if (!TryWrite(value))
+        if (!TryWriteUnmanaged(value))
         {
             throw new InvalidOperationException($"Cannot convert {typeof(T).Name} to user data");
         }
     }
 
-    public unsafe void UnsafeWrite<T>(in T value)
+    public unsafe void WriteUnsafe<T>(in T value)
     {
         state.PushValue(Reference);
         var ptr = state.ToUserDataPointer(-1);

@@ -15,13 +15,13 @@ public readonly struct LuaFuncArguments
         this.len = len;
     }
 
-    public LuaValue this[int index]
+    public LuaArgumentValue this[int index]
     {
         get
         {
             if (index < 0 || index >= len)
                 ThrowIndexOutOfRange();
-            return state.ToLuaValue(index + 1);
+            return state.ToArgumentValue(index + 1);
         }
     }
 

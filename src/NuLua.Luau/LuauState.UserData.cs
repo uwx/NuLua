@@ -41,7 +41,7 @@ public sealed unsafe partial class LuauState
     /// Pushes the per-tag metatable for <paramref name="tag"/>, if registered.
     /// Returns <see langword="false"/> (and restores the stack) when not registered.
     /// </summary>
-    public bool TryGetUserDataMetatable(int tag, [NotNullWhen(true)] out LuaTable? metatable)
+    public bool TryGetUserDataMetatable(int tag, [NotNullWhen(true)] out LuaTableRef? metatable)
     {
         CheckDisposed();
         NativeMethods.lua_getuserdatametatable(ptr, tag);

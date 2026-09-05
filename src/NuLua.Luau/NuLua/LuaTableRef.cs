@@ -2,18 +2,18 @@ using NuLua.Luau;
 
 namespace NuLua;
 
-public sealed class LuaTable(LuauState state, LuaReference reference) : LuaObject(state, reference)
+public sealed class LuaTableRef(LuauState state, LuaReference reference) : LuaObjectRef(state, reference)
 {
     readonly LuauState state = state;
 
-    public struct Enumerator(LuaTable table)
+    public struct Enumerator(LuaTableRef table)
     {
-        readonly LuaTable table = table;
+        readonly LuaTableRef table = table;
         bool started = false;
         bool finished = false;
         int tableIndex = 0;
-        KeyValuePair<LuaValue, LuaValue> current;
-        public KeyValuePair<LuaValue, LuaValue> Current => current;
+        KeyValuePair<LuaRefValue, LuaRefValue> current;
+        public KeyValuePair<LuaRefValue, LuaRefValue> Current => current;
 
         public bool MoveNext()
         {
@@ -41,15 +41,24 @@ public sealed class LuaTable(LuauState state, LuaReference reference) : LuaObjec
                 finished = true;
                 return false;
             }
-
+            
             var key = table.state.ToLuaValue(-2);
             var value = table.state.ToLuaValue(-1);
-            current = new KeyValuePair<LuaValue, LuaValue>(key, value);
+            
+            current.Key.Return();
+            current.Value.Return();
+            current = new KeyValuePair<LuaRefValue, LuaRefValue>(key, value);
             return true;
         }
+
+        public void Dispose()
+        {
+            current.Key.Return();
+            current.Value.Return();
+        }
     }
 
-    public LuaValue this[int index]
+    public LuaRefValue this[int index]
     {
         get
         {
@@ -70,7 +79,7 @@ public sealed class LuaTable(LuauState state, LuaReference reference) : LuaObjec
         }
     }
 
-    public LuaValue this[ReadOnlySpan<char> key]
+    public LuaRefValue this[ReadOnlySpan<char> key]
     {
         get
         {
@@ -91,7 +100,7 @@ public sealed class LuaTable(LuauState state, LuaReference reference) : LuaObjec
         }
     }
 
-    public LuaValue this[ReadOnlySpan<byte> key]
+    public LuaRefValue this[ReadOnlySpan<byte> key]
     {
         get
         {
@@ -112,7 +121,7 @@ public sealed class LuaTable(LuauState state, LuaReference reference) : LuaObjec
         }
     }
 
-    public LuaValue this[LuaValue key]
+    public LuaRefValue this[LuaRefValue key]
     {
         get
         {
@@ -147,7 +156,7 @@ public sealed class LuaTable(LuauState state, LuaReference reference) : LuaObjec
 
     public Enumerator GetEnumerator() => new(this);
 
-    public bool TryGetValue(LuaValue key, out LuaValue value)
+    public bool TryGetValue(LuaRefValue key, out LuaRefValue value)
     {
         value = this[key];
         return value.Type != LuaValueType.Nil;

@@ -1,6 +1,6 @@
 namespace NuLua.Luau;
 
-public sealed class LuauBuffer(LuauState state, LuaReference reference) : LuaObject(state, reference)
+public sealed class LuauBufferRef(LuauState state, LuaReference reference) : LuaObjectRef(state, reference)
 {
     readonly LuauState state = state;
 
